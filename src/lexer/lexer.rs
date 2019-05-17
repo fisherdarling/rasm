@@ -2,6 +2,7 @@ use std::str::CharIndices;
 
 use crate::lexer::Token;
 
+#[derive(Debug, Clone)]
 pub struct Lexer<'a> {
     source: &'a str,
     chars: CharIndices<'a>,
