@@ -20,7 +20,10 @@ pub struct ElementSegment {
 }
 
 #[derive(Debug, Clone)]
-pub struct Memory {}
+pub struct Memory {
+    memtype: MemType,
+    memory: Vec<u8>,
+}
 
 #[derive(Debug, Clone)]
 pub struct Table {
@@ -33,6 +36,8 @@ pub struct Table {
 pub enum TableType {
     FuncRef,
 }
+
+pub type MemType = Limit;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Limit {
