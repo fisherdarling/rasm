@@ -1,6 +1,7 @@
 use crate::types::index::{GlobalIdx, LocalIdx};
 
-pub enum Varop {
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Instr {
     LocalGet(LocalIdx),
     LocalSet(LocalIdx),
     LocalTee(LocalIdx),

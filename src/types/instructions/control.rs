@@ -2,7 +2,8 @@ use crate::types::ResType;
 use crate::types::index::{LabelIdx, TypeIdx, FuncIdx};
 use crate::types::instructions::Instr;
 
-pub enum CtrlOp {
+#[derive(Debug, Clone, PartialEq)]
+pub enum Instr {
     Nop,
     Unreachable,
     Block(ResType, Vec<Instr>),
