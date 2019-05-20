@@ -8,7 +8,7 @@ pub enum Relop {
 
 pub mod irelop {
     use super::Signed;
-    
+
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Op {
         Eq,
@@ -19,7 +19,7 @@ pub mod irelop {
         Ge(Signed),
     }
 }
-    
+
 pub mod frelop {
 
     #[derive(Debug, Copy, Clone, PartialEq)]
@@ -28,6 +28,6 @@ pub mod frelop {
         Ne,
         Lt,
         Gt,
-        Ge
+        Ge,
     }
 }

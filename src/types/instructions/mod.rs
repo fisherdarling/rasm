@@ -1,7 +1,7 @@
+pub mod control;
 pub mod numeric;
 pub mod parametric;
 pub mod variable;
-pub mod control;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Instr {

@@ -19,4 +19,3 @@ pub enum ValueType {
     Float32,
     Float64,
 }
-

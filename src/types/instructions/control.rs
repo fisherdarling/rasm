@@ -1,6 +1,6 @@
-use crate::types::ResType;
-use crate::types::index::{LabelIdx, TypeIdx, FuncIdx};
+use crate::types::index::{FuncIdx, LabelIdx, TypeIdx};
 use crate::types::instructions::Instr as RealInstr;
+use crate::types::ResType;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Instr {

@@ -7,7 +7,7 @@ pub enum Unop {
 }
 
 pub mod iunop {
-#[derive(Debug, Copy, Clone, PartialEq)]
+    #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Op {
         Clz,
         Ctz,
@@ -16,7 +16,7 @@ pub mod iunop {
 }
 
 pub mod funop {
-#[derive(Debug, Copy, Clone, PartialEq)]
+    #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Op {
         Abs,
         Neg,

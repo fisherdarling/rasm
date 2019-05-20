@@ -1,20 +1,19 @@
-pub mod unop;
 pub mod binop;
-pub mod relop;
 pub mod cvtop;
+pub mod relop;
+pub mod unop;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Bitlen {
     N32,
     N64,
-} 
+}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Signed {
     Signed,
     Unsigned,
 }
-
 
 pub mod testop {
     use super::Bitlen;

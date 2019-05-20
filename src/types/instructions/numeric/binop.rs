@@ -8,7 +8,7 @@ pub enum Binop {
 
 pub mod ibinop {
     use super::Signed;
-    
+
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Op {
         Add,

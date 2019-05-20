@@ -1,8 +1,4 @@
-use crate::types::{
-    expression::Expr,   
-    GlobalType,
-};
-
+use crate::types::{expression::Expr, GlobalType};
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -14,7 +10,7 @@ pub enum Value {
 
 #[derive(Debug, Clone)]
 pub struct Global {
-    kind: GlobalType, 
+    kind: GlobalType,
     value: Option<Value>,
 }
 

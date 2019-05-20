@@ -1,6 +1,6 @@
 use crate::types::{
     index::{FuncIdx, GlobalIdx, MemIdx, TableIdx, TypeIdx},
-    memory::{TableType, MemType},
+    memory::{MemType, TableType},
     types::GlobalType,
 };
 
