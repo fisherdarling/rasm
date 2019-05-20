@@ -1,4 +1,4 @@
-// use crate::types::instructions::numeric::{Bitlen, Signed};
+use crate::types::instructions::numeric::Bitlen;
 
 pub enum Unop {
     Int(Bitlen, iunop::Op),
