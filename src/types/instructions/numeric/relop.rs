@@ -1,6 +1,6 @@
 use crate::types::instructions::numeric::{Bitlen, Signed};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Relop {
     Int(Bitlen, irelop::Op),
     Float(Bitlen, frelop::Op),
@@ -9,7 +9,7 @@ pub enum Relop {
 pub mod irelop {
     use super::Signed;
     
-    #[derive(Debug, Copy, Clone)]
+    #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Op {
         Eq,
         Ne,
@@ -22,7 +22,7 @@ pub mod irelop {
     
 pub mod frelop {
 
-    #[derive(Debug, Copy, Clone)]
+    #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Op {
         Eq,
         Ne,
