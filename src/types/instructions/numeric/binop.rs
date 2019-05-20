@@ -1,5 +1,6 @@
 use crate::types::instructions::numeric::{Bitlen, Signed};
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Binop {
     Int(Bitlen, ibinop::Op),
     Float(Bitlen, fbinop::Op),
@@ -8,6 +9,7 @@ pub enum Binop {
 pub mod ibinop {
     use super::Signed;
     
+    #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Op {
         Add,
         Sub,
@@ -25,6 +27,7 @@ pub mod ibinop {
 }
 
 pub mod fbinop {
+    #[derive(Debug, Copy, Clone, PartialEq)]
     pub enum Op {
         Add,
         Sub,

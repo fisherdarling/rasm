@@ -1,3 +1,5 @@
+pub type ResType = Option<ValueType>;
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct GlobalType {
     modify: Mut,
