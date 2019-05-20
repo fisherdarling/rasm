@@ -1,7 +1,4 @@
-use crate::types::{
-    ValueType,
-    instructions::Instr,
-};
+use crate::types::{expression::Expr, index::TypeIdx, instructions::Instr, ValueType};
 
 #[derive(Debug, Clone)]
 pub struct FuncType {
@@ -11,7 +8,7 @@ pub struct FuncType {
 
 #[derive(Debug, Clone)]
 pub struct Function {
-    typeidx: u32,
+    typeidx: TypeIdx,
     locals: Vec<ValueType>,
-    body: Vec<Instr>
+    body: Expr,
 }

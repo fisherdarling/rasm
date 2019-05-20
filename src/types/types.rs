@@ -1,8 +1,16 @@
-#[derive(Debug, Clone)]
-pub struct Global {}
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct GlobalType {
+    modify: Mut,
+    kind: ValueType,
+}
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Mut {
+    Const,
+    Var,
+}
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValueType {
     Int32,
     Int64,
@@ -10,8 +18,3 @@ pub enum ValueType {
     Float64,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Limit {
-    min: u32,
-    max: Option<u32>,
-}

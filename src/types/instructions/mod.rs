@@ -1,6 +1,2 @@
-
-
 #[derive(Debug, Copy, Clone)]
-pub enum Instr {
-    
-}
+pub enum Instr {}

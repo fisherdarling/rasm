@@ -1,5 +1,34 @@
-#[derive(Debug, Clone)]
-pub struct Import {}
+use crate::types::{
+    index::{FuncIdx, GlobalIdx, MemIdx, TableIdx, TypeIdx},
+    memory::{Limit, TableType},
+    types::GlobalType,
+};
 
 #[derive(Debug, Clone)]
-pub struct Export {}
+pub struct Import {
+    module: String,
+    name: String,
+    desc: ImportDesc,
+}
+
+#[derive(Debug, Clone)]
+pub enum ImportDesc {
+    Func(TypeIdx),
+    Table(TableType),
+    Mem(Limit),
+    Global(GlobalType),
+}
+
+#[derive(Debug, Clone)]
+pub struct Export {
+    name: String,
+    desc: ExportDesc,
+}
+
+#[derive(Debug, Clone)]
+pub enum ExportDesc {
+    Func(FuncIdx),
+    Table(TableIdx),
+    Mem(MemIdx),
+    Global(GlobalIdx),
+}

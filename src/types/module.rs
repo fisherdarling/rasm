@@ -1,8 +1,9 @@
 use crate::types::{
     environment::{Export, Import},
     function::{FuncType, Function},
+    index::FuncIdx,
     memory::{DataSegment, ElementSegment, Memory, Table},
-    Global,
+    values::Global,
 };
 
 #[derive(Debug, Clone)]
@@ -14,7 +15,7 @@ pub struct Module {
     globals: Option<Vec<Global>>,
     elem: Option<Vec<ElementSegment>>,
     data: Option<Vec<DataSegment>>,
-    start: Option<Function>,
+    start: Option<FuncIdx>,
     imports: Option<Vec<Import>>,
     exports: Option<Vec<Export>>,
 }
