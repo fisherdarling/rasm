@@ -1,7 +1,7 @@
 use crate::types::*;
 
-pub mod parser;
 pub mod binary;
+pub mod parser;
 
 pub use parser::*;
 
@@ -15,5 +15,7 @@ pub enum AstElem {
     Import(env::Import),
     Export(env::Export),
     Type(types::Type),
-    Index(index::Index),    
+    Index(index::Index),
+    Instr(instructions::Instr),
+    Name(String),
 }

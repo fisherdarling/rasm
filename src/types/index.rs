@@ -19,7 +19,6 @@ pub struct LocalIdx(u32);
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct LabelIdx(u32);
 
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Index {
     Type(TypeIdx),
@@ -28,5 +27,5 @@ pub enum Index {
     Mem(MemIdx),
     Global(GlobalIdx),
     Local(LocalIdx),
-    Label(LabelIdx),    
+    Label(LabelIdx),
 }

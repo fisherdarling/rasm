@@ -8,6 +8,6 @@ pub mod module;
 pub mod types;
 pub mod values;
 
+pub use index::*;
 pub use types::*;
 pub use values::*;
-pub use index::*;
