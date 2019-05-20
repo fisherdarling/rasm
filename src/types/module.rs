@@ -1,5 +1,5 @@
 use crate::types::{
-    environment::{Export, Import},
+    env::{Export, Import},
     function::{FuncType, Function},
     index::FuncIdx,
     memory::{DataSegment, ElementSegment, Memory, Table},
@@ -7,7 +7,7 @@ use crate::types::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Module {
+pub struct ModuleType {
     types: Option<Vec<FuncType>>,
     funcs: Option<Vec<Function>>,
     tables: Option<Vec<Table>>,

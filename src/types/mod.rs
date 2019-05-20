@@ -1,4 +1,4 @@
-pub mod environment;
+pub mod env;
 pub mod expression;
 pub mod function;
 pub mod index;
@@ -10,3 +10,4 @@ pub mod values;
 
 pub use types::*;
 pub use values::*;
+pub use index::*;
