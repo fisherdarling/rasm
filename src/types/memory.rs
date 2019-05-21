@@ -26,14 +26,26 @@ pub struct Memory {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct TableType {
+    kind: ElemType,
+    limits: Limit,
+}
+
+impl TableType {
+    pub fn new(kind: ElemType, limits: Limit) -> TableType {
+        Self { kind, limits }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Table {
-    kind: TableType,
+    kind: ElemType,
     limits: Limit,
     // elems: Vec<
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum TableType {
+pub enum ElemType {
     FuncRef,
 }
 

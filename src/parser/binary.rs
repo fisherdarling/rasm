@@ -32,7 +32,7 @@ impl<'a> Parser<'a> {
         parser
     }
 
-    fn next_byte_opt(&mut self) -> Option<u8> {
+    pub fn next_byte_opt(&mut self) -> Option<u8> {
         match self.inner.next() {
             Some((idx, byte)) => {
                 self.pos = idx;
@@ -47,7 +47,7 @@ impl<'a> Parser<'a> {
         self.lookahead
     }
 
-    fn next_byte(&mut self) -> ParseResult<u8> {
+    pub fn next_byte(&mut self) -> ParseResult<u8> {
         match self.inner.next() {
             Some((idx, byte)) => {
                 self.pos = idx;
@@ -62,13 +62,13 @@ impl<'a> Parser<'a> {
         eof(self.lookahead)
     }
 
-    fn scan_byte(&mut self, elem: AstElem) -> AstElem {
+    pub fn scan_byte(&mut self, elem: AstElem) -> AstElem {
         self.next_byte_opt();
 
         elem
     }
 
-    fn scan_u32(&mut self) -> ParseResult<u32> {
+    pub fn scan_u32(&mut self) -> ParseResult<u32> {
         let bytes = [
             self.next_byte()?,
             self.next_byte()?,
@@ -79,7 +79,7 @@ impl<'a> Parser<'a> {
         Ok(u32::from_le_bytes(bytes))
     }
 
-    fn scan_u64(&mut self) -> ParseResult<u64> {
+    pub fn scan_u64(&mut self) -> ParseResult<u64> {
         let bytes = [
             self.next_byte()?,
             self.next_byte()?,
@@ -104,22 +104,21 @@ impl<'a> Parser<'a> {
     //     }
     // }
 
-    fn parse_vec_valuetype(&mut self) -> ParseResult<Vec<ValueType>> {
+    pub fn parse_vec_valuetype(&mut self) -> ParseResult<Vec<ValueType>> {
         let size = eof(self.lookahead)?;
         let mut types = Vec::with_capacity(size as usize);
 
         for _ in 0..size {
             let byte = eof(self.next_byte_opt())?;
+            let vtype = get_valtype(byte)?;
 
-            if let Some(vtype) = get_valtype(byte) {
-                types.push(vtype);
-            }
+            types.push(vtype);
         }
 
         Ok(types)
     }
 
-    fn parse_vec_byte(&mut self) -> ParseResult<Vec<u8>> {
+    pub fn parse_vec_byte(&mut self) -> ParseResult<Vec<u8>> {
         let size = eof(self.lookahead)?;
         let mut bytes = Vec::with_capacity(size as usize);
 
@@ -161,6 +160,13 @@ impl<'a> Parser<'a> {
         }
     }
 
+    pub fn parse_table(&mut self) -> ParseResult<memory::TableType> {
+        let elemtype = get_elemtype(self.next_byte()?)?;
+        let limit = self.parse_limit()?;
+
+        Ok(memory::TableType::new(elemtype, limit))
+    }
+
     // pub fn next(&mut self) -> AstElem {
 
     // }
@@ -171,12 +177,19 @@ fn eof(byte: Option<u8>) -> ParseResult<u8> {
     byte.ok_or_else(|| Error::EOF)
 }
 
-pub fn get_valtype(code: u8) -> Option<ValueType> {
+pub fn get_valtype(code: u8) -> ParseResult<ValueType> {
     match code {
-        0x7F => Some(ValueType::Int32),
-        0x7E => Some(ValueType::Int64),
-        0x7D => Some(ValueType::Float32),
-        0x7C => Some(ValueType::Float64),
-        _ => None,
+        0x7F => Ok(ValueType::Int32),
+        0x7E => Ok(ValueType::Int64),
+        0x7D => Ok(ValueType::Float32),
+        0x7C => Ok(ValueType::Float64),
+        _ => Err(Error::InvalidValueType),
+    }
+}
+
+pub fn get_elemtype(code: u8) -> ParseResult<memory::ElemType> {
+    match code {
+        0x70 => Ok(memory::ElemType::FuncRef),
+        _ => Err(Error::InvalidElemType),
     }
 }

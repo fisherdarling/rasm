@@ -28,5 +28,5 @@ pub enum Type {
     ResType(ResType),
     MemoryType(memory::MemType),
     FuncType(function::FuncType),
-    Table(memory::TableType),
+    Table(memory::ElemType),
 }

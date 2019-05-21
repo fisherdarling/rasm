@@ -6,4 +6,10 @@ pub enum Error {
     EOF,
     #[fail(display = "Invalid limit")]
     InvalidLimit,
+    #[fail(display = "Invalid Value Type")]
+    InvalidValueType,
+    #[fail(display = "Invalid Elem Type")]
+    InvalidElemType,
+    #[fail(display = "Invalid Table Type")]
+    InvalidTableType,
 }

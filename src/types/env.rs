@@ -1,6 +1,6 @@
 use crate::types::{
     index::{FuncIdx, GlobalIdx, MemIdx, TableIdx, TypeIdx},
-    memory::{MemType, TableType},
+    memory::{ElemType, MemType},
     types::GlobalType,
 };
 
@@ -14,7 +14,7 @@ pub struct Import {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ImportDesc {
     Func(TypeIdx),
-    Table(TableType),
+    Table(ElemType),
     Mem(MemType),
     Global(GlobalType),
 }
