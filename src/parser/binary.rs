@@ -116,7 +116,7 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_valuetype(&mut self) -> ParseResult<ValueType> {
-        get_valtype(self.next_byte()?)
+        get_valtype(eof(self.lookahead)?)
     }
 
     pub fn parse_vec_byte(&mut self) -> ParseResult<Vec<u8>> {
@@ -132,6 +132,14 @@ impl<'a> Parser<'a> {
         }
 
         Ok(bytes)
+    }
+
+    pub fn parse_restype(&mut self) -> ParseResult<types::ResType> {
+        if let Some(0x40) = self.lookahead {
+            Ok(None)
+        } else {
+            Ok(Some(get_valtype(eof(self.lookahead)?)?))
+        }
     }
 
     pub fn parse_functype(&mut self) -> ParseResult<function::FuncType> {
@@ -175,8 +183,6 @@ impl<'a> Parser<'a> {
         Ok(types::GlobalType::new(vis, valuetype))
     }
 
-    
-
     // pub fn next(&mut self) -> AstElem {
 
     // }
@@ -208,5 +214,21 @@ pub fn get_mut_type(code: u8) -> ParseResult<types::Mut> {
     match code {
         0x00 => Ok(types::Mut::Const),
         0x01 => Ok(types::Mut::Var),
+        _ => Err(Error::InvalidMutability)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_valuetype() {
+        let source = [0x7F];
+
+        let mut parser = Parser::new(&source);
+
+        println!("{:?}", parser.parse_valuetype());
     }
 }

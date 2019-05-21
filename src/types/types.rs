@@ -10,10 +10,7 @@ pub struct GlobalType {
 
 impl GlobalType {
     pub fn new(modify: Mut, kind: ValueType) -> Self {
-        Self {
-            modify,
-            kind,
-        }
+        Self { modify, kind }
     }
 }
 
@@ -33,6 +30,7 @@ pub enum ValueType {
 
 pub enum Type {
     Global(GlobalType),
+    ResType(ResType),
     ValueType(ValueType),
     ResType(ResType),
     MemoryType(memory::MemType),

@@ -12,4 +12,7 @@ pub enum Error {
     InvalidElemType,
     #[fail(display = "Invalid Table Type")]
     InvalidTableType,
+    #[fail(display = "Invalid Mutability Type")]
+    InvalidMutability,
+    
 }
