@@ -4,14 +4,14 @@ use crate::types::{
     types::GlobalType,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Import {
     module: String,
     name: String,
     desc: ImportDesc,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ImportDesc {
     Func(TypeIdx),
     Table(TableType),
@@ -19,13 +19,13 @@ pub enum ImportDesc {
     Global(GlobalType),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Export {
     name: String,
     desc: ExportDesc,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ExportDesc {
     Func(FuncIdx),
     Table(TableIdx),

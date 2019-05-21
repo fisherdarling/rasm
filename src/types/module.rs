@@ -6,8 +6,8 @@ use crate::types::{
     values::Global,
 };
 
-#[derive(Debug, Clone)]
-pub struct ModuleType {
+#[derive(Debug, Clone, Default)]
+pub struct Module {
     types: Option<Vec<FuncType>>,
     funcs: Option<Vec<Function>>,
     tables: Option<Vec<Table>>,
@@ -19,3 +19,15 @@ pub struct ModuleType {
     imports: Option<Vec<Import>>,
     exports: Option<Vec<Export>>,
 }
+
+impl Module {
+    pub fn new() -> Module {
+        Module {
+            ..Default::default()
+        }
+    }
+}
+
+// pub struct Module {
+
+// }

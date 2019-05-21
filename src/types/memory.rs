@@ -4,7 +4,7 @@ use crate::types::{
 };
 
 // TODO: ConstExpr
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DataSegment {
     tableidx: TableIdx,
     offset: Expr,
@@ -12,27 +12,27 @@ pub struct DataSegment {
 }
 
 // TODO: ConstExpr
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ElementSegment {
     data: MemIdx,
     offset: Expr,
     init: Vec<u8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Memory {
     memtype: MemType,
     memory: Vec<u8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Table {
     kind: TableType,
     limits: Limit,
     // elems: Vec<
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TableType {
     FuncRef,
 }
@@ -43,4 +43,13 @@ pub type MemType = Limit;
 pub struct Limit {
     min: u32,
     max: Option<u32>,
+}
+
+impl Limit {
+    pub fn new(min: u32, max: Option<u32>) -> Self {
+        Limit {
+            min,
+            max,
+        }
+    }
 }

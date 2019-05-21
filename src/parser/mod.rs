@@ -2,10 +2,12 @@ use crate::types::*;
 
 pub mod binary;
 pub mod parser;
+pub mod error;
 
 pub use parser::*;
 
 pub enum AstElem {
+    Module(module::Module),
     Global(values::Global),
     ImmValue(values::Value),
     Limit(memory::Limit),
@@ -18,4 +20,7 @@ pub enum AstElem {
     Index(index::Index),
     Instr(instructions::Instr),
     Name(String),
+    VecType(Vec<ValueType>),
+    VecValue(Vec<Value>),
+    VecByte(Vec<u8>),
 }
