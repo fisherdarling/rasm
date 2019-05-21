@@ -8,6 +8,15 @@ pub struct GlobalType {
     kind: ValueType,
 }
 
+impl GlobalType {
+    pub fn new(modify: Mut, kind: ValueType) -> Self {
+        Self {
+            modify,
+            kind,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Mut {
     Const,

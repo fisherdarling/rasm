@@ -109,13 +109,14 @@ impl<'a> Parser<'a> {
         let mut types = Vec::with_capacity(size as usize);
 
         for _ in 0..size {
-            let byte = eof(self.next_byte_opt())?;
-            let vtype = get_valtype(byte)?;
-
-            types.push(vtype);
+            types.push(self.parse_valuetype()?);
         }
 
         Ok(types)
+    }
+
+    pub fn parse_valuetype(&mut self) -> ParseResult<ValueType> {
+        get_valtype(self.next_byte()?)
     }
 
     pub fn parse_vec_byte(&mut self) -> ParseResult<Vec<u8>> {
@@ -160,12 +161,21 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_table(&mut self) -> ParseResult<memory::TableType> {
+    pub fn parse_table_type(&mut self) -> ParseResult<memory::TableType> {
         let elemtype = get_elemtype(self.next_byte()?)?;
         let limit = self.parse_limit()?;
 
         Ok(memory::TableType::new(elemtype, limit))
     }
+
+    pub fn parse_global_type(&mut self) -> ParseResult<types::GlobalType> {
+        let valuetype = self.parse_valuetype()?;
+        let vis = get_mut_type(self.next_byte()?)?;
+
+        Ok(types::GlobalType::new(vis, valuetype))
+    }
+
+    
 
     // pub fn next(&mut self) -> AstElem {
 
@@ -191,5 +201,12 @@ pub fn get_elemtype(code: u8) -> ParseResult<memory::ElemType> {
     match code {
         0x70 => Ok(memory::ElemType::FuncRef),
         _ => Err(Error::InvalidElemType),
+    }
+}
+
+pub fn get_mut_type(code: u8) -> ParseResult<types::Mut> {
+    match code {
+        0x00 => Ok(types::Mut::Const),
+        0x01 => Ok(types::Mut::Var),
     }
 }
