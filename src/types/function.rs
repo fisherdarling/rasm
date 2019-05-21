@@ -8,10 +8,7 @@ pub struct FuncType {
 
 impl FuncType {
     pub fn new(params: Option<Vec<ValueType>>, result: Option<Vec<ValueType>>) -> Self {
-        FuncType {
-            params,
-            result,
-        }
+        FuncType { params, result }
     }
 }
 

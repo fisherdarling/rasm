@@ -1,8 +1,8 @@
 use crate::types::*;
 
 pub mod binary;
-pub mod parser;
 pub mod error;
+pub mod parser;
 
 pub use parser::*;
 

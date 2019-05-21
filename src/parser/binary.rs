@@ -1,18 +1,15 @@
+use crate::parser::error::Error;
 use crate::parser::AstElem;
 use crate::types::*;
-use std::slice::Iter;
 use std::iter::Enumerate;
-use crate::parser::error::Error;
+use std::slice::Iter;
 
 /// TODO: BINARY PARSER
 
-pub type ParseResult<T> = Result<T, Error>; 
-
+pub type ParseResult<T> = Result<T, Error>;
 
 pub static MAGIC: u32 = 0x00_61_73_6D;
 pub static VERSION: u32 = 0x01_00_00_00;
-
-
 
 pub struct Parser<'a> {
     source: &'a [u8],
@@ -52,7 +49,7 @@ impl<'a> Parser<'a> {
 
     fn next_byte(&mut self) -> ParseResult<u8> {
         let mut byte: Option<u8> = None;
-        
+
         match self.inner.next() {
             Some((idx, b)) => {
                 self.pos = idx;
@@ -75,15 +72,28 @@ impl<'a> Parser<'a> {
     }
 
     fn scan_u32(&mut self) -> ParseResult<u32> {
-        let bytes = [self.next_byte()?, self.next_byte()?, self.next_byte()?, self.next_byte()?];
+        let bytes = [
+            self.next_byte()?,
+            self.next_byte()?,
+            self.next_byte()?,
+            self.next_byte()?,
+        ];
 
         Ok(u32::from_le_bytes(bytes))
     }
 
     fn scan_u64(&mut self) -> ParseResult<u64> {
-        let bytes = [self.next_byte()?, self.next_byte()?, self.next_byte()?, self.next_byte()?,
-                    self.next_byte()?, self.next_byte()?, self.next_byte()?, self.next_byte()?];
-        
+        let bytes = [
+            self.next_byte()?,
+            self.next_byte()?,
+            self.next_byte()?,
+            self.next_byte()?,
+            self.next_byte()?,
+            self.next_byte()?,
+            self.next_byte()?,
+            self.next_byte()?,
+        ];
+
         Ok(u64::from_le_bytes(bytes))
     }
 
@@ -99,14 +109,13 @@ impl<'a> Parser<'a> {
 
     fn parse_vec_valuetype(&mut self) -> ParseResult<Vec<ValueType>> {
         let size = eof(self.lookahead)?;
-        let mut types = Vec::with_capacity(size as usize); 
-        
-        
+        let mut types = Vec::with_capacity(size as usize);
+
         for _ in 0..size {
             let byte = eof(self.next_byte_opt())?;
-            
+
             if let Some(vtype) = get_valtype(byte) {
-                    types.push(vtype);
+                types.push(vtype);
             }
         }
 
@@ -115,8 +124,8 @@ impl<'a> Parser<'a> {
 
     fn parse_vec_byte(&mut self) -> ParseResult<Vec<u8>> {
         let size = eof(self.lookahead)?;
-        let mut bytes = Vec::with_capacity(size as usize); 
-        
+        let mut bytes = Vec::with_capacity(size as usize);
+
         for _ in 0..size {
             if let Some(next) = self.next_byte_opt() {
                 bytes.push(next);
@@ -142,7 +151,7 @@ impl<'a> Parser<'a> {
     // }
 
     // pub fn next(&mut self) -> AstElem {
-        
+
     // }
 }
 
@@ -150,7 +159,6 @@ impl<'a> Parser<'a> {
 fn eof(byte: Option<u8>) -> ParseResult<u8> {
     byte.ok_or_else(|| Error::EOF)
 }
-
 
 pub fn get_valtype(code: u8) -> Option<ValueType> {
     match code {

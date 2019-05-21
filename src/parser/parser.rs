@@ -1,6 +1,6 @@
 use crate::lexer::{Lexer, Token};
-use crate::types::*;
 use crate::parser::AstElem;
+use crate::types::*;
 
 #[derive(Debug, Clone)]
 pub struct Parser<'a> {
@@ -15,5 +15,4 @@ impl<'a> Parser<'a> {
     pub fn Parser(&mut self) -> AstElem {
         AstElem::Module(module::Module::new())
     }
-    
 }

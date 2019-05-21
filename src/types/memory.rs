@@ -47,9 +47,6 @@ pub struct Limit {
 
 impl Limit {
     pub fn new(min: u32, max: Option<u32>) -> Self {
-        Limit {
-            min,
-            max,
-        }
+        Limit { min, max }
     }
 }
