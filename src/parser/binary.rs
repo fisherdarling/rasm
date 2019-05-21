@@ -48,13 +48,10 @@ impl<'a> Parser<'a> {
     }
 
     fn next_byte(&mut self) -> ParseResult<u8> {
-        let mut byte: Option<u8> = None;
-
         match self.inner.next() {
-            Some((idx, b)) => {
+            Some((idx, byte)) => {
                 self.pos = idx;
-                self.lookahead = Some(*b);
-                byte = Some(*b);
+                self.lookahead = Some(*byte);
             }
             None => {
                 self.pos = self.source.len();
@@ -62,7 +59,7 @@ impl<'a> Parser<'a> {
             }
         }
 
-        eof(byte)
+        eof(self.lookahead)
     }
 
     fn scan_byte(&mut self, elem: AstElem) -> AstElem {
@@ -144,11 +141,25 @@ impl<'a> Parser<'a> {
         Ok(function::FuncType::new(Some(params), Some(result)))
     }
 
-    // pub fn parse_limit(&mut self) -> memory::Limit {
-    //     if let Some(0x00) = self.lookahead {
+    pub fn parse_limit(&mut self) -> ParseResult<memory::Limit> {
+        if let Some(0x00) = self.lookahead {
+            self.next_byte();
 
-    //     }
-    // }
+            let min = self.scan_u32()?;
+            let max = None;
+
+            Ok(memory::Limit::new(min, max))
+        } else if let Some(0x01) = self.lookahead {
+            self.next_byte();
+
+            let min = self.scan_u32()?;
+            let max = self.scan_u32()?;
+
+            Ok(memory::Limit::new(min, Some(max)))
+        } else {
+            Err(Error::InvalidLimit)
+        }
+    }
 
     // pub fn next(&mut self) -> AstElem {
 
