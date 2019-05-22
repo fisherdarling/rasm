@@ -14,5 +14,4 @@ pub enum Error {
     InvalidTableType,
     #[fail(display = "Invalid Mutability Type")]
     InvalidMutability,
-    
 }

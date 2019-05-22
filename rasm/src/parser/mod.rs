@@ -2,6 +2,7 @@ use crate::types::*;
 
 pub mod binary;
 pub mod error;
+pub mod nomer;
 pub mod parser;
 
 pub use parser::*;

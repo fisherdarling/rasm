@@ -32,7 +32,6 @@ pub enum Type {
     Global(GlobalType),
     ResType(ResType),
     ValueType(ValueType),
-    ResType(ResType),
     MemoryType(memory::MemType),
     FuncType(function::FuncType),
     Table(memory::ElemType),

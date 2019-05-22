@@ -214,10 +214,9 @@ pub fn get_mut_type(code: u8) -> ParseResult<types::Mut> {
     match code {
         0x00 => Ok(types::Mut::Const),
         0x01 => Ok(types::Mut::Var),
-        _ => Err(Error::InvalidMutability)
+        _ => Err(Error::InvalidMutability),
     }
 }
-
 
 #[cfg(test)]
 mod tests {
