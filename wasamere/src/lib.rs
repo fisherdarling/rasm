@@ -10,8 +10,7 @@ pub mod types;
 use nom::{le_u8, IResult};
 
 // pub fn leb_le_u32(input: &[u8]) -> IResult<&[u8], u32> {
-    
-    
+
 //     Ok((&[10], 0))
 // }
 
@@ -43,7 +42,6 @@ pub fn leb_u32(input: &[u8]) -> IResult<&[u8], u32> {
         }
     }
 
-
     Ok((slice, result))
 }
 
@@ -68,7 +66,7 @@ pub fn leb_i32(input: &[u8]) -> IResult<&[u8], i32> {
             let cont_bit = (byte & 0x80) != 0;
             let sign_and_unused_bit = (byte << 1) as i8 >> (32 - shift);
 
-            if cont_bit || (sign_and_unused_bit != 0 &&sign_and_unused_bit != -1) {
+            if cont_bit || (sign_and_unused_bit != 0 && sign_and_unused_bit != -1) {
                 panic!("Invalid v")
             }
 
@@ -81,9 +79,9 @@ pub fn leb_i32(input: &[u8]) -> IResult<&[u8], i32> {
             break;
         }
     }
-    
+
     let final_shift = 32 - shift;
-    
+
     Ok((&[10], (result << final_shift) >> final_shift))
 }
 // pub fn read_var_i32(&mut self) -> Result<i32> {
@@ -117,7 +115,6 @@ pub fn leb_i32(input: &[u8]) -> IResult<&[u8], i32> {
 //         let ashift = 32 - shift;
 //         Ok((result << ashift) >> ashift)
 // }
-
 
 // pub fn read_var_u32() -> Result<u32> {
 //         // Optimization for single byte i32.

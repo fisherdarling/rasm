@@ -1,15 +1,15 @@
-use nom::{le_u64, le_f32, le_f64};
 use nom::le_u8;
 use nom::take;
 use nom::ErrorKind;
 use nom::IResult;
+use nom::{le_f32, le_f64, le_u64};
 
 use crate::error::Error;
 use crate::instr::*;
 use crate::types::index::*;
 use crate::types::*;
 
-use crate::{leb_u32, leb_i32};
+use crate::{leb_i32, leb_u32};
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
 pub static VERSION: u32 = 0x01_00_00_00;
@@ -52,6 +52,15 @@ pub fn parse_vec_index<T: ParseIndex>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
     count!(input, T::parse_index, length as usize)
 }
 
+named!(
+    pub parse_globaltype<GlobalType>,
+    do_parse!(
+        valtype: call!(le_u8)
+            >> muta: call!(le_u8)
+            >> (GlobalType(ValType::from(valtype), Mut::from(muta)))
+    )
+);
+
 // TODO: Figure out work around with :: for type parameters
 pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
     let (rest, _) = tag!(input, &[0x60u8])?;
@@ -62,7 +71,7 @@ pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
 }
 
 named!(
-    parse_limit<Limit>,
+    pub parse_limit<Limit>,
     map!(
         switch!(le_u8,
             0x00 => count!(leb_u32, 1) |
@@ -83,7 +92,7 @@ named!(
 );
 
 named!(
-    parse_tabletype<TableType>,
+    pub parse_tabletype<TableType>,
     do_parse!(
         elemtype: map!(le_u8, |b| ElemType::from(b))
             >> limit: parse_limit

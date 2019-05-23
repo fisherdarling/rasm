@@ -1,6 +1,9 @@
 // use nom::IResult;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+pub struct GlobalType(pub ValType, pub Mut);
+
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValType {
     I32,
     I64,
