@@ -157,8 +157,17 @@ named!(
                     indices: call!(parse_vec_index) >>
                     index: call!(LabelIdx::parse_index) >>
                     (Instr::BrTable(indices, index))
+                ) |
+                0x0F => value!(Instr::Return) |
+                0x10 => do_parse!(
+                    index: call!(FuncIdx::parse_index) >>
+                    (Instr::Call(index))
+                ) |
+                0x11 => do_parse!(
+                    index: call!(TypeIdx::parse_index) >>
+                    tag!(&[0x00]) >>
+                    (Instr::CallIndirect(index))
                 )
-            
             )
             >> (instr)
     )
