@@ -3,7 +3,8 @@ use crate::instr::Expression;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct GlobalType(pub ValType, pub Mut);
 
-pub struct Global(pub GlobalType, Expression);
+#[derive(Debug, Clone, PartialEq)]
+pub struct Global(pub GlobalType, pub Expression);
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValType {

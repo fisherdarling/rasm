@@ -61,6 +61,11 @@ named!(
     )
 );
 
+named!(
+    pub parse_valtype<ValType>,
+    map!(le_u8, |b| ValType::from(b))
+);
+
 // TODO: Figure out work around with :: for type parameters
 pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
     let (rest, _) = tag!(input, &[0x60u8])?;

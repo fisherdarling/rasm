@@ -1,4 +1,4 @@
-use crate::parser::{parse_valtype, parse_expression};
+use crate::parser::{parse_globaltype, parse_expression};
 use crate::types::Global;
 use crate::leb_u32;
 
@@ -7,7 +7,7 @@ pub struct GlobalSection(Vec<Global>);
 
 named!(pub parse_global<Global>,
     do_parse!(
-        globaltype: call!(parse_valtype) >>
+        globaltype: call!(parse_globaltype) >>
         init: call!(parse_expression) >>
         (Global(globaltype, init))
     )
