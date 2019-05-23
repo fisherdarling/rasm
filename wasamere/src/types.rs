@@ -79,3 +79,18 @@ pub struct Limit {
     pub min: u32,
     pub max: Option<u32>,
 }
+
+pub enum ElemType {
+    FuncRef,
+}
+
+impl From<u8> for ElemType {
+    fn from(code: u8) -> ElemType {
+        match code {
+            0x70 => ElemType::FuncRef,
+            _ => panic!("Improper code for elemtype"),
+        }
+    }
+}
+
+pub struct TableType(pub ElemType, pub Limit);

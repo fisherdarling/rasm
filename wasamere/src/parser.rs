@@ -39,7 +39,7 @@ named!(
 pub fn parse_vec<T: From<u8>>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
     let (input, length) = le_u8(data)?;
 
-    count!(input, map!(take!(1), |b| b[0].into()), length as usize)
+    count!(input, map!(le_u8, Into::into), length as usize)
 }
 
 // TODO: Figure out work around with :: for type parameters
@@ -72,33 +72,14 @@ named!(
     )
 );
 
-//  {
-//             if s.len() == 1 {
-//                 // Limit {
-//                 //     min: s[0],
-//                 //     max: None,
-//                 // }
-//                 s
-//             } else {
-//                 // Limit {
-//                 //     min: s[0],
-//                 //     max: Some(s[1]),
-//                 // }
-//                 s
-//             }
-//         }
-
-// named!(parse_limit,
-//     map!(switch!(take!(1),
-//     _ => &[10]),
-//                 // &[0x00u8] => take!(1) |
-//                 // &[0x00u8] => take!(2))
-//             |s| s.len())
-// );
-
-// pub fn parse_limit(input: &[u8]) -> IResult<&[u8], Limit> {
-
-// }
+named!(
+    parse_tabletype<TableType>,
+    do_parse!(
+        elemtype: map!(le_u8, |b| ElemType::from(b))
+            >> limit: parse_limit
+            >> (TableType(elemtype, limit))
+    )
+);
 
 #[cfg(test)]
 mod tests {
