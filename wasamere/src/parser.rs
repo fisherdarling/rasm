@@ -5,8 +5,8 @@ use nom::ErrorKind;
 use nom::IResult;
 
 use crate::error::Error;
-use crate::types::*;
 use crate::instr::*;
+use crate::types::*;
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
 pub static VERSION: u32 = 0x01_00_00_00;
@@ -82,34 +82,45 @@ named!(
     )
 );
 
-named!(parse_block<Instr>,
+named!(
+    parse_block<Instr>,
     do_parse!(
-                restype: call!(le_u8) >>
-                instrs: many_till!(parse_instr, tag!(&[0x0B])) >>
-                (Instr::Block(ResType::from(restype), instrs.0))
-            ) 
+        restype: call!(le_u8)
+            >> instrs: many_till!(parse_instr, tag!(&[0x0B]))
+            >> (Instr::Block(ResType::from(restype), instrs.0))
+    )
 );
 
-named!(parse_loop<Instr>,
+named!(
+    parse_loop<Instr>,
     do_parse!(
-                restype: call!(le_u8) >>
-                instrs: many_till!(parse_instr, tag!(&[0x0B])) >>
-                (Instr::Loop(ResType::from(restype), instrs.0))
-            ) 
+        restype: call!(le_u8)
+            >> instrs: many_till!(parse_instr, tag!(&[0x0B]))
+            >> (Instr::Loop(ResType::from(restype), instrs.0))
+    )
 );
 
-// named!(parse_if<Instr>,
-//     do_parse!(
-
-//     )
-// )
+named!(
+    parse_if<Instr>,
+    do_parse!(
+        restype: call!(le_u8)
+            >> conseq: many_till!(parse_instr, alt!(tag!(&[0x0B]) | tag!(&[0x0F])))
+            >> altern:
+                switch!(value!(conseq.1),
+                    &[0x0F] => map!(many_till!(parse_instr, tag!(&[0x0B])), |s| s.0) |
+                    &[0x0B] => value!(Vec::<Instr>::new())
+                )
+            >> (Instr::If(ResType::from(restype), conseq.0, altern))
+    )
+);
 
 named!(
     parse_instr<Instr>,
     do_parse!(
         // code: call!(le_u8) >>
         // instr: switch!(value!(code),
-        instr: switch!(le_u8,
+        instr:
+            switch!(le_u8,
             0x00 => value!(Instr::Unreachable) |
             0x01 => value!(Instr::Nop) |
             // Block
@@ -117,8 +128,8 @@ named!(
             // Loop
             0x03 => call!(parse_loop) |
             // If
-            0x04 => value!(Instr::Nop)) >>
-        (instr)
+            0x04 => call!(parse_if))
+            >> (instr)
     )
 );
 

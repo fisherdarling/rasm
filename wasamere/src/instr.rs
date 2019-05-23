@@ -2,8 +2,8 @@ use nom::take;
 use nom::ErrorKind;
 use nom::IResult;
 
+use crate::types::index::{FuncIdx, LabelIdx, LocalIdx, TypeIdx};
 use crate::types::ResType;
-use crate::types::index::{LabelIdx, LocalIdx, FuncIdx, TypeIdx};
 
 pub type MemArg = (u32, u32);
 
@@ -30,42 +30,42 @@ pub enum Instr {
     // Parametric Instructions:
     Drop,
     Select,
-    
+
     // Variable Instructions:
     LocalGet(u32),
     LocalSet(u32),
     LocalTee(u32),
     GlobalGet(u32),
     GlobalSet(u32),
-    
+
     // Memory Instructions:
     I32Load(MemArg),
     I64Load(MemArg),
-    
+
     F32Load(MemArg),
     F64Load(MemArg),
-    
+
     I32Load8S(MemArg),
     I32Load8U(MemArg),
     I32Load16S(MemArg),
     I32Load16U(MemArg),
-    
+
     I64Load8S(MemArg),
     I64Load8U(MemArg),
     I64Load16S(MemArg),
     I64Load16U(MemArg),
     I64Load32S(MemArg),
     I64Load32U(MemArg),
-    
+
     I32Store(MemArg),
     I64Store(MemArg),
-    
+
     F32Store(MemArg),
     F64Store(MemArg),
-    
+
     I32Store8(MemArg),
     I32Store16(MemArg),
-    
+
     I64Store8(MemArg),
     I64Store16(MemArg),
     I64Store32(MemArg),
@@ -119,7 +119,7 @@ pub enum Instr {
     F64Gt,
     F64Le,
     F64Ge,
-    
+
     // I32 Binop:
     I32Cls,
     I32Ctz,
@@ -196,19 +196,19 @@ pub enum Instr {
     I32TruncF32U,
     I32TruncF64S,
     I32TruncF64U,
-    
+
     I64ExtendI32S,
     I64ExtendI32U,
     I64TruncF32S,
     I64TruncF32U,
     I64TruncF64S,
     I64TruncF64U,
-    
+
     F32ConvertI32S,
     F32ConvertI32U,
     F32ConvertI64S,
     F32ConvertI64U,
-    
+
     F64ConvertI32S,
     F64ConvertI32U,
     F64ConvertI64S,
@@ -233,5 +233,5 @@ pub enum Instr {
 // }
 
 // fn parse_control_code(data: &[u8]) -> IResult<&[u8], Instr> {
-    
+
 // }

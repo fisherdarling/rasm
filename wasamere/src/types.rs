@@ -100,7 +100,7 @@ pub struct TableType(pub ElemType, pub Limit);
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Mut {
     Const,
-    Var
+    Var,
 }
 
 impl From<u8> for Mut {
@@ -116,11 +116,11 @@ impl From<u8> for Mut {
 pub mod index {
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct TypeIdx(u32);
-    
+
     impl From<&[u8]> for TypeIdx {
         fn from(data: &[u8]) -> Self {
             use nom::le_u32;
-            
+
             Self(le_u32(data).unwrap().1)
         }
     }
@@ -137,7 +137,7 @@ pub mod index {
     impl From<&[u8]> for FuncIdx {
         fn from(data: &[u8]) -> Self {
             use nom::le_u32;
-            
+
             Self(le_u32(data).unwrap().1)
         }
     }
@@ -147,14 +147,14 @@ pub mod index {
             self.0
         }
     }
-    
+
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct TableIdx(u32);
 
     impl From<&[u8]> for TableIdx {
         fn from(data: &[u8]) -> Self {
             use nom::le_u32;
-            
+
             Self(le_u32(data).unwrap().1)
         }
     }
@@ -164,14 +164,14 @@ pub mod index {
             self.0
         }
     }
-    
+
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct MemIdx(u32);
 
     impl From<&[u8]> for MemIdx {
         fn from(data: &[u8]) -> Self {
             use nom::le_u32;
-            
+
             Self(le_u32(data).unwrap().1)
         }
     }
@@ -181,14 +181,14 @@ pub mod index {
             self.0
         }
     }
-    
+
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct GlobalIdx(u32);
 
     impl From<&[u8]> for GlobalIdx {
         fn from(data: &[u8]) -> Self {
             use nom::le_u32;
-            
+
             Self(le_u32(data).unwrap().1)
         }
     }
@@ -198,14 +198,14 @@ pub mod index {
             self.0
         }
     }
-    
+
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct LocalIdx(u32);
 
     impl From<&[u8]> for LocalIdx {
         fn from(data: &[u8]) -> Self {
             use nom::le_u32;
-            
+
             Self(le_u32(data).unwrap().1)
         }
     }
@@ -215,14 +215,14 @@ pub mod index {
             self.0
         }
     }
-    
+
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct LabelIdx(u32);
 
     impl From<&[u8]> for LabelIdx {
         fn from(data: &[u8]) -> Self {
             use nom::le_u32;
-            
+
             Self(le_u32(data).unwrap().1)
         }
     }
@@ -232,6 +232,5 @@ pub mod index {
             self.0
         }
     }
-
 
 }
