@@ -116,11 +116,12 @@ impl From<u8> for Mut {
 }
 
 pub mod index {
-    use nom::{IResult, le_u32};
+    use nom::{le_u32, IResult};
 
     pub trait ParseIndex {
         fn parse_index(input: &[u8]) -> IResult<&[u8], Self>
-        where Self: Sized;
+        where
+            Self: Sized;
     }
 
     #[derive(Debug, Copy, Clone, PartialEq)]
@@ -162,14 +163,12 @@ pub mod index {
             Ok((rest, FuncIdx(index)))
         }
     }
-    
+
     impl FuncIdx {
         pub fn index(&self) -> u32 {
             self.0
         }
     }
-
-
 
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct TableIdx(pub u32);
@@ -187,14 +186,12 @@ pub mod index {
             Ok((rest, TableIdx(index)))
         }
     }
-    
+
     impl TableIdx {
         pub fn index(&self) -> u32 {
             self.0
         }
     }
-
-
 
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct MemIdx(pub u32);
@@ -212,14 +209,12 @@ pub mod index {
             Ok((rest, MemIdx(index)))
         }
     }
-    
+
     impl MemIdx {
         pub fn index(&self) -> u32 {
             self.0
         }
     }
-
-
 
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct GlobalIdx(pub u32);
@@ -237,14 +232,12 @@ pub mod index {
             Ok((rest, GlobalIdx(index)))
         }
     }
-    
+
     impl GlobalIdx {
         pub fn index(&self) -> u32 {
             self.0
         }
     }
-
-
 
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct LocalIdx(pub u32);
@@ -262,14 +255,12 @@ pub mod index {
             Ok((rest, LocalIdx(index)))
         }
     }
-    
+
     impl LocalIdx {
         pub fn index(&self) -> u32 {
             self.0
         }
     }
-
-
 
     #[derive(Debug, Copy, Clone, PartialEq)]
     pub struct LabelIdx(pub u32);
@@ -287,7 +278,7 @@ pub mod index {
             Ok((rest, LabelIdx(index)))
         }
     }
-    
+
     impl LabelIdx {
         pub fn index(&self) -> u32 {
             self.0

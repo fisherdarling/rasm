@@ -2,7 +2,7 @@ use nom::take;
 use nom::ErrorKind;
 use nom::IResult;
 
-use crate::types::index::{FuncIdx, LabelIdx, LocalIdx, TypeIdx};
+use crate::types::index::{FuncIdx, LabelIdx, LocalIdx, TypeIdx, GlobalIdx};
 use crate::types::ResType;
 
 pub type MemArg = (u32, u32);
@@ -32,11 +32,11 @@ pub enum Instr {
     Select,
 
     // Variable Instructions:
-    LocalGet(u32),
-    LocalSet(u32),
-    LocalTee(u32),
-    GlobalGet(u32),
-    GlobalSet(u32),
+    LocalGet(LocalIdx),
+    LocalSet(LocalIdx),
+    LocalTee(LocalIdx),
+    GlobalGet(GlobalIdx),
+    GlobalSet(GlobalIdx),
 
     // Memory Instructions:
     I32Load(MemArg),

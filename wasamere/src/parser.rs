@@ -6,8 +6,8 @@ use nom::IResult;
 
 use crate::error::Error;
 use crate::instr::*;
-use crate::types::*;
 use crate::types::index::*;
+use crate::types::*;
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
 pub static VERSION: u32 = 0x01_00_00_00;
@@ -49,8 +49,6 @@ pub fn parse_vec_index<T: ParseIndex>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
 
     count!(input, T::parse_index, length as usize)
 }
-
-
 
 // TODO: Figure out work around with :: for type parameters
 pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
@@ -123,51 +121,97 @@ named!(
     )
 );
 
-// // pub fn parse_label<'a, T: index::ParseIndex>(input: &'a [u8]) -> IResult<&'a [u8], T> {
+// pub fn parse_label<'a, T: index::ParseIndex>(input: &'a [u8]) -> IResult<&'a [u8], T> {
 //     T::parse_index(input)
 // }
+
+pub fn parse_control(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+    switch!(input, value!(code),
+        // Control Instructions:
+        0x00 => value!(Instr::Unreachable) |
+        0x01 => value!(Instr::Nop) |
+        // Block
+        0x02 => call!(parse_block) |
+        // Loop
+        0x03 => call!(parse_loop) |
+        // If
+        0x04 => call!(parse_if) |
+        // Br label
+        0x0C => do_parse!(
+            index: call!(LabelIdx::parse_index) >>
+            (Instr::Br(index))
+        ) |
+        // Br If
+        0x0D => do_parse!(
+            index: call!(LabelIdx::parse_index) >>
+            (Instr::BrIf(index))
+        ) |
+        // Br Table
+        0x0E => do_parse!(
+            indices: call!(parse_vec_index) >>
+            index: call!(LabelIdx::parse_index) >>
+            (Instr::BrTable(indices, index))
+        ) |
+        0x0F => value!(Instr::Return) |
+        0x10 => do_parse!(
+            index: call!(FuncIdx::parse_index) >>
+            (Instr::Call(index))
+        ) |
+        0x11 => do_parse!(
+            index: call!(TypeIdx::parse_index) >>
+            tag!(&[0x00]) >>
+            (Instr::CallIndirect(index))
+        )
+    )
+}
+
+// pub fn parse_control(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+// }
+
+pub fn parse_parametric(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+    switch!(input, value!(code),
+        0x1A => value!(Instr::Drop) |
+        0x1B => value!(Instr::Select)
+    )
+}
+
+pub fn parse_variable(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+    switch!(input, value!(code),
+        0x20 => do_parse!(
+            index: call!(LocalIdx::parse_index) >>
+            (Instr::LocalGet(index))
+        ) |
+        0x21 => do_parse!(
+            index: call!(LocalIdx::parse_index) >>
+            (Instr::LocalSet(index))
+        ) |
+        0x22 => do_parse!(
+            index: call!(LocalIdx::parse_index) >>
+            (Instr::LocalTee(index))
+        ) |
+        0x23 => do_parse!(
+            index: call!(GlobalIdx::parse_index) >>
+            (Instr::GlobalGet(index))
+        ) |
+        0x24 => do_parse!(
+            index: call!(GlobalIdx::parse_index) >>
+            (Instr::GlobalSet(index))
+        )
+    )
+}
 
 named!(
     parse_instr<Instr>,
     do_parse!(
-        // code: call!(le_u8) >>
+        code: call!(le_u8) >>
         // instr: switch!(value!(code),
         instr:
-            switch!(le_u8,
-                0x00 => value!(Instr::Unreachable) |
-                0x01 => value!(Instr::Nop) |
-                // Block
-                0x02 => call!(parse_block) |
-                // Loop
-                0x03 => call!(parse_loop) |
-                // If
-                0x04 => call!(parse_if) |
-                // Br label
-                0x0C => do_parse!(
-                    index: call!(LabelIdx::parse_index) >>
-                    (Instr::Br(index))
-                ) |
-                // Br If
-                0x0D => do_parse!(
-                    index: call!(LabelIdx::parse_index) >>
-                    (Instr::BrIf(index))
-                ) |
-                // Br Table
-                0x0E => do_parse!(
-                    indices: call!(parse_vec_index) >>
-                    index: call!(LabelIdx::parse_index) >>
-                    (Instr::BrTable(indices, index))
-                ) |
-                0x0F => value!(Instr::Return) |
-                0x10 => do_parse!(
-                    index: call!(FuncIdx::parse_index) >>
-                    (Instr::Call(index))
-                ) |
-                0x11 => do_parse!(
-                    index: call!(TypeIdx::parse_index) >>
-                    tag!(&[0x00]) >>
-                    (Instr::CallIndirect(index))
-                )
+            switch!(value!(code),
+                // Control Instructions
+                0x00..=0x11 => call!(parse_control, code) |
+                // Parametric Instructions:
+                0x1A..=0x1B => call!(parse_parametric, code) |
+                0x20..=0x24 => call!(parse_variable, code) 
             )
             >> (instr)
     )
