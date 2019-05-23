@@ -1,4 +1,4 @@
-use nom::le_u32;
+use nom::{le_u32, le_u64, le_f32, le_f64};
 use nom::le_u8;
 use nom::take;
 use nom::ErrorKind;
@@ -302,6 +302,149 @@ pub fn parse_mem_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
             tag!(&[0x00]) >>
             (Instr::MemGrow))
     )
+}
+
+pub fn parse_num_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+    switch!(input, value!(code),
+        0x41 => do_parse!(
+           imm: call!(le_u32) >>
+           (Instr::I32Const(imm))  
+        ) |
+        0x42 => do_parse!(
+           imm: call!(le_u64) >>
+           (Instr::I64Const(imm))  
+        ) |
+        0x43 => do_parse!(
+           imm: call!(le_f32) >>
+           (Instr::F32Const(imm))  
+        ) |
+        0x44 => do_parse!(
+           imm: call!(le_f64) >>
+           (Instr::F64Const(imm))  
+        ) |
+        0x45 =>	value!(Instr::I32Eqz) |
+        0x46 =>	value!(Instr::I32Eq) |
+        0x47 =>	value!(Instr::I32Ne) |
+        0x48 =>	value!(Instr::I32LtS) |
+        0x49 =>	value!(Instr::I32LtI) |
+        0x4a =>	value!(Instr::I32GtS) |
+        0x4b =>	value!(Instr::I32GtU) |
+        0x4c =>	value!(Instr::I32LeS) |
+        0x4d =>	value!(Instr::I32LeU) |
+        0x4e =>	value!(Instr::I32GeS) |
+        0x4f =>	value!(Instr::I32GeU) |
+        0x50 =>	value!(Instr::I64Eqz) |
+        0x51 =>	value!(Instr::I64Eq) |
+        0x52 =>	value!(Instr::I64Ne) |
+        0x53 =>	value!(Instr::I64LtS) |
+        0x54 =>	value!(Instr::I64LtI) |
+        0x55 =>	value!(Instr::I64GtS) |
+        0x56 =>	value!(Instr::I64GtU) |
+        0x57 =>	value!(Instr::I64LeS) |
+        0x58 =>	value!(Instr::I64LeU) |
+        0x59 =>	value!(Instr::I64GeS) |
+        0x5a =>	value!(Instr::I64GeU) |
+        0x5b =>	value!(Instr::F32Eq) |
+        0x5c =>	value!(Instr::F32Ne) |
+        0x5d =>	value!(Instr::F32Lt) |
+        0x5e =>	value!(Instr::F32Gt) |
+        0x5f =>	value!(Instr::F32Le) |
+        0x60 =>	value!(Instr::F32Ge) |
+        0x61 =>	value!(Instr::F64Eq) |
+        0x62 =>	value!(Instr::F64Ne) |
+        0x63 =>	value!(Instr::F64Lt) |
+        0x64 =>	value!(Instr::F64Gt) |
+        0x65 =>	value!(Instr::F64Le) |
+        0x66 =>	value!(Instr::F64Ge) |
+        0x67 =>	value!(Instr::I32Cls) |
+        0x68 =>	value!(Instr::I32Ctz) |
+        0x69 =>	value!(Instr::I32Popcnt) |
+        0x6a =>	value!(Instr::I32Add) |
+        0x6b =>	value!(Instr::I32Sub) |
+        0x6c =>	value!(Instr::I32Mul) |
+        0x6d =>	value!(Instr::I32DivS) |
+        0x6e =>	value!(Instr::I32DivU) |
+        0x6f =>	value!(Instr::I32RemS) |
+        0x70 =>	value!(Instr::I32RemU) |
+        0x71 =>	value!(Instr::I32And) |
+        0x72 =>	value!(Instr::I32Or) |
+        0x73 =>	value!(Instr::I32Xor) |
+        0x74 =>	value!(Instr::I32Shl) |
+        0x75 =>	value!(Instr::I32ShrS) |
+        0x76 =>	value!(Instr::I32ShrU) |
+        0x77 =>	value!(Instr::I32Rotl) |
+        0x78 =>	value!(Instr::I32Rotr) |
+        0x79 =>	value!(Instr::I64Clz) |
+        0x7a =>	value!(Instr::I64Ctz) |
+        0x7b =>	value!(Instr::I64Popcnt) |
+        0x7c =>	value!(Instr::I64Add) |
+        0x7d =>	value!(Instr::I64Sub) |
+        0x7e =>	value!(Instr::I64Mul) |
+        0x7f =>	value!(Instr::I64DivS) |
+        0x80 =>	value!(Instr::I64DivU) |
+        0x81 =>	value!(Instr::I64RemS) |
+        0x82 =>	value!(Instr::I64RemU) |
+        0x83 =>	value!(Instr::I64And) |
+        0x84 =>	value!(Instr::I64Or) |
+        0x85 =>	value!(Instr::I64Xor) |
+        0x86 =>	value!(Instr::I64Shl) |
+        0x87 =>	value!(Instr::I64ShrS) |
+        0x88 =>	value!(Instr::I64ShrU) |
+        0x89 =>	value!(Instr::I64Rotl) |
+        0x8a =>	value!(Instr::I64Rotr) |
+        0x8b =>	value!(Instr::F32Abs) |
+        0x8c =>	value!(Instr::F32Neg) |
+        0x8d =>	value!(Instr::F32Ceil) |
+        0x8e =>	value!(Instr::F32Floor) |
+        0x8f =>	value!(Instr::F32Trunc) |
+        0x90 =>	value!(Instr::F32Nearest) |
+        0x91 =>	value!(Instr::F32Sqrt) |
+        0x92 =>	value!(Instr::F32Add) |
+        0x93 =>	value!(Instr::F32Sub) |
+        0x94 =>	value!(Instr::F32Mul) |
+        0x95 =>	value!(Instr::F32Div) |
+        0x96 =>	value!(Instr::F32Min) |
+        0x97 =>	value!(Instr::F32Max) |
+        0x98 =>	value!(Instr::F32Copysign) |
+        0x99 =>	value!(Instr::F64Abs) |
+        0x9a =>	value!(Instr::F64Neg) |
+        0x9b =>	value!(Instr::F64Ceil) |
+        0x9c =>	value!(Instr::F64Floor) |
+        0x9d =>	value!(Instr::F64Trunc) |
+        0x9e =>	value!(Instr::F64Nearest) |
+        0x9f =>	value!(Instr::F64Sqrt) |
+        0xa0 =>	value!(Instr::F64Add) |
+        0xa1 =>	value!(Instr::F64Sub) |
+        0xa2 =>	value!(Instr::F64Mul) |
+        0xa3 =>	value!(Instr::F64Div) |
+        0xa4 =>	value!(Instr::F64Min) |
+        0xa5 =>	value!(Instr::F64Max) |
+        0xa6 =>	value!(Instr::F64Copysign) |
+        0xa7 =>	value!(Instr::I32WrapI64) |
+        0xa8 =>	value!(Instr::I32TruncF32S) |
+        0xa9 =>	value!(Instr::I32TruncF32U) |
+        0xaa =>	value!(Instr::I32TruncF64S) |
+        0xab =>	value!(Instr::I32TruncF64U) |
+        0xac =>	value!(Instr::I64ExtendI32S) |
+        0xad =>	value!(Instr::I64ExtendI32U) |
+        0xae =>	value!(Instr::I64TruncF32S) |
+        0xaf =>	value!(Instr::I64TruncF32U) |
+        0xb0 =>	value!(Instr::I64TruncF64S) |
+        0xb1 =>	value!(Instr::I64TruncF64U) |
+        0xb2 =>	value!(Instr::F32ConvertI32S) |
+        0xb3 =>	value!(Instr::F32ConvertI32U) |
+        0xb4 =>	value!(Instr::F32ConvertI64S) |
+        0xb5 =>	value!(Instr::F32DemoteF64) |
+        0xb6 =>	value!(Instr::F32ConvertI64U) |
+        0xb7 =>	value!(Instr::F64ConvertI32S) |
+        0xb8 =>	value!(Instr::F64ConvertI32U) |
+        0xb9 =>	value!(Instr::F64ConvertI64S) |
+        0xba =>	value!(Instr::F64ConvertI64U) |
+        0xbb =>	value!(Instr::F64PromoteF32) |
+        0xbc =>	value!(Instr::I32ReinterpF32) |
+        0xbd =>	value!(Instr::I64ReinterpF64) |
+        0xbe =>	value!(Instr::F32ReinterpI32) |
+        0xbf =>	value!(Instr::F64ReinterpI64))
 }
 
 named!(

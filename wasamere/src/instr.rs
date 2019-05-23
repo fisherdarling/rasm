@@ -2,7 +2,7 @@ use nom::take;
 use nom::ErrorKind;
 use nom::IResult;
 
-use crate::types::index::{FuncIdx, LabelIdx, LocalIdx, TypeIdx, GlobalIdx};
+use crate::types::index::{FuncIdx, GlobalIdx, LabelIdx, LocalIdx, TypeIdx};
 use crate::types::ResType;
 
 pub type MemArg = (u32, u32);
@@ -73,8 +73,8 @@ pub enum Instr {
     MemGrow,
 
     // Numeric Instructions:
-    I32Const(i32),
-    I64Const(i64),
+    I32Const(u32),
+    I64Const(u64),
     F32Const(f32),
     F64Const(f64),
 
@@ -132,7 +132,8 @@ pub enum Instr {
     I32RemS,
     I32RemU,
     I32And,
-    I32OrdXor,
+    I32Or,
+    I32Xor,
     I32Shl,
     I32ShrS,
     I32ShrU,
@@ -140,7 +141,7 @@ pub enum Instr {
     I32Rotr,
 
     // I64 Binop:
-    I64Cls,
+    I64Clz,
     I64Ctz,
     I64Popcnt,
     I64Add,
@@ -151,7 +152,8 @@ pub enum Instr {
     I64RemS,
     I64RemU,
     I64And,
-    I64OrdXor,
+    I64Or,
+    I64Xor,
     I64Shl,
     I64ShrS,
     I64ShrU,
@@ -208,6 +210,7 @@ pub enum Instr {
     F32ConvertI32U,
     F32ConvertI64S,
     F32ConvertI64U,
+    F32DemoteF64,
 
     F64ConvertI32S,
     F64ConvertI32U,
