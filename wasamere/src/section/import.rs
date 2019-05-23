@@ -25,7 +25,7 @@ pub enum ImportDesc {
 }
 
 named!(
-    parse_import<Import>,
+    pub parse_import<Import>,
     do_parse!(
         module: call!(parse_vec::<u8>)
             >> name: call!(parse_vec::<u8>)
@@ -55,7 +55,7 @@ named!(
 );
 
 
-named!(parse_importsec<ImportSection>,
+named!(pub parse_importsec<ImportSection>,
     do_parse!(
         length: call!(leb_u32) >>
         imports: count!(parse_import, length as usize) >>
