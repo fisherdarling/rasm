@@ -5,24 +5,10 @@ use nom::ErrorKind;
 use nom::IResult;
 
 use crate::error::Error;
-
-pub enum ValType {
-    Int32,
-    Int64,
-    Float32,
-    Float64,
-}
+use crate::types::*;
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
 pub static VERSION: u32 = 0x01_00_00_00;
-
-pub const BYTE_TO_VALTYPE: fn(u8) -> ValType = |code| match code {
-    0x7F => ValType::Int32,
-    0x7E => ValType::Int64,
-    0x7D => ValType::Float32,
-    0x7C => ValType::Float64,
-    _ => panic!(),
-};
 
 pub struct Parser<'a> {
     source: &'a [u8],
@@ -50,8 +36,36 @@ named!(
     )
 );
 
-pub fn parse_vec<T: From<u8>>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
+pub fn parse_vec_byte<T: From<u8>>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
     let (input, length) = le_u8(data)?;
 
     count!(input, map!(take!(1), |b| b[0].into()), length as usize)
+}
+
+// TODO: Figure out work around with :: for type parameters
+pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
+    let (rest, _) = tag!(input, &[0x60u8])?;
+    let (rest, params) = parse_vec_byte::<ValType>(rest)?;
+    let (rest, result) = parse_vec_byte::<ValType>(rest)?;
+
+    Ok((rest, FuncType::new(params, result)))
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_valtype_vec() {
+        // length: 4
+        // values: I32, I64, F32, F64
+        let bytes = [0x04, 0x7F, 0x7E, 0x7D, 0x7C];
+
+        let (rest, types) = parse_vec_byte::<ValType>(&bytes).unwrap();
+
+        assert!(rest.is_empty());
+
+        assert_eq!(&types, &[ValType::I32, ValType::I64, ValType::F32, ValType::F64]);
+    }
 }
