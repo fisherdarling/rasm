@@ -20,7 +20,7 @@ pub enum Instr {
     Loop(ResType, Vec<Instr>),
     If(ResType, Vec<Instr>, Vec<Instr>),
     Br(LabelIdx),
-    BrIf(LocalIdx),
+    BrIf(LabelIdx),
     // Figure out meaning of l_N
     BrTable(Vec<LabelIdx>, LabelIdx),
     Return,

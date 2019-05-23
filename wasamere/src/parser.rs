@@ -7,6 +7,7 @@ use nom::IResult;
 use crate::error::Error;
 use crate::instr::*;
 use crate::types::*;
+use crate::types::index::*;
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
 pub static VERSION: u32 = 0x01_00_00_00;
@@ -42,6 +43,14 @@ pub fn parse_vec<T: From<u8>>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
 
     count!(input, map!(le_u8, Into::into), length as usize)
 }
+
+pub fn parse_vec_index<T: ParseIndex>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
+    let (input, length) = le_u8(data)?;
+
+    count!(input, T::parse_index, length as usize)
+}
+
+
 
 // TODO: Figure out work around with :: for type parameters
 pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
@@ -114,6 +123,10 @@ named!(
     )
 );
 
+// // pub fn parse_label<'a, T: index::ParseIndex>(input: &'a [u8]) -> IResult<&'a [u8], T> {
+//     T::parse_index(input)
+// }
+
 named!(
     parse_instr<Instr>,
     do_parse!(
@@ -121,14 +134,32 @@ named!(
         // instr: switch!(value!(code),
         instr:
             switch!(le_u8,
-            0x00 => value!(Instr::Unreachable) |
-            0x01 => value!(Instr::Nop) |
-            // Block
-            0x02 => call!(parse_block) |
-            // Loop
-            0x03 => call!(parse_loop) |
-            // If
-            0x04 => call!(parse_if))
+                0x00 => value!(Instr::Unreachable) |
+                0x01 => value!(Instr::Nop) |
+                // Block
+                0x02 => call!(parse_block) |
+                // Loop
+                0x03 => call!(parse_loop) |
+                // If
+                0x04 => call!(parse_if) |
+                // Br label
+                0x0C => do_parse!(
+                    index: call!(LabelIdx::parse_index) >>
+                    (Instr::Br(index))
+                ) |
+                // Br If
+                0x0D => do_parse!(
+                    index: call!(LabelIdx::parse_index) >>
+                    (Instr::BrIf(index))
+                ) |
+                // Br Table
+                0x0E => do_parse!(
+                    indices: call!(parse_vec_index) >>
+                    index: call!(LabelIdx::parse_index) >>
+                    (Instr::BrTable(indices, index))
+                )
+            
+            )
             >> (instr)
     )
 );
