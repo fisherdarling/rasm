@@ -26,7 +26,7 @@ pub enum ExportDesc {
 named!(
     pub parse_export<Export>,
     do_parse!(
-            >> name: call!(parse_vec::<u8>)
+            name: call!(parse_vec::<u8>)
             >> desc: switch!(le_u8,
             0x00 => do_parse!(
                 index: call!(TypeIdx::parse_index) >>

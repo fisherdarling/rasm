@@ -1,5 +1,3 @@
-use nom::IResult;
-
 use crate::leb_u32;
 use crate::parser::parse_functype;
 use crate::types::FuncType;
@@ -15,11 +13,3 @@ named!(
             >> (TypeSection(types))
     )
 );
-
-// pub fn parse_typesec(input: &[u8]) -> IResult<&[u8], TypeSection> {
-//     let (input, length) = leb_u32(input)?;
-
-//     let (input, types) = count!(input, parse_functype, length as usize)?;
-
-//     Ok((input, TypeSection(types)))
-// }
