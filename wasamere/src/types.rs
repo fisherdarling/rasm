@@ -88,9 +88,24 @@ impl From<u8> for ElemType {
     fn from(code: u8) -> ElemType {
         match code {
             0x70 => ElemType::FuncRef,
-            _ => panic!("Improper code for elemtype"),
+            _ => panic!("Invalid code for elemtype"),
         }
     }
 }
 
 pub struct TableType(pub ElemType, pub Limit);
+
+pub enum Mut {
+    Const,
+    Var
+}
+
+impl From<u8> for Mut {
+    fn from(code: u8) -> Mut {
+        match code {
+            0x00 => Mut::Const,
+            0x01 => Mut::Var,
+            _ => panic!("Invalid code for mut"),
+        }
+    }
+}
