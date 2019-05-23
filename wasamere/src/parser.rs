@@ -125,7 +125,7 @@ named!(
 //     T::parse_index(input)
 // }
 
-pub fn parse_control(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+pub fn parse_control_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
     switch!(input, value!(code),
         // Control Instructions:
         0x00 => value!(Instr::Unreachable) |
@@ -165,17 +165,17 @@ pub fn parse_control(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
     )
 }
 
-// pub fn parse_control(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+// pub fn parse_control_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
 // }
 
-pub fn parse_parametric(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+pub fn parse_parametric_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
     switch!(input, value!(code),
         0x1A => value!(Instr::Drop) |
         0x1B => value!(Instr::Select)
     )
 }
 
-pub fn parse_variable(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+pub fn parse_variable_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
     switch!(input, value!(code),
         0x20 => do_parse!(
             index: call!(LocalIdx::parse_index) >>
@@ -200,6 +200,110 @@ pub fn parse_variable(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
     )
 }
 
+pub fn parse_mem_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
+    switch!(input, value!(code),
+            // Memory Instructions:
+        0x28 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I32Load((align, offset)))) |
+        0x29 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Load((align, offset)))) |
+        0x2A => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::F32Load((align, offset)))) |
+        0x2B => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::F64Load((align, offset)))) |
+        0x2C => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I32Load8S((align, offset)))) |
+        0x2D => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I32Load8U((align, offset)))) |
+        0x2E => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I32Load16S((align, offset)))) |
+        0x2F => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I32Load16U((align, offset)))) |
+        0x30 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Load8S((align, offset)))) |
+        0x31 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Load8U((align, offset)))) |
+        0x32 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Load16S((align, offset)))) |
+        0x33 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Load16U((align, offset)))) |
+        0x34 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Load32S((align, offset)))) |
+        0x35 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Load32U((align, offset)))) |
+        0x36 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I32Store((align, offset)))) |
+        0x37 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Store((align, offset)))) |
+        0x38 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::F32Store((align, offset)))) |
+        0x39 => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::F64Store((align, offset)))) |
+        0x3A => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I32Store8((align, offset)))) |
+        0x3B => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I32Store16((align, offset)))) |
+        0x3C => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Store8((align, offset)))) |
+        0x3D => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Store16((align, offset)))) |
+        0x3E => do_parse!(
+            align: call!(le_u32) >>
+            offset: call!(le_u32) >>
+            (Instr::I64Store32((align, offset)))) |
+        0x3F => do_parse!(
+            tag!(&[0x00]) >>
+            (Instr::MemSize)) |
+        0x40 => do_parse!(
+            tag!(&[0x00]) >>
+            (Instr::MemGrow))
+    )
+}
+
 named!(
     parse_instr<Instr>,
     do_parse!(
@@ -208,10 +312,19 @@ named!(
         instr:
             switch!(value!(code),
                 // Control Instructions
-                0x00..=0x11 => call!(parse_control, code) |
+                0x00..=0x11 => call!(parse_control_instr, code) |
+                
                 // Parametric Instructions:
-                0x1A..=0x1B => call!(parse_parametric, code) |
-                0x20..=0x24 => call!(parse_variable, code) 
+                0x1A..=0x1B => call!(parse_parametric_instr, code) |
+                
+                // Variable Instructions:
+                0x20..=0x24 => call!(parse_variable_instr, code) |
+                
+                // Mem Instructions:
+                0x28..=0x40 => call!(parse_mem_instr, code) |
+
+                // Numeric Instructions:
+                0x41..=0xB4 => call!(parse_num_instr, code)
             )
             >> (instr)
     )
