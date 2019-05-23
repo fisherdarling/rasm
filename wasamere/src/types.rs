@@ -1,4 +1,3 @@
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValType {
     I32,
@@ -19,6 +18,7 @@ impl From<u8> for ValType {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ResType {
     ValType(ValType),
     Unit,
@@ -59,6 +59,7 @@ impl From<u8> for ResType {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct FuncType {
     params: Vec<ValType>,
     result: ValType,
@@ -71,4 +72,10 @@ impl FuncType {
             result: result[0],
         }
     }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Limit {
+    pub min: u32,
+    pub max: Option<u32>,
 }

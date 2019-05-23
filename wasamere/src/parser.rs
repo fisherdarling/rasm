@@ -36,7 +36,7 @@ named!(
     )
 );
 
-pub fn parse_vec_byte<T: From<u8>>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
+pub fn parse_vec<T: From<u8>>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
     let (input, length) = le_u8(data)?;
 
     count!(input, map!(take!(1), |b| b[0].into()), length as usize)
@@ -45,12 +45,60 @@ pub fn parse_vec_byte<T: From<u8>>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
 // TODO: Figure out work around with :: for type parameters
 pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
     let (rest, _) = tag!(input, &[0x60u8])?;
-    let (rest, params) = parse_vec_byte::<ValType>(rest)?;
-    let (rest, result) = parse_vec_byte::<ValType>(rest)?;
+    let (rest, params) = parse_vec::<ValType>(rest)?;
+    let (rest, result) = parse_vec::<ValType>(rest)?;
 
     Ok((rest, FuncType::new(params, result)))
 }
 
+named!(
+    parse_limit<Limit>,
+    map!(
+        switch!(take!(1),
+            &[0x00u8] => count!(le_u32, 1) |
+            &[0x00u8] => count!(le_u32, 2)
+        ),
+        |s| if s.len() == 1 {
+            Limit {
+                min: s[0],
+                max: None,
+            }
+        } else {
+            Limit {
+                min: s[0],
+                max: Some(s[1]),
+            }
+        }
+    )
+);
+
+//  {
+//             if s.len() == 1 {
+//                 // Limit {
+//                 //     min: s[0],
+//                 //     max: None,
+//                 // }
+//                 s
+//             } else {
+//                 // Limit {
+//                 //     min: s[0],
+//                 //     max: Some(s[1]),
+//                 // }
+//                 s
+//             }
+//         }
+
+// named!(parse_limit,
+//     map!(switch!(take!(1),
+//     _ => &[10]),
+//                 // &[0x00u8] => take!(1) |
+//                 // &[0x00u8] => take!(2))
+//             |s| s.len())
+// );
+
+// pub fn parse_limit(input: &[u8]) -> IResult<&[u8], Limit> {
+
+// }
 
 #[cfg(test)]
 mod tests {
@@ -62,10 +110,13 @@ mod tests {
         // values: I32, I64, F32, F64
         let bytes = [0x04, 0x7F, 0x7E, 0x7D, 0x7C];
 
-        let (rest, types) = parse_vec_byte::<ValType>(&bytes).unwrap();
+        let (rest, types) = parse_vec::<ValType>(&bytes).unwrap();
 
         assert!(rest.is_empty());
 
-        assert_eq!(&types, &[ValType::I32, ValType::I64, ValType::F32, ValType::F64]);
+        assert_eq!(
+            &types,
+            &[ValType::I32, ValType::I64, ValType::F32, ValType::F64]
+        );
     }
 }
