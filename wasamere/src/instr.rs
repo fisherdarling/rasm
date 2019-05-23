@@ -1,18 +1,44 @@
+use nom::take;
+use nom::ErrorKind;
+use nom::IResult;
+
+use crate::types::ResType;
+use crate::types::index::{LabelIdx, LocalIdx, FuncIdx, TypeIdx};
+
 pub type MemArg = (u32, u32);
 
-pub enum Operator {
+#[derive(Debug, Clone, PartialEq)]
+pub enum Instr {
+    // Ast Only:
+    End,
+    Else,
+
+    // Control Instructions:
+    Unreachable,
+    Nop,
+    Block(ResType, Vec<Instr>),
+    Loop(ResType, Vec<Instr>),
+    If(ResType, Vec<Instr>, Vec<Instr>),
+    Br(LabelIdx),
+    BrIf(LocalIdx),
+    // Figure out meaning of l_N
+    BrTable(Vec<LabelIdx>, LabelIdx),
+    Return,
+    Call(FuncIdx),
+    CallIndirect(TypeIdx),
+
     // Parametric Instructions:
     Drop,
     Select,
     
     // Variable Instructions:
-    LocalGet,
-    LocalSet,
-    LocalTee,
-    GlobalGet,
-    GlobalSet,
+    LocalGet(u32),
+    LocalSet(u32),
+    LocalTee(u32),
+    GlobalGet(u32),
+    GlobalSet(u32),
     
-    // Memory Instructions
+    // Memory Instructions:
     I32Load(MemArg),
     I64Load(MemArg),
     
@@ -46,13 +72,13 @@ pub enum Operator {
     MemSize,
     MemGrow,
 
-    // Numeric Instructions
+    // Numeric Instructions:
     I32Const(i32),
     I64Const(i64),
     F32Const(f32),
     F64Const(f64),
 
-    // I32 Relop
+    // I32 Relop:
     I32Eqz,
     I32Eq,
     I32Ne,
@@ -65,7 +91,7 @@ pub enum Operator {
     I32GeS,
     I32GeU,
 
-    // I64 Relop
+    // I64 Relop:
     I64Eqz,
     I64Eq,
     I64Ne,
@@ -78,7 +104,7 @@ pub enum Operator {
     I64GeS,
     I64GeU,
 
-    // F32 Relop
+    // F32 Relop:
     F32Eq,
     F32Ne,
     F32Lt,
@@ -86,7 +112,7 @@ pub enum Operator {
     F32Le,
     F32Ge,
 
-    // F64 Relop
+    // F64 Relop:
     F64Eq,
     F64Ne,
     F64Lt,
@@ -94,7 +120,7 @@ pub enum Operator {
     F64Le,
     F64Ge,
     
-    // I32 Binop
+    // I32 Binop:
     I32Cls,
     I32Ctz,
     I32Popcnt,
@@ -113,7 +139,7 @@ pub enum Operator {
     I32Rotl,
     I32Rotr,
 
-    // I64 Binop
+    // I64 Binop:
     I64Cls,
     I64Ctz,
     I64Popcnt,
@@ -132,7 +158,7 @@ pub enum Operator {
     I64Rotl,
     I64Rotr,
 
-    // F32 Binop
+    // F32 Binop:
     F32Abs,
     F32Neg,
     F32Ceil,
@@ -148,7 +174,7 @@ pub enum Operator {
     F32Max,
     F32Copysign,
 
-    // F64 Binop
+    // F64 Binop:
     F64Abs,
     F64Neg,
     F64Ceil,
@@ -164,7 +190,7 @@ pub enum Operator {
     F64Max,
     F64Copysign,
 
-    // Cvtop
+    // Cvtop:
     I32WrapI64,
     I32TruncF32S,
     I32TruncF32U,
@@ -195,3 +221,17 @@ pub enum Operator {
     F32ReinterpI32,
     F64ReinterpI64,
 }
+
+// impl From<&[u8]> for Instr {
+//     fn from(data: &[u8]) -> Instr {
+//         match data[0] {
+//             0x00..=0x11 => {
+
+//             }
+//         }
+//     }
+// }
+
+// fn parse_control_code(data: &[u8]) -> IResult<&[u8], Instr> {
+    
+// }

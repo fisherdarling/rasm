@@ -6,6 +6,7 @@ use nom::IResult;
 
 use crate::error::Error;
 use crate::types::*;
+use crate::instr::*;
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
 pub static VERSION: u32 = 0x01_00_00_00;
@@ -54,9 +55,9 @@ pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
 named!(
     parse_limit<Limit>,
     map!(
-        switch!(take!(1),
-            &[0x00u8] => count!(le_u32, 1) |
-            &[0x00u8] => count!(le_u32, 2)
+        switch!(le_u8,
+            0x00 => count!(le_u32, 1) |
+            0x01 => count!(le_u32, 2)
         ),
         |s| if s.len() == 1 {
             Limit {
@@ -78,6 +79,46 @@ named!(
         elemtype: map!(le_u8, |b| ElemType::from(b))
             >> limit: parse_limit
             >> (TableType(elemtype, limit))
+    )
+);
+
+named!(parse_block<Instr>,
+    do_parse!(
+                restype: call!(le_u8) >>
+                instrs: many_till!(parse_instr, tag!(&[0x0B])) >>
+                (Instr::Block(ResType::from(restype), instrs.0))
+            ) 
+);
+
+named!(parse_loop<Instr>,
+    do_parse!(
+                restype: call!(le_u8) >>
+                instrs: many_till!(parse_instr, tag!(&[0x0B])) >>
+                (Instr::Loop(ResType::from(restype), instrs.0))
+            ) 
+);
+
+// named!(parse_if<Instr>,
+//     do_parse!(
+
+//     )
+// )
+
+named!(
+    parse_instr<Instr>,
+    do_parse!(
+        // code: call!(le_u8) >>
+        // instr: switch!(value!(code),
+        instr: switch!(le_u8,
+            0x00 => value!(Instr::Unreachable) |
+            0x01 => value!(Instr::Nop) |
+            // Block
+            0x02 => call!(parse_block) |
+            // Loop
+            0x03 => call!(parse_loop) |
+            // If
+            0x04 => value!(Instr::Nop)) >>
+        (instr)
     )
 );
 
