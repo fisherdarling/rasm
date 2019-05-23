@@ -1,7 +1,9 @@
-// use nom::IResult;
+use crate::instr::Expression;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct GlobalType(pub ValType, pub Mut);
+
+pub struct Global(pub GlobalType, Expression);
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValType {

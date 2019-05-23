@@ -101,6 +101,14 @@ named!(
 );
 
 named!(
+    pub parse_expression<Expression>,
+    do_parse!(
+        instrs: many_till!(parse_instr, tag!(&[0x0B])) >>
+        (Expression(instrs.0)) 
+    )
+);
+
+named!(
     parse_block<Instr>,
     do_parse!(
         restype: call!(le_u8)

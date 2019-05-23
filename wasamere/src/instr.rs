@@ -8,6 +8,9 @@ use crate::types::ResType;
 pub type MemArg = (u32, u32);
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Expression(pub Vec<Instr>);
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Instr {
     // Ast Only:
     End,
