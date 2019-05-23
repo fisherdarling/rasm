@@ -116,7 +116,8 @@ impl From<u8> for Mut {
 }
 
 pub mod index {
-    use nom::{le_u32, IResult};
+    use crate::leb_u32;
+    use nom::IResult;
 
     pub trait ParseIndex {
         fn parse_index(input: &[u8]) -> IResult<&[u8], Self>
@@ -129,13 +130,13 @@ pub mod index {
 
     impl From<&[u8]> for TypeIdx {
         fn from(data: &[u8]) -> Self {
-            Self(le_u32(data).unwrap().1)
+            Self(leb_u32(data).unwrap().1)
         }
     }
 
     impl ParseIndex for TypeIdx {
         fn parse_index(input: &[u8]) -> IResult<&[u8], TypeIdx> {
-            let (rest, index) = le_u32(input)?;
+            let (rest, index) = leb_u32(input)?;
 
             Ok((rest, TypeIdx(index)))
         }
@@ -152,13 +153,13 @@ pub mod index {
 
     impl From<&[u8]> for FuncIdx {
         fn from(data: &[u8]) -> Self {
-            Self(le_u32(data).unwrap().1)
+            Self(leb_u32(data).unwrap().1)
         }
     }
 
     impl ParseIndex for FuncIdx {
         fn parse_index(input: &[u8]) -> IResult<&[u8], FuncIdx> {
-            let (rest, index) = le_u32(input)?;
+            let (rest, index) = leb_u32(input)?;
 
             Ok((rest, FuncIdx(index)))
         }
@@ -175,13 +176,13 @@ pub mod index {
 
     impl From<&[u8]> for TableIdx {
         fn from(data: &[u8]) -> Self {
-            Self(le_u32(data).unwrap().1)
+            Self(leb_u32(data).unwrap().1)
         }
     }
 
     impl ParseIndex for TableIdx {
         fn parse_index(input: &[u8]) -> IResult<&[u8], TableIdx> {
-            let (rest, index) = le_u32(input)?;
+            let (rest, index) = leb_u32(input)?;
 
             Ok((rest, TableIdx(index)))
         }
@@ -198,13 +199,13 @@ pub mod index {
 
     impl From<&[u8]> for MemIdx {
         fn from(data: &[u8]) -> Self {
-            Self(le_u32(data).unwrap().1)
+            Self(leb_u32(data).unwrap().1)
         }
     }
 
     impl ParseIndex for MemIdx {
         fn parse_index(input: &[u8]) -> IResult<&[u8], MemIdx> {
-            let (rest, index) = le_u32(input)?;
+            let (rest, index) = leb_u32(input)?;
 
             Ok((rest, MemIdx(index)))
         }
@@ -221,13 +222,13 @@ pub mod index {
 
     impl From<&[u8]> for GlobalIdx {
         fn from(data: &[u8]) -> Self {
-            Self(le_u32(data).unwrap().1)
+            Self(leb_u32(data).unwrap().1)
         }
     }
 
     impl ParseIndex for GlobalIdx {
         fn parse_index(input: &[u8]) -> IResult<&[u8], GlobalIdx> {
-            let (rest, index) = le_u32(input)?;
+            let (rest, index) = leb_u32(input)?;
 
             Ok((rest, GlobalIdx(index)))
         }
@@ -244,13 +245,13 @@ pub mod index {
 
     impl From<&[u8]> for LocalIdx {
         fn from(data: &[u8]) -> Self {
-            Self(le_u32(data).unwrap().1)
+            Self(leb_u32(data).unwrap().1)
         }
     }
 
     impl ParseIndex for LocalIdx {
         fn parse_index(input: &[u8]) -> IResult<&[u8], LocalIdx> {
-            let (rest, index) = le_u32(input)?;
+            let (rest, index) = leb_u32(input)?;
 
             Ok((rest, LocalIdx(index)))
         }
@@ -267,13 +268,13 @@ pub mod index {
 
     impl From<&[u8]> for LabelIdx {
         fn from(data: &[u8]) -> Self {
-            Self(le_u32(data).unwrap().1)
+            Self(leb_u32(data).unwrap().1)
         }
     }
 
     impl ParseIndex for LabelIdx {
         fn parse_index(input: &[u8]) -> IResult<&[u8], LabelIdx> {
-            let (rest, index) = le_u32(input)?;
+            let (rest, index) = leb_u32(input)?;
 
             Ok((rest, LabelIdx(index)))
         }

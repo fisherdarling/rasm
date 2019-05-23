@@ -1,4 +1,4 @@
-use nom::{le_u32, le_u64, le_f32, le_f64};
+use nom::{le_u64, le_f32, le_f64};
 use nom::le_u8;
 use nom::take;
 use nom::ErrorKind;
@@ -8,6 +8,8 @@ use crate::error::Error;
 use crate::instr::*;
 use crate::types::index::*;
 use crate::types::*;
+
+use crate::{leb_u32, leb_i32};
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
 pub static VERSION: u32 = 0x01_00_00_00;
@@ -63,8 +65,8 @@ named!(
     parse_limit<Limit>,
     map!(
         switch!(le_u8,
-            0x00 => count!(le_u32, 1) |
-            0x01 => count!(le_u32, 2)
+            0x00 => count!(leb_u32, 1) |
+            0x01 => count!(leb_u32, 2)
         ),
         |s| if s.len() == 1 {
             Limit {
@@ -204,96 +206,96 @@ pub fn parse_mem_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
     switch!(input, value!(code),
             // Memory Instructions:
         0x28 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I32Load((align, offset)))) |
         0x29 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Load((align, offset)))) |
         0x2A => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::F32Load((align, offset)))) |
         0x2B => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::F64Load((align, offset)))) |
         0x2C => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I32Load8S((align, offset)))) |
         0x2D => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I32Load8U((align, offset)))) |
         0x2E => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I32Load16S((align, offset)))) |
         0x2F => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I32Load16U((align, offset)))) |
         0x30 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Load8S((align, offset)))) |
         0x31 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Load8U((align, offset)))) |
         0x32 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Load16S((align, offset)))) |
         0x33 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Load16U((align, offset)))) |
         0x34 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Load32S((align, offset)))) |
         0x35 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Load32U((align, offset)))) |
         0x36 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I32Store((align, offset)))) |
         0x37 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Store((align, offset)))) |
         0x38 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::F32Store((align, offset)))) |
         0x39 => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::F64Store((align, offset)))) |
         0x3A => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I32Store8((align, offset)))) |
         0x3B => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I32Store16((align, offset)))) |
         0x3C => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Store8((align, offset)))) |
         0x3D => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Store16((align, offset)))) |
         0x3E => do_parse!(
-            align: call!(le_u32) >>
-            offset: call!(le_u32) >>
+            align: call!(leb_u32) >>
+            offset: call!(leb_u32) >>
             (Instr::I64Store32((align, offset)))) |
         0x3F => do_parse!(
             tag!(&[0x00]) >>
@@ -307,7 +309,7 @@ pub fn parse_mem_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
 pub fn parse_num_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
     switch!(input, value!(code),
         0x41 => do_parse!(
-           imm: call!(le_u32) >>
+           imm: call!(leb_u32) >>
            (Instr::I32Const(imm))  
         ) |
         0x42 => do_parse!(
@@ -478,7 +480,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_valtype_vec() {
+    fn parse_valtype_vec() {
         // length: 4
         // values: I32, I64, F32, F64
         let bytes = [0x04, 0x7F, 0x7E, 0x7D, 0x7C];
@@ -491,5 +493,27 @@ mod tests {
             &types,
             &[ValType::I32, ValType::I64, ValType::F32, ValType::F64]
         );
+    }
+
+    #[test]
+    fn parse_var_instr() {
+        let bytes = [0x20, 0x00];
+
+        let (rest, instr) = parse_instr(&bytes).unwrap();
+
+        assert!(rest.is_empty());
+
+        println!("{:?}", instr);
+    }
+
+    #[test]
+    fn parse_functype_many() {
+        let bytes = [0x60, 0x02, 0x7F, 0x7F, 0x01, 0x7F];
+
+        let (rest, functype) = parse_functype(&bytes).unwrap();
+
+        assert!(rest.is_empty());
+
+        println!("{:?}", functype);
     }
 }

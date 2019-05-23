@@ -224,17 +224,3 @@ pub enum Instr {
     F32ReinterpI32,
     F64ReinterpI64,
 }
-
-// impl From<&[u8]> for Instr {
-//     fn from(data: &[u8]) -> Instr {
-//         match data[0] {
-//             0x00..=0x11 => {
-
-//             }
-//         }
-//     }
-// }
-
-// fn parse_control_code(data: &[u8]) -> IResult<&[u8], Instr> {
-
-// }
