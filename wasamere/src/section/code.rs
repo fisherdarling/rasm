@@ -7,7 +7,7 @@ pub struct CodeSection(pub Vec<Function>);
 
 named!(
     pub parse_locals<Locals>,
-    map!(parse_vec::<ValType>, |types| Locals(types))
+    tap!( ploc: map!(parse_vec::<ValType>, |types| Locals(types)) => { println!("Parsed Locals: {:?}", ploc)} )
 );
 
 named!(

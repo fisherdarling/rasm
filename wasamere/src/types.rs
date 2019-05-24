@@ -21,7 +21,10 @@ impl From<u8> for ValType {
             0x7E => ValType::I64,
             0x7D => ValType::F32,
             0x7C => ValType::F64,
-            _ => panic!("A Valtype cannot be created from the given byte: {:x?}", code),
+            _ => panic!(
+                "A Valtype cannot be created from the given byte: {:x?}",
+                code
+            ),
         }
     }
 }

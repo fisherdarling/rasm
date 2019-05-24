@@ -1,8 +1,8 @@
-use std::path::Path;
 use std::fs::File;
 use std::io::Read;
+use std::path::Path;
 
-use nom::{IResult, le_u32, le_u8};
+use nom::{le_u32, le_u8, IResult};
 
 use crate::leb_u32;
 
@@ -12,16 +12,8 @@ use crate::section::{
 };
 
 use crate::section::{
-    parse_codesec,
-    parse_elemsec,
-    parse_exportsec,
-    parse_funcsec,
-    parse_globalsec,
-    parse_importsec,
-    parse_memsec,
-    parse_startsec,
-    parse_tablesec,
-    parse_typesec
+    parse_codesec, parse_elemsec, parse_exportsec, parse_funcsec, parse_globalsec, parse_importsec,
+    parse_memsec, parse_startsec, parse_tablesec, parse_typesec,
 };
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
@@ -96,28 +88,30 @@ pub fn parse_module(input: &[u8]) -> IResult<&[u8], Module> {
 
     // opt!(complete!())
     loop {
-        let (rest, code) = do_parse!(input,
-            sec_code: tap!( res: opt!(complete!(call!(le_u8))) => { println!("[code] {:?}", res) }) >>
-            sec_size: tap!( res: opt!(complete!(call!(leb_u32))) => {println!("[size] {:?}", res) }) >>
-            opt!(switch!(value!(sec_code),
-                Some(1) => map!(parse_typesec, |sec| { println!("{:?}", sec); module.types = sec }) |
-                Some(2) => map!(parse_importsec, |sec| { println!("{:?}", sec); module.imports = sec }) |
-                Some(3) => map!(parse_funcsec, |sec| { println!("{:?}", sec); module.funcs = sec }) |
-                Some(4) => map!(parse_tablesec, |sec| { println!("{:?}", sec); module.tables = sec }) |
-                Some(5) => map!(parse_memsec, |sec| { println!("{:?}", sec); module.mems = sec }) |
-                Some(6) => map!(parse_globalsec, |sec| { println!("{:?}", sec); module.globals = sec }) |
-                Some(7) => map!(parse_exportsec, |sec| { println!("{:?}", sec); module.exports = sec }) |
-                Some(8) => map!(parse_startsec, |sec| { println!("{:?}", sec); module.start = sec }) |
-                Some(9) => map!(parse_elemsec, |sec| { println!("{:?}", sec); module.elem = sec }) |
-                Some(10) => map!(parse_codesec, |sec| { println!("{:?}", sec); module.code = sec }) |
-                Some(c) => map!(take!(0), |_| println!("Got: {}", c)) |
-                _ => value!(())
-            )) >>
-            (sec_code)
+        let (rest, code) = do_parse!(
+            input,
+            sec_code: tap!( res: opt!(complete!(call!(le_u8))) => { println!("[code] {:?}", res) })
+                >> sec_size:
+                    tap!( res: opt!(complete!(call!(leb_u32))) => {println!("[size] {:?}", res) })
+                >> opt!(switch!(value!(sec_code),
+                    Some(1) => map!(parse_typesec, |sec| { println!("{:?}", sec); module.types = sec }) |
+                    Some(2) => map!(parse_importsec, |sec| { println!("{:?}", sec); module.imports = sec }) |
+                    Some(3) => map!(parse_funcsec, |sec| { println!("{:?}", sec); module.funcs = sec }) |
+                    Some(4) => map!(parse_tablesec, |sec| { println!("{:?}", sec); module.tables = sec }) |
+                    Some(5) => map!(parse_memsec, |sec| { println!("{:?}", sec); module.mems = sec }) |
+                    Some(6) => map!(parse_globalsec, |sec| { println!("{:?}", sec); module.globals = sec }) |
+                    Some(7) => map!(parse_exportsec, |sec| { println!("{:?}", sec); module.exports = sec }) |
+                    Some(8) => map!(parse_startsec, |sec| { println!("{:?}", sec); module.start = sec }) |
+                    Some(9) => map!(parse_elemsec, |sec| { println!("{:?}", sec); module.elem = sec }) |
+                    Some(10) => map!(parse_codesec, |sec| { println!("{:?}", sec); module.code = sec }) |
+                    Some(c) => map!(take!(0), |_| println!("Got: {}", c)) |
+                    _ => value!(())
+                ))
+                >> (sec_code)
         )?;
-        
+
         println!("Input length: {}", input.len());
-        
+
         input = rest;
 
         if code.is_none() {
@@ -133,9 +127,6 @@ pub fn parse_module(input: &[u8]) -> IResult<&[u8], Module> {
         //         break;
         //     }
         // }
-
-
-
 
         // if let Ok((_, None)) = check {}
 

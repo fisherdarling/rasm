@@ -1,7 +1,7 @@
 use crate::instr::Expression;
+use crate::leb_u32;
 use crate::parser::{parse_expression, parse_vec_index};
 use crate::types::index::{FuncIdx, ParseIndex, TableIdx};
-use crate::leb_u32;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ElementSection(pub Vec<Element>);

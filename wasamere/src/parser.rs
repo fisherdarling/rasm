@@ -85,7 +85,12 @@ pub fn parse_function(input: &[u8]) -> IResult<&[u8], Function> {
         map!(parse_locals, |local| local.0),
         num_locals as usize
     )?;
+
+    println!("Vec Locals: {:?}", vec_locals);
+
     let vec_valtypes: Vec<ValType> = vec_locals.into_iter().flatten().collect();
+
+    println!("Vec ValTypes: {:?}", vec_valtypes);
 
     let locals = Locals(vec_valtypes);
 

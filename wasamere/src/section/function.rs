@@ -1,7 +1,7 @@
 use crate::leb_u32;
 use crate::parser::parse_functype;
-use crate::types::FuncType;
 use crate::types::index::{FuncIdx, ParseIndex};
+use crate::types::FuncType;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FuncSection(pub Vec<FuncIdx>);
