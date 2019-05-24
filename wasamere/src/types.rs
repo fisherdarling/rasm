@@ -130,6 +130,9 @@ impl From<u8> for Mut {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Locals(pub Vec<ValType>);
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct Data(pub index::MemIdx, pub Expression, pub Vec<u8>);
+
 pub mod index {
     use crate::leb_u32;
     use nom::IResult;

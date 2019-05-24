@@ -121,6 +121,17 @@ named!(
 );
 
 named!(
+    pub parse_data<Data>,
+    do_parse!(
+        index: call!(MemIdx::parse_index) >>
+        offset: call!(parse_expression) >>
+        length: call!(leb_u32) >>
+        init: count!(le_u8, length as usize) >>
+        (Data(index, offset, init))
+    )
+);
+
+named!(
     pub parse_tabletype<TableType>,
     do_parse!(
         elemtype: map!(le_u8, |b| ElemType::from(b))

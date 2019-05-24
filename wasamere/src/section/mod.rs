@@ -8,6 +8,8 @@ pub mod memory;
 pub mod start;
 pub mod table;
 pub mod typesec;
+pub mod custom;
+pub mod data;
 
 pub use code::*;
 pub use element::*;
@@ -19,3 +21,5 @@ pub use memory::*;
 pub use start::*;
 pub use table::*;
 pub use typesec::*;
+pub use custom::*;
+pub use data::*;
