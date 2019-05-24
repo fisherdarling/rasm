@@ -78,9 +78,10 @@ pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
 pub fn parse_function(input: &[u8]) -> IResult<&[u8], Function> {
     use crate::section::code::parse_locals;
 
-    let (rest, num_locals) = leb_u32(input)?;
-    let (rest, vec_locals) = count!(
-        rest,
+    let (input, func_size) = leb_u32(input)?;
+    let (input, num_locals) = leb_u32(input)?;
+    let (input, vec_locals) = count!(
+        input,
         map!(parse_locals, |local| local.0),
         num_locals as usize
     )?;
@@ -88,9 +89,9 @@ pub fn parse_function(input: &[u8]) -> IResult<&[u8], Function> {
 
     let locals = Locals(vec_valtypes);
 
-    let (rest, code) = parse_expression(rest)?;
+    let (input, code) = parse_expression(input)?;
 
-    Ok((rest, Function(locals, code)))
+    Ok((input, Function(locals, code)))
 }
 
 named!(
