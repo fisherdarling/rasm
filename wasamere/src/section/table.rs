@@ -1,6 +1,6 @@
+use crate::leb_u32;
 use crate::parser::parse_tabletype;
 use crate::types::TableType;
-use crate::leb_u32;
 // use crate:
 
 #[derive(Debug, Clone, PartialEq)]

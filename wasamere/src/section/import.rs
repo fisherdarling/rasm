@@ -1,8 +1,8 @@
 use crate::types::index::*;
 
+use crate::leb_u32;
 use crate::parser::{parse_globaltype, parse_limit, parse_tabletype, parse_vec};
 use crate::types::{GlobalType, Limit, TableType};
-use crate::leb_u32;
 
 use nom::le_u8;
 
@@ -53,7 +53,6 @@ named!(
             })
     )
 );
-
 
 named!(pub parse_importsec<ImportSection>,
     do_parse!(

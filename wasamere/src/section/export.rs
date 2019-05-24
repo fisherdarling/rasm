@@ -1,6 +1,6 @@
 use crate::types::index::*;
 
-use crate::parser::{parse_vec};
+use crate::parser::parse_vec;
 // use crate::types::{};
 use crate::leb_u32;
 
@@ -50,7 +50,6 @@ named!(
             })
     )
 );
-
 
 named!(pub parse_exportsec<ExportSection>,
     do_parse!(

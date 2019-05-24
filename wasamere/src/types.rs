@@ -82,6 +82,9 @@ impl FuncType {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct Function(pub Locals, pub Expression);
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Limit {
     pub min: u32,
@@ -120,6 +123,9 @@ impl From<u8> for Mut {
         }
     }
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Locals(pub Vec<ValType>);
 
 pub mod index {
     use crate::leb_u32;

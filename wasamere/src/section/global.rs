@@ -1,6 +1,6 @@
-use crate::parser::{parse_globaltype, parse_expression};
-use crate::types::Global;
 use crate::leb_u32;
+use crate::parser::{parse_expression, parse_globaltype};
+use crate::types::Global;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct GlobalSection(Vec<Global>);
