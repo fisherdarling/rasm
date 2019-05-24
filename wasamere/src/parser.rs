@@ -43,6 +43,8 @@ named!(
 pub fn parse_vec<T: From<u8>>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
     let (input, length) = le_u8(data)?;
 
+
+
     count!(input, map!(le_u8, Into::into), length as usize)
 }
 
@@ -68,11 +70,11 @@ named!(
 
 // TODO: Figure out work around with :: for type parameters
 pub fn parse_functype(input: &[u8]) -> IResult<&[u8], FuncType> {
-    let (rest, _) = tag!(input, &[0x60u8])?;
-    let (rest, params) = parse_vec::<ValType>(rest)?;
-    let (rest, result) = parse_vec::<ValType>(rest)?;
+    let (input, _) = tag!(input, &[0x60u8])?;
+    let (input, params) = parse_vec::<ValType>(input)?;
+    let (input, results) = parse_vec::<ResType>(input)?;
 
-    Ok((rest, FuncType::new(params, result)))
+    Ok((input, FuncType::new(params, results)))
 }
 
 pub fn parse_function(input: &[u8]) -> IResult<&[u8], Function> {

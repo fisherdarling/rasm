@@ -73,14 +73,14 @@ impl From<u8> for ResType {
 #[derive(Debug, Clone, PartialEq)]
 pub struct FuncType {
     params: Vec<ValType>,
-    result: ValType,
+    result: ResType,
 }
 
 impl FuncType {
-    pub fn new(params: Vec<ValType>, result: Vec<ValType>) -> Self {
+    pub fn new(params: Vec<ValType>, results: Vec<ResType>) -> Self {
         Self {
             params,
-            result: result[0],
+            result: *results.get(0).unwrap_or(&ResType::Unit),
         }
     }
 }
