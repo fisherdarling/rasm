@@ -8,12 +8,12 @@ use crate::leb_u32;
 
 use crate::section::{
     CodeSection, ElementSection, ExportSection, FuncSection, GlobalSection, ImportSection,
-    MemSection, StartSection, TableSection, TypeSection,
+    MemSection, StartSection, TableSection, TypeSection, CustomSection, DataSection,
 };
 
 use crate::section::{
     parse_codesec, parse_elemsec, parse_exportsec, parse_funcsec, parse_globalsec, parse_importsec,
-    parse_memsec, parse_startsec, parse_tablesec, parse_typesec,
+    parse_memsec, parse_startsec, parse_tablesec, parse_typesec, parse_customsec, parse_datasec,
 };
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
@@ -23,8 +23,8 @@ pub static VERSION: u32 = 0x01_00_00_00;
 pub struct Module {
     pub magic: u32,
     pub version: u32,
-    // custom: CustomSection
-    // pub data: DataSection
+    pub custom: CustomSection,
+    pub data: DataSection,
     pub types: TypeSection,
     pub funcs: FuncSection,
     pub code: CodeSection,
@@ -63,6 +63,8 @@ impl Default for Module {
         Module {
             magic: MAGIC_NUMBER,
             version: VERSION,
+            custom: CustomSection(Vec::new()),
+            data: DataSection(Vec::new()),
             types: TypeSection(Vec::new()),
             funcs: FuncSection(Vec::new()),
             code: CodeSection(Vec::new()),
@@ -94,6 +96,7 @@ pub fn parse_module(input: &[u8]) -> IResult<&[u8], Module> {
                 >> sec_size:
                     tap!( res: opt!(complete!(call!(leb_u32))) => {println!("[size] {:?}", res) })
                 >> opt!(switch!(value!(sec_code),
+                    Some(0) => map!(parse_customsec, |sec| { println!("{:?}", sec); module.custom = sec }) |
                     Some(1) => map!(parse_typesec, |sec| { println!("{:?}", sec); module.types = sec }) |
                     Some(2) => map!(parse_importsec, |sec| { println!("{:?}", sec); module.imports = sec }) |
                     Some(3) => map!(parse_funcsec, |sec| { println!("{:?}", sec); module.funcs = sec }) |
@@ -104,6 +107,7 @@ pub fn parse_module(input: &[u8]) -> IResult<&[u8], Module> {
                     Some(8) => map!(parse_startsec, |sec| { println!("{:?}", sec); module.start = sec }) |
                     Some(9) => map!(parse_elemsec, |sec| { println!("{:?}", sec); module.elem = sec }) |
                     Some(10) => map!(parse_codesec, |sec| { println!("{:?}", sec); module.code = sec }) |
+                    Some(11) => map!(parse_datasec, |sec| { println!("{:?}", sec); module.data = sec }) |
                     Some(c) => map!(take!(0), |_| println!("Got: {}", c)) |
                     _ => value!(())
                 ))
@@ -117,26 +121,6 @@ pub fn parse_module(input: &[u8]) -> IResult<&[u8], Module> {
         if code.is_none() {
             break;
         }
-
-        // println!("")
-
-        // if let Ok((rest, code)) = res {
-        //     input = rest;
-
-        //     if code.is_none() {
-        //         break;
-        //     }
-        // }
-
-        // if let Ok((_, None)) = check {}
-
-        // match check {
-        //     Ok((new_input, Some(code))) => {
-        //         println!("Parsed section code {}", code);
-        //         input = new_input;
-        //     },
-        //     _ => break,
-        // }
     }
 
     Ok((input, module))
