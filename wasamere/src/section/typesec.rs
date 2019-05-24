@@ -6,7 +6,7 @@ use crate::types::FuncType;
 pub struct TypeSection(pub Vec<FuncType>);
 
 named!(
-    parse_typesec<TypeSection>,
+    pub parse_typesec<TypeSection>,
     do_parse!(
         length: call!(leb_u32)
             >> types: count!(parse_functype, length as usize)

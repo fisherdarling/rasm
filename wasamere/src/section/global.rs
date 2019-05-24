@@ -3,7 +3,7 @@ use crate::parser::{parse_expression, parse_globaltype};
 use crate::types::Global;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct GlobalSection(Vec<Global>);
+pub struct GlobalSection(pub Vec<Global>);
 
 named!(pub parse_global<Global>,
     do_parse!(

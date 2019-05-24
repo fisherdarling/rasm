@@ -7,7 +7,7 @@ use crate::types::{GlobalType, Limit, TableType};
 use nom::le_u8;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ImportSection(Vec<Import>);
+pub struct ImportSection(pub Vec<Import>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Import {

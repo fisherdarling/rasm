@@ -7,7 +7,7 @@ use crate::leb_u32;
 use nom::le_u8;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ExportSection(Vec<Export>);
+pub struct ExportSection(pub Vec<Export>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Export {

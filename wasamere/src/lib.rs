@@ -3,16 +3,12 @@ extern crate nom;
 
 pub mod error;
 pub mod instr;
+pub mod module;
 pub mod parser;
 pub mod section;
 pub mod types;
 
 use nom::{le_u8, IResult};
-
-// pub fn leb_le_u32(input: &[u8]) -> IResult<&[u8], u32> {
-
-//     Ok((&[10], 0))
-// }
 
 pub fn leb_u32(input: &[u8]) -> IResult<&[u8], u32> {
     let (rest, byte) = le_u8(input)?;

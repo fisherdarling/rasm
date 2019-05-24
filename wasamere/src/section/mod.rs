@@ -5,6 +5,7 @@ pub mod function;
 pub mod global;
 pub mod import;
 pub mod memory;
+pub mod start;
 pub mod table;
 pub mod typesec;
 
@@ -15,5 +16,6 @@ pub use function::*;
 pub use global::*;
 pub use import::*;
 pub use memory::*;
+pub use start::*;
 pub use table::*;
 pub use typesec::*;
