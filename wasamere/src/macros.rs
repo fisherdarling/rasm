@@ -16,7 +16,11 @@ macro_rules! impl_index {
 
         impl crate::parser::Parse for $id {
             fn parse(input: &[u8]) -> nom::IResult<&[u8], Self> {
+                use log::debug;
+                
                 let (input, value) = crate::leb_u32(input)?;
+                
+                debug!("Parsed {:?}: {:?}", stringify!($id), value);
 
                 Ok((input, Self(value)))
             }

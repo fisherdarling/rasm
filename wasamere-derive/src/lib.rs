@@ -50,9 +50,15 @@ fn gen_parse_impl(data: DataStruct, generics: Generics, name: &Ident) -> proc_ma
     let expanded = quote! {
         impl #impl_generics crate::parser::Parse for #name #ty_generics #where_clause {
             fn parse(input: &[u8]) -> crate::parser::PResult<Self> {
+                use log::debug;
+                
                 let mut input = input;
 
+                debug!("Parsing {}", stringify!(#name));
+
                 let value = #self_return;
+
+                debug!("Parsed {}: {:?}", stringify!(#name), value);
 
                 Ok((input, value))
             }

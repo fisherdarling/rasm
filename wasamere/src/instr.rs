@@ -248,7 +248,7 @@ named!(
     do_parse!(
         restype: call!(ResType::parse)
             >> instrs: many_till!(parse_instr, tag!(&[0x0B]))
-            >> (Instr::Block(ResType::from(restype), instrs.0))
+            >> (Instr::Block(restype, instrs.0))
     )
 );
 

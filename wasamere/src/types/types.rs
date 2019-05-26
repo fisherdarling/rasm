@@ -84,8 +84,27 @@ impl Parse for FuncType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Parse)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Function(pub Locals, pub Expression);
+
+impl Parse for Function {
+    fn parse(input: &[u8]) -> PResult<Self> {
+        use log::debug;
+
+        debug!("Parsing Function");
+
+        let (input, body_size) = u32::parse(input)?;
+
+        let (input, locals) = Locals::parse(input)?;
+        let (input, expression) = Expression::parse(input)?;
+
+        let value = Function(locals, expression);
+
+        debug!("Parsed {}: {:?}", "Function", value);
+
+        Ok((input, value))
+    }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Limit {
@@ -156,6 +175,7 @@ impl Parse for Locals {
 
         let (input, ()) = do_parse!(input, 
             num: call!(le_u8) >>
+            // value!({println!("Num locals {}", num)}) >>    
             count!(do_parse!(
                 inner_num: call!(le_u8) >>
                 value!({println!("inner_num {}", num)}) >>    
@@ -169,7 +189,7 @@ impl Parse for Locals {
             (())
         )?;
 
-        println!("Input after parsing locals: {:?}", input);
+        // println!("Input after parsing locals: {:?}", input);
 
         Ok((input, Locals(values)))
     }

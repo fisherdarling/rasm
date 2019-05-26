@@ -94,31 +94,31 @@ pub fn parse_module(input: &[u8]) -> IResult<&[u8], Module> {
     module.version = version;
 
     loop {
+        println!("Input length: {}", input.len());
         let (rest, code) = do_parse!(
             input,
-            sec_code: tap!( res: opt!(complete!(call!(le_u8))) => { println!("[code] {:?}", res) })
+            sec_code: tap!( res: opt!(complete!(call!(le_u8))) => { /* println!("[code] {:?}", res) */ })
                 >> sec_size:
-                    tap!( res: opt!(complete!(call!(leb_u32))) => {println!("[size] {:?}", res) })
+                    tap!( res: opt!(complete!(call!(leb_u32))) => { /* println!("[size] {:?}", res) */ })
                 >> opt!(switch!(value!(sec_code),
-                    Some(0) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.custom = sec }) |
-                    Some(1) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.types = sec }) |
-                    Some(2) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.imports = sec }) |
-                    Some(3) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.funcs = sec }) |
-                    Some(4) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.tables = sec }) |
-                    Some(5) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.mems = sec }) |
-                    Some(6) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.globals = sec }) |
-                    Some(7) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.exports = sec }) |
-                    Some(8) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.start = sec }) |
-                    Some(9) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.elem = sec }) |
-                    Some(10) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.code = sec }) |
-                    Some(11) => map!(Parse::parse, |sec| { println!("{:?}", sec); module.data = sec }) |
+                    Some(0) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.custom = sec }) |
+                    Some(1) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.types = sec }) |
+                    Some(2) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.imports = sec }) |
+                    Some(3) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.funcs = sec }) |
+                    Some(4) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.tables = sec }) |
+                    Some(5) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.mems = sec }) |
+                    Some(6) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.globals = sec }) |
+                    Some(7) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.exports = sec }) |
+                    Some(8) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.start = sec }) |
+                    Some(9) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.elem = sec }) |
+                    Some(10) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.code = sec }) |
+                    Some(11) => map!(Parse::parse, |sec| { println!("{:#?}", sec); module.data = sec }) |
                     Some(c) => map!(take!(0), |_| println!("Got: {}", c)) |
                     _ => value!(())
                 ))
                 >> (sec_code)
         )?;
 
-        println!("Input length: {}", input.len());
 
         input = rest;
 
