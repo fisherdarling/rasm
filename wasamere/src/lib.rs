@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate nom;
 
+#[macro_use]
+extern crate wasamere_derive;
+
 pub mod error;
 pub mod instr;
 pub mod module;

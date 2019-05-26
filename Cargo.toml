@@ -1,5 +1,7 @@
 [workspace]
 members = [
     "rasm", 
-    "wasamere"
+    "wasamere",
+    "wasamere-derive",
+    "wasamere-parse",
 ]

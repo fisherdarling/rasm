@@ -1,15 +1,5 @@
-use crate::leb_u32;
-use crate::parser::parse_tabletype;
+use crate::parser::Parse;
 use crate::types::TableType;
-// use crate:
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Parse)]
 pub struct TableSection(pub Vec<TableType>);
-
-named!(pub parse_tablesec<TableSection>,
-    do_parse!(
-        length: call!(leb_u32) >>
-        tabletypes: count!(parse_tabletype, length as usize) >>
-        (TableSection(tabletypes))
-    )
-);

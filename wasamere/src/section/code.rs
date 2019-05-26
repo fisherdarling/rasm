@@ -1,8 +1,8 @@
 use crate::leb_u32;
-use crate::parser::{parse_function, parse_vec};
+use crate::parser::{parse_function, parse_vec, Parse};
 use crate::types::{Function, Locals, ValType};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Parse)]
 pub struct CodeSection(pub Vec<Function>);
 
 named!(

@@ -1,18 +1,24 @@
 use crate::types::index::*;
 
-use crate::parser::parse_vec;
+use crate::parser::{Parse, parse_vec, PResult};
 // use crate::types::{};
 use crate::leb_u32;
 
 use nom::le_u8;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Parse)]
 pub struct ExportSection(pub Vec<Export>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Export {
     name: String,
     desc: ExportDesc,
+}
+
+impl Parse for Export {
+    fn parse(input: &[u8]) -> PResult<Export> {
+        parse_export(input)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -26,26 +32,26 @@ pub enum ExportDesc {
 named!(
     pub parse_export<Export>,
     do_parse!(
-            name: call!(parse_vec::<u8>)
+            name: call!(String::parse)
             >> desc: switch!(le_u8,
             0x00 => do_parse!(
-                index: call!(TypeIdx::parse_index) >>
+                index: call!(TypeIdx::parse) >>
                 (ExportDesc::Func(index))
             ) |
             0x01 => do_parse!(
-                index: call!(TableIdx::parse_index) >>
+                index: call!(TableIdx::parse) >>
                 (ExportDesc::Table(index))
             ) |
             0x02 => do_parse!(
-                index: call!(MemIdx::parse_index) >>
+                index: call!(MemIdx::parse) >>
                 (ExportDesc::Mem(index))
             ) |
             0x03 => do_parse!(
-                index: call!(GlobalIdx::parse_index) >>
+                index: call!(GlobalIdx::parse) >>
                 (ExportDesc::Global(index))
             ))
             >> (Export {
-                name: String::from_utf8_lossy(&name).to_string(),
+                name,
                 desc
             })
     )

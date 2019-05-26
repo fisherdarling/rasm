@@ -1,4 +1,4 @@
-// use crate::parser::Parsable;
+// use crate::parser::Parse;
 // use crate::leb_u32;
 // use nom::IResult;
 
@@ -6,7 +6,7 @@
 macro_rules! impl_index {
     ($id:ident) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-        pub struct $id(u32);
+        pub struct $id(pub(crate) u32);
 
         impl $id {
             pub fn index(&self) -> u32 {
@@ -14,7 +14,7 @@ macro_rules! impl_index {
             }
         }
 
-        impl crate::parser::Parsable for $id {
+        impl crate::parser::Parse for $id {
             fn parse(input: &[u8]) -> nom::IResult<&[u8], Self> {
                 let (input, value) = crate::leb_u32(input)?;
                 

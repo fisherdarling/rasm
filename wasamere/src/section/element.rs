@@ -1,29 +1,29 @@
 use crate::instr::Expression;
 use crate::leb_u32;
-use crate::parser::{parse_expression, parse_vec_index};
-use crate::types::index::{FuncIdx, ParseIndex, TableIdx};
+use crate::parser::Parse;
+use crate::types::index::{FuncIdx, TableIdx};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Parse)]
 pub struct ElementSection(pub Vec<Element>);
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Parse)]
 pub struct Element(pub TableIdx, pub Expression, pub Vec<FuncIdx>);
 
-named!(
-    parse_element<Element>,
-    do_parse!(
-        table: call!(TableIdx::parse_index)
-            >> init: call!(parse_expression)
-            >> funcs: call!(parse_vec_index::<FuncIdx>)
-            >> (Element(table, init, funcs))
-    )
-);
+// named!(
+//     parse_element<Element>,
+//     do_parse!(
+//         table: call!(TableIdx::parse)
+//             >> init: call!(Expression::parse)
+//             >> funcs: call!(Parse::parse)
+//             >> (Element(table, init, funcs))
+//     )
+// );
 
-named!(
-    pub parse_elemsec<ElementSection>,
-    do_parse!(
-        length: call!(leb_u32) >>
-        elements: count!(parse_element, length as usize) >>
-        (ElementSection(elements))
-    )
-);
+// named!(
+//     pub parse_elemsec<ElementSection>,
+//     do_parse!(
+//         length: call!(leb_u32) >>
+//         elements: count!(Elem, length as usize) >>
+//         (ElementSection(elements))
+//     )
+// );
