@@ -86,34 +86,6 @@ named!(
     )
 );
 
-named!(
-    pub parse_data<Data>,
-    do_parse!(
-        index: call!(MemIdx::parse) >>
-        offset: call!(Expression::parse) >>
-        length: call!(leb_u32) >>
-        init: count!(le_u8, length as usize) >>
-        (Data(index, offset, init))
-    )
-);
-
-named!(
-    pub parse_tabletype<TableType>,
-    do_parse!(
-        elemtype: call!(ElemType::parse)
-            >> limit: parse_limit
-            >> (TableType(elemtype, limit))
-    )
-);
-
-// named!(
-//     pub parse_expression<Expression>,
-//     do_parse!(
-//         instrs: many_till!(Instr::parse, tag!(&[0x0B])) >>
-//         (Expression(instrs.0)) 
-//     )
-// );
-
 #[cfg(test)]
 mod tests {
     use super::*;

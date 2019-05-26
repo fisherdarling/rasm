@@ -69,12 +69,18 @@ impl Parse for ResType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Parse)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FuncType(Vec<ValType>, ResType);
 
 impl FuncType {
     pub fn new(params: Vec<ValType>, results: Vec<ResType>) -> Self {
         Self(params, *results.get(0).unwrap_or(&ResType::Unit))
+    }
+}
+
+impl Parse for FuncType {
+    fn parse(input: &[u8]) -> PResult<Self> {
+        crate::parser::parse_functype(input)
     }
 }
 
