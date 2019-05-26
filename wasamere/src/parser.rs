@@ -55,6 +55,8 @@ impl Parse for String {
 pub fn parse_vec<T: Parse>(data: &[u8]) -> IResult<&[u8], Vec<T>> {
     let (input, length) = le_u8(data)?;
 
+    println!("Parsing vec of length {}", length);
+
     count!(input, Parse::parse, length as usize)
 }
 

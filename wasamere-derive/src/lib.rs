@@ -4,8 +4,8 @@ use crate::proc_macro::TokenStream;
 
 use quote::quote;
 use syn::{
-    parse_macro_input, Data, DataStruct, DeriveInput, Fields, FieldsNamed, FieldsUnnamed, Generics,
-    Ident,
+    parse_macro_input, Data, DataStruct, DeriveInput, Fields, FieldsNamed, FieldsUnnamed,
+    Generics, Ident,
 };
 
 #[proc_macro_derive(Parse)]
@@ -52,7 +52,9 @@ fn gen_parse_impl(data: DataStruct, generics: Generics, name: &Ident) -> proc_ma
             fn parse(input: &[u8]) -> crate::parser::PResult<Self> {
                 let mut input = input;
 
-                Ok((input, #self_return))
+                let value = #self_return;
+
+                Ok((input, value))
             }
         }
     };

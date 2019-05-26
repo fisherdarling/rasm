@@ -1,6 +1,6 @@
-use self::index::*;
 use crate::instr::Expression;
 use crate::parser::{PResult, Parse};
+use self::index::*;
 
 use nom::Err as NomErr;
 
@@ -15,7 +15,7 @@ pub enum ValType {
 impl Parse for ValType {
     fn parse(input: &[u8]) -> PResult<ValType> {
         let (input, code) = u8::parse(input)?;
-
+        
         match code {
             0x7F => Ok((input, ValType::I32)),
             0x7E => Ok((input, ValType::I64)),
@@ -57,7 +57,7 @@ impl ResType {
 impl Parse for ResType {
     fn parse(input: &[u8]) -> PResult<Self> {
         let (input, code) = u8::parse(input)?;
-
+        
         match code {
             0x7F => Ok((input, ResType::i_32())),
             0x7E => Ok((input, ResType::i_64())),
@@ -107,7 +107,7 @@ pub enum ElemType {
 impl Parse for ElemType {
     fn parse(input: &[u8]) -> PResult<ElemType> {
         let (input, code) = u8::parse(input)?;
-
+        
         match code {
             0x70 => Ok((input, ElemType::FuncRef)),
             _ => panic!("Invalid code for elemtype"),
@@ -136,7 +136,7 @@ pub enum Mut {
 impl Parse for Mut {
     fn parse(input: &[u8]) -> PResult<Mut> {
         let (input, code) = u8::parse(input)?;
-
+        
         match code {
             0x00 => Ok((input, Mut::Const)),
             0x01 => Ok((input, Mut::Var)),
@@ -145,8 +145,35 @@ impl Parse for Mut {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Parse)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Locals(pub Vec<ValType>);
+
+impl Parse for Locals {
+    fn parse(input: &[u8]) -> PResult<Self> {
+        use nom::le_u8;
+
+        let mut values = Vec::new();
+
+        let (input, ()) = do_parse!(input, 
+            num: call!(le_u8) >>
+            count!(do_parse!(
+                inner_num: call!(le_u8) >>
+                value!({println!("inner_num {}", num)}) >>    
+                val: call!(ValType::parse) >>
+                ({
+                    for i in 0..inner_num {
+                        values.push(val.clone());
+                    }
+                })
+            ), num as usize) >>
+            (())
+        )?;
+
+        println!("Input after parsing locals: {:?}", input);
+
+        Ok((input, Locals(values)))
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Parse)]
 pub struct Data(pub index::MemIdx, pub Expression, pub Vec<u8>);
@@ -163,12 +190,4 @@ pub mod index {
     impl_index!(LabelIdx);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::index::*;
-    use super::*;
-    use crate::parser::Parse;
-    use crate::test_parse;
 
-    test_parse!(parse_valtypes, Vec<ValType> => vec![ValType::I32, ValType::I64, ValType::F32, ValType::F64], &[0x04, 0x7F, 0x7E, 0x7D, 0x7C]);
-}

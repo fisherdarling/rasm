@@ -7,8 +7,17 @@ use nom::{le_f32, le_f64, le_u32, le_u64, le_u8, IResult};
 
 pub type MemArg = (u32, u32);
 
-#[derive(Debug, Clone, PartialEq, Parse)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Expression(pub Vec<Instr>);
+
+impl Parse for Expression {
+    fn parse(input: &[u8]) -> PResult<Self> {
+        do_parse!(input,
+            instrs: many_till!(parse_instr, tag!(&[0x0B])) >>
+            (Expression(instrs.0)) 
+        )
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Instr {
@@ -613,3 +622,21 @@ named!(
             >> (instr)
     )
 );
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_parse;
+    use crate::parser::Parse;
+
+    test_parse!(
+        parse_expression,
+        Expression => Expression(vec![
+            Instr::LocalGet(LocalIdx(0)),
+            Instr::LocalGet(LocalIdx(1)),
+            Instr::I32Add,
+        ]),
+        &[0x20, 0x00, 0x20, 0x01, 0x6a, 0x0b]
+    );
+}
