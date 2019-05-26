@@ -1,7 +1,7 @@
 use crate::types::index::*;
 
 use crate::leb_u32;
-use crate::parser::{Parse, parse_limit, parse_tabletype, parse_vec, PResult};
+use crate::parser::{Parse, PResult};
 use crate::types::{GlobalType, Limit, TableType};
 
 use nom::le_u8;
@@ -41,11 +41,11 @@ named!(
                 (ImportDesc::Func(index))
             ) |
             0x01 => do_parse!(
-                tabletype: call!(parse_tabletype) >>
+                tabletype: call!(TableType::parse) >>
                 (ImportDesc::Table(tabletype))
             ) |
             0x02 => do_parse!(
-                memtype: call!(parse_limit) >>
+                memtype: call!(Limit::parse) >>
                 (ImportDesc::Mem(memtype))
             ) |
             0x03 => do_parse!(
@@ -57,13 +57,5 @@ named!(
                 name,
                 desc
             })
-    )
-);
-
-named!(pub parse_importsec<ImportSection>,
-    do_parse!(
-        length: call!(leb_u32) >>
-        imports: count!(parse_import, length as usize) >>
-        (ImportSection(imports))
     )
 );

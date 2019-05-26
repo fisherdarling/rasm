@@ -1,25 +1,8 @@
-pub mod code;
-pub mod element;
 pub mod export;
-pub mod function;
-pub mod global;
 pub mod import;
-pub mod memory;
-pub mod start;
-pub mod table;
-pub mod typesec;
-pub mod custom;
-pub mod data;
+pub mod section;
 
-pub use code::*;
-pub use element::*;
+
 pub use export::*;
-pub use function::*;
-pub use global::*;
 pub use import::*;
-pub use memory::*;
-pub use start::*;
-pub use table::*;
-pub use typesec::*;
-pub use custom::*;
-pub use data::*;
+pub use section::*;

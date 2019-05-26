@@ -56,11 +56,3 @@ named!(
             })
     )
 );
-
-named!(pub parse_exportsec<ExportSection>,
-    do_parse!(
-        length: call!(leb_u32) >>
-        exports: count!(parse_export, length as usize) >>
-        (ExportSection(exports))
-    )
-);

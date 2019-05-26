@@ -1,5 +1,7 @@
 use crate::instr::Expression;
 use crate::parser::{PResult, Parse};
+use self::index::*;
+
 use nom::Err as NomErr;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -107,8 +109,17 @@ impl Parse for ElemType {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Parse)]
+pub struct Element(pub TableIdx, pub Expression, pub Vec<FuncIdx>);
+
 #[derive(Debug, Copy, Clone, PartialEq, Parse)]
 pub struct TableType(pub ElemType, pub Limit);
+
+#[derive(Debug, Copy, Clone, PartialEq, Parse)]
+pub struct GlobalType(pub ValType, pub Mut);
+
+#[derive(Debug, Clone, PartialEq, Parse)]
+pub struct Global(pub GlobalType, pub Expression);
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Mut {
