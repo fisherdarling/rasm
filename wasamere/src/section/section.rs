@@ -1,6 +1,6 @@
 use crate::parser::Parse;
-use crate::types::{Function, Data, Element, Global, Limit, TableType, FuncType};
 use crate::types::index::FuncIdx;
+use crate::types::{Data, Element, FuncType, Function, Global, Limit, TableType};
 
 #[derive(Debug, Clone, PartialEq, Parse)]
 pub struct CodeSection(pub Vec<Function>);
@@ -31,4 +31,3 @@ pub struct TableSection(pub Vec<TableType>);
 
 #[derive(Debug, Clone, PartialEq, Parse)]
 pub struct TypeSection(pub Vec<FuncType>);
-

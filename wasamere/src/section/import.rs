@@ -1,7 +1,7 @@
 use crate::types::index::*;
 
 use crate::leb_u32;
-use crate::parser::{Parse, PResult};
+use crate::parser::{PResult, Parse};
 use crate::types::{GlobalType, Limit, TableType};
 
 use nom::le_u8;

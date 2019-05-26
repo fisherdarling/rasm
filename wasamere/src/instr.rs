@@ -1,10 +1,9 @@
-
-use crate::parser::{Parse, PResult};
+use crate::parser::{PResult, Parse};
 use crate::types::index::{FuncIdx, GlobalIdx, LabelIdx, LocalIdx, TypeIdx};
 use crate::types::ResType;
 
-use nom::{le_u8, le_u32, le_u64, le_f32, le_f64, IResult};
 use crate::leb_u32;
+use nom::{le_f32, le_f64, le_u32, le_u64, le_u8, IResult};
 
 pub type MemArg = (u32, u32);
 
@@ -232,7 +231,7 @@ pub enum Instr {
 impl Parse for Instr {
     fn parse(input: &[u8]) -> PResult<Self> {
         parse_instr(input)
-    } 
+    }
 }
 
 named!(

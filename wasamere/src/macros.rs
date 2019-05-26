@@ -17,7 +17,7 @@ macro_rules! impl_index {
         impl crate::parser::Parse for $id {
             fn parse(input: &[u8]) -> nom::IResult<&[u8], Self> {
                 let (input, value) = crate::leb_u32(input)?;
-                
+
                 Ok((input, Self(value)))
             }
         }
@@ -32,6 +32,22 @@ macro_rules! impl_index {
             fn into(self) -> u32 {
                 self.0
             }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! test_parse {
+    ($name:ident, $test:ty => $inst:expr, $bytes:expr) => {
+        #[test]
+        fn $name() {
+            let input: &[u8] = $bytes;
+
+            let (input, value) = <$test>::parse(&input).unwrap();
+
+            assert!(input.is_empty());
+
+            assert_eq!($inst, value);
         }
     };
 }

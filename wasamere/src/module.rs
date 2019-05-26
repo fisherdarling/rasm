@@ -9,8 +9,8 @@ use crate::parser::Parse;
 use crate::leb_u32;
 
 use crate::section::{
-    CodeSection, ElementSection, ExportSection, FuncSection, GlobalSection, ImportSection,
-    MemSection, StartSection, TableSection, TypeSection, CustomSection, DataSection,
+    CodeSection, CustomSection, DataSection, ElementSection, ExportSection, FuncSection,
+    GlobalSection, ImportSection, MemSection, StartSection, TableSection, TypeSection,
 };
 
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;

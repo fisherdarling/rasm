@@ -4,6 +4,4 @@
 // #[derive(Parse)]
 // pub struct TestStruct(u32, TypeIdx);
 
-fn main() {
-
-}
+fn main() {}

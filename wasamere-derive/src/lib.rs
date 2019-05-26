@@ -4,8 +4,8 @@ use crate::proc_macro::TokenStream;
 
 use quote::quote;
 use syn::{
-    parse_macro_input, Data, DataStruct, DeriveInput, Fields, FieldsNamed, FieldsUnnamed,
-    Generics, Ident,
+    parse_macro_input, Data, DataStruct, DeriveInput, Fields, FieldsNamed, FieldsUnnamed, Generics,
+    Ident,
 };
 
 #[proc_macro_derive(Parse)]

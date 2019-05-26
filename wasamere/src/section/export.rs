@@ -1,6 +1,6 @@
 use crate::types::index::*;
 
-use crate::parser::{Parse, parse_vec, PResult};
+use crate::parser::{parse_vec, PResult, Parse};
 // use crate::types::{};
 use crate::leb_u32;
 

@@ -17,7 +17,9 @@ pub static VERSION: u32 = 0x01_00_00_00;
 pub type PResult<'a, T> = IResult<&'a [u8], T>;
 
 pub trait Parse {
-    fn parse(input: &[u8]) -> IResult<&[u8], Self> where Self: Sized;
+    fn parse(input: &[u8]) -> IResult<&[u8], Self>
+    where
+        Self: Sized;
 }
 
 impl Parse for u8 {

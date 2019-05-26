@@ -1,6 +1,6 @@
+use self::index::*;
 use crate::instr::Expression;
 use crate::parser::{PResult, Parse};
-use self::index::*;
 
 use nom::Err as NomErr;
 
@@ -15,7 +15,7 @@ pub enum ValType {
 impl Parse for ValType {
     fn parse(input: &[u8]) -> PResult<ValType> {
         let (input, code) = u8::parse(input)?;
-        
+
         match code {
             0x7F => Ok((input, ValType::I32)),
             0x7E => Ok((input, ValType::I64)),
@@ -57,7 +57,7 @@ impl ResType {
 impl Parse for ResType {
     fn parse(input: &[u8]) -> PResult<Self> {
         let (input, code) = u8::parse(input)?;
-        
+
         match code {
             0x7F => Ok((input, ResType::i_32())),
             0x7E => Ok((input, ResType::i_64())),
@@ -70,7 +70,7 @@ impl Parse for ResType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct FuncType(Vec<ValType>, ResType);
+pub struct FuncType(pub Vec<ValType>, pub ResType);
 
 impl FuncType {
     pub fn new(params: Vec<ValType>, results: Vec<ResType>) -> Self {
@@ -107,7 +107,7 @@ pub enum ElemType {
 impl Parse for ElemType {
     fn parse(input: &[u8]) -> PResult<ElemType> {
         let (input, code) = u8::parse(input)?;
-        
+
         match code {
             0x70 => Ok((input, ElemType::FuncRef)),
             _ => panic!("Invalid code for elemtype"),
@@ -136,7 +136,7 @@ pub enum Mut {
 impl Parse for Mut {
     fn parse(input: &[u8]) -> PResult<Mut> {
         let (input, code) = u8::parse(input)?;
-        
+
         match code {
             0x00 => Ok((input, Mut::Const)),
             0x01 => Ok((input, Mut::Var)),
@@ -161,4 +161,14 @@ pub mod index {
     impl_index!(GlobalIdx);
     impl_index!(LocalIdx);
     impl_index!(LabelIdx);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::index::*;
+    use super::*;
+    use crate::parser::Parse;
+    use crate::test_parse;
+
+    test_parse!(parse_valtypes, Vec<ValType> => vec![ValType::I32, ValType::I64, ValType::F32, ValType::F64], &[0x04, 0x7F, 0x7E, 0x7D, 0x7C]);
 }

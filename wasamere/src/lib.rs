@@ -6,11 +6,11 @@ extern crate wasamere_derive;
 
 pub mod error;
 pub mod instr;
+mod macros;
 pub mod module;
 pub mod parser;
 pub mod section;
 pub mod types;
-mod macros;
 
 use nom::{le_u8, IResult};
 
