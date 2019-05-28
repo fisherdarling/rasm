@@ -3,4 +3,5 @@ members = [
     # "rasm", 
     "wasamere",
     "wasamere-derive",
+    "yawr",
 ]

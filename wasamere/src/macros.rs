@@ -5,7 +5,7 @@
 #[macro_export]
 macro_rules! impl_index {
     ($id:ident) => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub struct $id(pub(crate) u32);
 
         impl $id {
@@ -17,9 +17,9 @@ macro_rules! impl_index {
         impl crate::parser::Parse for $id {
             fn parse(input: &[u8]) -> nom::IResult<&[u8], Self> {
                 use log::debug;
-                
+
                 let (input, value) = crate::leb_u32(input)?;
-                
+
                 debug!("Parsed {:?}: {:?}", stringify!($id), value);
 
                 Ok((input, Self(value)))
@@ -48,6 +48,22 @@ macro_rules! test_parse {
             let input: &[u8] = $bytes;
 
             let (input, value) = <$test>::parse(&input).unwrap();
+
+            assert!(input.is_empty());
+
+            assert_eq!($inst, value);
+        }
+    };
+    ($name:ident, $test:ty => $inst:expr, $bytes:expr, $debug:expr) => {
+        #[test]
+        fn $name() {
+            let input: &[u8] = $bytes;
+
+            let (input, value) = <$test>::parse(&input).unwrap();
+
+            if $debug {
+                println!("{:?}, {:?}", value, input);
+            }
 
             assert!(input.is_empty());
 

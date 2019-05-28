@@ -11,8 +11,8 @@ pub struct ExportSection(pub Vec<Export>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Export {
-    name: String,
-    desc: ExportDesc,
+    pub name: String,
+    pub desc: ExportDesc,
 }
 
 impl Parse for Export {

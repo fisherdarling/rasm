@@ -12,9 +12,9 @@ pub struct Expression(pub Vec<Instr>);
 
 impl Parse for Expression {
     fn parse(input: &[u8]) -> PResult<Self> {
-        do_parse!(input,
-            instrs: many_till!(parse_instr, tag!(&[0x0B])) >>
-            (Expression(instrs.0)) 
+        do_parse!(
+            input,
+            instrs: many_till!(parse_instr, tag!(&[0x0B])) >> (Expression(instrs.0))
         )
     }
 }
@@ -264,13 +264,15 @@ named!(
 named!(
     parse_if<Instr>,
     do_parse!(
+        // value!(println!("Parse If")) >>
         restype: call!(ResType::parse)
-            >> conseq: many_till!(parse_instr, alt!(tag!(&[0x0B]) | tag!(&[0x0F])))
+        // value!(println!("ResType: {:?}", restype))
+            >> conseq: many_till!(parse_instr, one_of!(&[0x0B, 0x05]))
+            // value!(println!("Conseq: {:?}", conseq))
             >> altern:
-                switch!(value!(conseq.1),
-                    &[0x0F] => map!(many_till!(parse_instr, tag!(&[0x0B])), |s| s.0) |
-                    &[0x0B] => value!(Vec::<Instr>::new())
-                )
+                switch!(value!(conseq.1 as u8),
+                    0x05 => map!(many_till!(parse_instr, tag!(&[0x0B])), |s| s.0) |
+                    0x0B => value!(Vec::<Instr>::new()))
             >> (Instr::If(restype, conseq.0, altern))
     )
 );
@@ -623,12 +625,25 @@ named!(
     )
 );
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_parse;
     use crate::parser::Parse;
+    use crate::test_parse;
+    use crate::types::index::*;
+    use crate::types::*;
+
+    static IF_STMT: &[u8] = &[
+        0x04, // If
+        0x7f, // ResType: i32
+        0x20, 0x00, // local.get: 0
+        0x20, 0x01, // local.get: 1
+        0x10, 0x0f, // call: FuncIdx(15)
+        0x2d, 0x00, 0x00, // i32.load8_u { align: 0, offset: 0 }
+        // Else
+        0x05, 0x41, 0x00, // i32.const: 0
+        0x0b, // end (else)
+    ];
 
     test_parse!(
         parse_expression,
@@ -638,5 +653,19 @@ mod tests {
             Instr::I32Add,
         ]),
         &[0x20, 0x00, 0x20, 0x01, 0x6a, 0x0b]
+    );
+
+    test_parse!(
+        parse_if,
+        Instr => Instr::If(ResType::i_32(), vec![
+            Instr::LocalGet(LocalIdx(0)),
+            Instr::LocalGet(LocalIdx(1)),
+            Instr::Call(FuncIdx(15)),
+            Instr::I32Load8U((0, 0)),
+        ], vec![
+            Instr::I32Const(0),
+        ]),
+        IF_STMT,
+        true
     );
 }
