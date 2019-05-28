@@ -10,8 +10,8 @@ use wasamere::instr::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Signature {
-    params: Vec<ValType>,
-    result: ResType,
+    pub(crate) params: Vec<ValType>,
+    pub(crate) result: ResType,
 }
 
 impl From<crate::types::FuncType> for Signature {
@@ -38,4 +38,6 @@ impl Function {
             body,
         }
     }
+
+    // pub fn gen_frame<'a>(&self, )
 }
