@@ -6,7 +6,7 @@ use crate::types::index::FuncIdx;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Store {
-    functions: HashMap<FuncIdx, Function>,
+    pub(crate) functions: HashMap<FuncIdx, Function>,
 }
 
 impl Store {

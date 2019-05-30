@@ -11,6 +11,8 @@ use std::ops::{Deref, Index};
 
 use wasamere::instr::*;
 
+use log::*;
+
 #[derive(Debug, Clone)]
 pub struct FuncRef(Rc<FuncInstance>);
 
@@ -50,6 +52,10 @@ impl FuncInstance {
     pub fn len(&self) -> usize {
         self.body.len()
     }
+
+    pub fn res(&self) -> &ResType {
+        &self.res
+    }
 }
 
 impl Index<usize> for FuncInstance {
@@ -64,7 +70,6 @@ impl Index<usize> for FuncInstance {
 pub struct FuncReader {
     instance: FuncRef,
     pos: Option<Cell<usize>>,
-    finished: Cell<bool>,
 }
 
 impl FuncReader {
@@ -72,18 +77,24 @@ impl FuncReader {
         FuncReader {
             instance: func,
             pos: None,
-            finished: Cell::new(false),
         }
     }
 
-    fn inc(&self) {
+    fn inc(&mut self) {
+
         match &self.pos {
             Some(pos) => { pos.set(pos.get() + 1); },
-            None => {},
-        }
+            None => {
+                if self.len() > 1 {
+                    self.pos = Some(Cell::new(0));
+                }
+            },
+        };
+        
+        debug!("Inc Reader: {:?}", self.pos);
     }
 
-    fn dec(&self) {
+    fn dec(&mut self) {
         match &self.pos {
             Some(pos) => { pos.set(pos.get() - 1); },
             None => {},
@@ -101,6 +112,8 @@ impl FuncReader {
         
         let instr = &self.instance[self.pos()?];
 
+        debug!("Get Current: {:?}", instr);
+
         Some(instr)
     }
 
@@ -108,10 +121,14 @@ impl FuncReader {
         self.instance.len()
     }
 
-    pub fn next(&self) -> Option<&Instr> {
-        if self.pos()? + 1 >= self.len() {
-            self.finished.replace(true);
+    pub fn next(&mut self) -> Option<&Instr> {
+        if self.pos.is_none() && self.len() > 0 {
+            self.inc();
+        
+            return self.current()
+        }
 
+        if self.pos()? + 1 >= self.len() {
             return None;
         }
         
@@ -120,12 +137,8 @@ impl FuncReader {
         self.current()
     }
 
-    pub fn prev(&self) -> Option<&Instr> {
+    pub fn prev(&mut self) -> Option<&Instr> {
         if self.pos()? == 0 {
-            if self.len() > 0 {
-                self.finished.replace(false);
-            }
-
             return None;
         }
 
@@ -148,7 +161,10 @@ impl FuncReader {
     }
 
     pub fn finished(&self) -> bool {
-        self.finished.get()
+        match &self.pos {
+            Some(pos) => pos.get() >= self.instance.len() - 1,
+            None => self.instance.len() == 0,
+        }
     }
 }
 

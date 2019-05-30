@@ -1,6 +1,7 @@
 use crate::function::Function;
 use crate::module::Module;
 use crate::runtime::frame::{Frame, StackElem};
+use crate::runtime::interpreter::Interpreter;
 use crate::store::Store;
 
 use crate::types::index::{FuncIdx, LocalIdx};
@@ -47,77 +48,11 @@ impl Runtime {
         }
     }
 
-    pub fn invoke(&mut self, name: String, args: Vec<Value>) -> ExecResult<WasmResult> {
-        let idx = self.resolver[&name];
-        let function = &self.store[&idx];
+    pub fn invoke<N: Into<String>, A: AsRef<[Value]>>(&mut self, name: N, args: A) -> ExecResult<WasmResult> {
+        let mut runner = Interpreter::new(self.store.functions.clone(), self.resolver.clone());
 
-        let frame = function.instantiate(&args);
-
-        // let frame = Frame::new(locals);
-        // let code: &[Instr] = &function.body.0;
-
-        // self.execute_with_frame(frame)
-
-        Ok(WasmResult::Unit)
+        runner.invoke(name, args)
     }
-
-    pub fn execute(&self, frame: Frame, code: &[Instr], restype: ResType) -> ExecResult<WasmResult>  {
-        
-        let mut stack: Vec<StackElem> = Vec::new();
-
-        for instr in code {
-            match instr {
-                Instr::LocalGet(idx) => 
-                stack
-                    .push(StackElem::Value(frame.locals[idx.index() as usize])),
-                Instr::I32Add => {
-                    let op_2 = stack.pop().unwrap();
-                    let op_1 = stack.pop().unwrap();
-
-                    if let (StackElem::Value(a), StackElem::Value(b)) = (op_1, op_2) {
-                        let res = StackElem::Value((a + b)?);
-
-                        stack.push(res);
-                    }
-                }
-                // Instr::I32Sub {
-
-
-
-                // }
-                _ => return Err(Error::NotImplemented(instr.clone())),
-            }
-        }
-
-        match restype {
-            ResType::Unit => {
-                assert!(self.stack.is_empty());
-                Ok(WasmResult::Unit)
-            },
-            ResType::ValType(ValType::I32) => {
-                if let StackElem::Value(Value::I32(res)) = stack.pop().unwrap() {
-                    Ok(WasmResult::I32(res))
-                } else {
-                    panic!()
-                }
-            },
-            // ResType::ValType(ValType::I64) => ,
-            // ResType::ValType(ValType::F32) => ,
-            // ResType::ValType(ValType::F64) => ,
-            _ => panic!()
-        }
-
-        // return self.stack.pop().unwrap()
-    }
-
-    //     WasmResult::Unit
-    // }
-
-    // #[derive(Debug, Clone, PartialEq)]
-    // pub struct Export {
-    //     name: String,
-    //     desc: ExportDesc,
-    // }
 }
 
 

@@ -7,3 +7,5 @@ edition = "2018"
 [dependencies]
 wasamere = { path = "../wasamere" }
 failure = "*"
+env_logger = "*"
+log = "*"

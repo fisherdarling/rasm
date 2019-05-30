@@ -16,7 +16,6 @@ pub enum StackElem {
 pub struct Frame {
     pub(crate) locals: Vec<Value>,
     pub(crate) stack: Vec<Value>,
-    pub(crate) reader: FuncReader,
     pub(crate) func: FuncRef,
 }
 
@@ -25,7 +24,6 @@ impl Frame {
         Frame {
             locals,
             stack: Vec::with_capacity(256),
-            reader: func.reader(),
             func,
         }
     }
@@ -34,8 +32,8 @@ impl Frame {
         &self.locals
     }
 
-    pub fn reader(&self) -> &FuncReader {
-        &self.reader
+    pub fn reader(&self) -> FuncReader {
+        self.func.reader()
     }
 }
 
