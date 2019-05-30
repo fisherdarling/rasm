@@ -1,8 +1,7 @@
 #[cfg(test)]
 pub mod tests {
-    use crate::types::Value;
     use crate::binop;
-
+    use crate::types::Value;
 
     #[test]
     fn add() {

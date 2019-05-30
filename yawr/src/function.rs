@@ -1,14 +1,14 @@
 // use std::collections::HashMap;
 
+use crate::error::{Error, ExecResult};
 use crate::module::Module;
+use crate::runtime::frame::Frame;
 use crate::types::Function as PFunction;
 use crate::types::{Locals, ResType, ValType, Value};
-use crate::runtime::frame::Frame;
-use crate::error::{ExecResult, Error};
 
-use std::rc::Rc;
 use std::cell::Cell;
 use std::ops::{Deref, Index};
+use std::rc::Rc;
 
 use wasamere::instr::*;
 
@@ -35,7 +35,6 @@ impl Deref for FuncRef {
     }
 }
 
-
 #[derive(Debug, Clone)]
 pub struct FuncInstance {
     res: ResType,
@@ -44,10 +43,7 @@ pub struct FuncInstance {
 
 impl FuncInstance {
     pub fn new(res: ResType, body: Expression) -> FuncInstance {
-        FuncInstance {
-            res,
-            body,
-        }
+        FuncInstance { res, body }
     }
 
     pub fn len(&self) -> usize {
@@ -82,23 +78,26 @@ impl FuncReader {
     }
 
     fn inc(&mut self) {
-
         match &self.pos {
-            Some(pos) => { pos.set(pos.get() + 1); },
+            Some(pos) => {
+                pos.set(pos.get() + 1);
+            }
             None => {
                 if self.len() > 1 {
                     self.pos = Some(Cell::new(0));
                 }
-            },
+            }
         };
-        
+
         debug!("Inc Reader: {:?}", self.pos);
     }
 
     fn dec(&mut self) {
         match &self.pos {
-            Some(pos) => { pos.set(pos.get() - 1); },
-            None => {},
+            Some(pos) => {
+                pos.set(pos.get() - 1);
+            }
+            None => {}
         }
     }
 
@@ -108,9 +107,9 @@ impl FuncReader {
 
     pub fn current(&self) -> Option<&Instr> {
         if self.len() == 0 {
-            return None
+            return None;
         }
-        
+
         let instr = &self.instance[self.pos()?];
 
         debug!("Get Current: {:?}", instr);
@@ -125,14 +124,14 @@ impl FuncReader {
     pub fn next(&mut self) -> Option<&Instr> {
         if self.pos.is_none() && self.len() > 0 {
             self.inc();
-        
-            return self.current()
+
+            return self.current();
         }
 
         if self.pos()? + 1 >= self.len() {
             return None;
         }
-        
+
         self.inc();
 
         self.current()
@@ -189,7 +188,7 @@ impl Function {
         let mut locals: Vec<Value> = Vec::new();
 
         if args.len() != self.signature.params.len() {
-            return Err(Error::FunctionArgumentCount)
+            return Err(Error::FunctionArgumentCount);
         }
 
         for (arg, param) in args.into_iter().zip(self.signature.params.iter()) {
@@ -212,11 +211,11 @@ impl Function {
         }
 
         let func = FuncRef::new(FuncInstance::new(self.signature.result, self.body.clone()));
-        
+
         let frame = Frame::new(locals, func);
 
         Ok(frame)
-    } 
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

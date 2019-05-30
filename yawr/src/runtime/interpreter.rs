@@ -1,14 +1,14 @@
 use std::collections::HashMap;
-use std::ops::{Deref, DerefMut};
 use std::convert::TryFrom;
+use std::ops::{Deref, DerefMut};
 
-use crate::error::{ExecResult, Error};
+use crate::error::{Error, ExecResult};
 
+use crate::function::{FuncInstance, FuncReader, FuncRef, Function};
+use crate::instr::{Expression, Instr};
 use crate::runtime::frame::Frame;
-use crate::function::{FuncRef, FuncInstance, FuncReader, Function};
-use crate::types::{index::FuncIdx, Value, WasmResult, ResType, ValType};
-use crate::instr::{Instr, Expression};
-use crate::{binop, relop, same_type, is_a};
+use crate::types::{index::FuncIdx, ResType, ValType, Value, WasmResult};
+use crate::{binop, is_a, relop, same_type};
 
 use log::*;
 
@@ -20,7 +20,10 @@ pub struct Interpreter {
 }
 
 impl Interpreter {
-    pub fn new(functions: HashMap<FuncIdx, Function>, resolver: HashMap<String, FuncIdx>) -> Interpreter {
+    pub fn new(
+        functions: HashMap<FuncIdx, Function>,
+        resolver: HashMap<String, FuncIdx>,
+    ) -> Interpreter {
         Interpreter {
             functions,
             resolver,
@@ -28,12 +31,22 @@ impl Interpreter {
         }
     }
 
-    pub fn invoke<N: Into<String>, A: AsRef<[Value]>>(&mut self, name: N, args: A) -> ExecResult<WasmResult> {
+    pub fn invoke<N: Into<String>, A: AsRef<[Value]>>(
+        &mut self,
+        name: N,
+        args: A,
+    ) -> ExecResult<WasmResult> {
         let name: String = name.into();
         let args: &[Value] = args.as_ref();
 
-        let func_idx = self.resolver.get(&name).ok_or(Error::InvalidFunctionName(name))?;
-        let function: &Function = self.functions.get(func_idx).ok_or(Error::InvalidFuncIdx(*func_idx))?;
+        let func_idx = self
+            .resolver
+            .get(&name)
+            .ok_or(Error::InvalidFunctionName(name))?;
+        let function: &Function = self
+            .functions
+            .get(func_idx)
+            .ok_or(Error::InvalidFuncIdx(*func_idx))?;
 
         let frame = function.instantiate(args)?;
 
@@ -66,7 +79,7 @@ impl Interpreter {
                 match next_instr {
                     Instr::Drop => {
                         let _ = current_frame.pop()?;
-                    },
+                    }
                     Instr::Select => {
                         let value = is_a!(I32, current_frame.pop())?;
 
@@ -80,22 +93,7 @@ impl Interpreter {
                         } else {
                             current_frame.push(val_2);
                         }
-                    },
-                    Instr::LocalGet(idx) => {
-                        let value = current_frame[idx.index() as usize];
-                        current_frame.stack_mut().push(value);
-                    },
-                    Instr::LocalSet(idx) => {
-                        let value = current_frame.pop()?;
-                        current_frame[idx.index() as usize] = value;
-                    },
-                    Instr::LocalTee(idx) => {
-                        let value = current_frame.pop()?;
-
-                        current_frame.push(value.clone());
-                        
-                        current_frame[idx.index() as usize] = value;
-                    },
+                    }
                     Instr::End => {
                         debug!("[End], Reader: {:?}", reader.finished());
 
@@ -104,41 +102,72 @@ impl Interpreter {
                         }
 
                         break 'instr;
-                    },
+                    }
+                    Instr::LocalGet(idx) => {
+                        let value = current_frame[idx.index() as usize];
+                        current_frame.stack_mut().push(value);
+                    }
+                    Instr::LocalSet(idx) => {
+                        let value = current_frame.pop()?;
+                        current_frame[idx.index() as usize] = value;
+                    }
+                    Instr::LocalTee(idx) => {
+                        let value = current_frame.pop()?;
+
+                        current_frame.push(value.clone());
+
+                        current_frame[idx.index() as usize] = value;
+                    }
                     Instr::I32Const(c) => {
                         current_frame.push(Value::I32(*c));
-                    },
+                    }
                     Instr::I64Const(c) => {
                         current_frame.push(Value::I64(*c));
-                    },
+                    }
                     Instr::F32Const(c) => {
                         current_frame.push(Value::F32(*c));
-                    },
+                    }
                     Instr::F64Const(c) => {
                         current_frame.push(Value::F64(*c));
-                    },
+                    }
                     Instr::I32Add => {
                         let (lhs, rhs) = current_frame.pop_pair()?;
 
                         let res = binop!(I32, |a, b| a + b)(lhs, rhs)?;
                         current_frame.push(res);
-                    },
-                    instr => return Err(Error::NotImplemented(instr.clone()))
+                    }
+                    Instr::I32Eqz => {
+                        let val = is_a!(I32, current_frame.pop())?;
+
+                        let res = Value::from(val == Value::I32(0));
+                        current_frame.push(res);
+                    }
+                    Instr::I32Eq => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = relop!(I32, |a, b| a == b)(lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I32Ne => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = relop!(I32, |a, b| a != b)(lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    instr => return Err(Error::NotImplemented(instr.clone())),
                 }
             }
 
             if self.frames.len() == 0 {
                 let result = match current_frame.func.res().clone() {
                     ResType::Unit => Ok(WasmResult::Unit),
-                    ResType::ValType(v) => {
-                        match (v, current_frame.pop()?) {
-                            (ValType::I32, r @ Value::I32(_)) => Ok(WasmResult::from(r)),
-                            (ValType::I64, r @ Value::I64(_)) => Ok(WasmResult::from(r)),
-                            (ValType::F32, r @ Value::F32(_)) => Ok(WasmResult::from(r)),
-                            (ValType::F64, r @ Value::F64(_)) => Ok(WasmResult::from(r)),
-                            _ => Err(Error::TypeMismatch)
-                        }
-                    }
+                    ResType::ValType(v) => match (v, current_frame.pop()?) {
+                        (ValType::I32, r @ Value::I32(_)) => Ok(WasmResult::from(r)),
+                        (ValType::I64, r @ Value::I64(_)) => Ok(WasmResult::from(r)),
+                        (ValType::F32, r @ Value::F32(_)) => Ok(WasmResult::from(r)),
+                        (ValType::F64, r @ Value::F64(_)) => Ok(WasmResult::from(r)),
+                        _ => Err(Error::TypeMismatch),
+                    },
                 };
 
                 debug!("Returning to outer function: {:?}", result);
@@ -148,14 +177,14 @@ impl Interpreter {
                 let last_frame = self.peek_frame_mut().ok_or(Error::EmptyFrameStack)?;
 
                 match current_frame.func.res().clone() {
-                    ResType::Unit => {},
+                    ResType::Unit => {}
                     ResType::ValType(v) => {
                         let value = match (v, current_frame.pop()?) {
                             (ValType::I32, r @ Value::I32(_)) => Ok(r),
                             (ValType::I64, r @ Value::I64(_)) => Ok(r),
                             (ValType::F32, r @ Value::F32(_)) => Ok(r),
                             (ValType::F64, r @ Value::F64(_)) => Ok(r),
-                            _ => Err(Error::TypeMismatch)
+                            _ => Err(Error::TypeMismatch),
                         }?;
 
                         last_frame.push(value);
@@ -176,12 +205,11 @@ impl Interpreter {
     fn peek_frame_mut(&mut self) -> Option<&mut Frame> {
         self.frames.inner_mut().last_mut()
     }
-
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct FrameStack {
-    frames: Vec<Frame>
+    frames: Vec<Frame>,
 }
 
 impl FrameStack {
@@ -197,5 +225,3 @@ impl FrameStack {
         self.frames.len()
     }
 }
-
-

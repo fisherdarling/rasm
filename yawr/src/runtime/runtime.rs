@@ -5,7 +5,7 @@ use crate::runtime::interpreter::Interpreter;
 use crate::store::Store;
 
 use crate::types::index::{FuncIdx, LocalIdx};
-use crate::types::{ValType, WasmResult, Value, ResType};
+use crate::types::{ResType, ValType, Value, WasmResult};
 
 use crate::error::{Error, ExecResult};
 
@@ -35,7 +35,7 @@ impl Runtime {
                 ExportDesc::Func(idx) => {
                     resolver.insert(name, FuncIdx::from(idx.index()));
                 }
-                _ => panic!(),
+                _ => {},
             }
         }
 
@@ -48,11 +48,13 @@ impl Runtime {
         }
     }
 
-    pub fn invoke<N: Into<String>, A: AsRef<[Value]>>(&mut self, name: N, args: A) -> ExecResult<WasmResult> {
+    pub fn invoke<N: Into<String>, A: AsRef<[Value]>>(
+        &mut self,
+        name: N,
+        args: A,
+    ) -> ExecResult<WasmResult> {
         let mut runner = Interpreter::new(self.store.functions.clone(), self.resolver.clone());
 
         runner.invoke(name, args)
     }
 }
-
-

@@ -7,24 +7,20 @@
 //         }
 //     };
 // }
-
 #[macro_export]
 macro_rules! binop {
     ($kind:ident, $ret:expr) => {
-        |a, b| {
-            match (a, b) {
-                (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind($ret(a, b))),
-                _ => Err(crate::error::Error::TypeMismatch),
-            }
+        |a, b| match (a, b) {
+            (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind($ret(a, b))),
+            _ => Err(crate::error::Error::TypeMismatch),
         };
-
     };
 }
 
 #[macro_export]
 macro_rules! relop {
-    ($kind:ident, $lhs:ident, $rhs:ident, $ret:expr) => {
-        match ($lhs, $rhs) {
+    ($kind:ident, $ret:expr) => {
+        |a, b| match (a, b) {
             (Value::$kind(a), Value::$kind(b)) => Ok(Value::from($ret(a, b))),
             _ => Err(crate::error::Error::TypeMismatch),
         }
@@ -53,15 +49,30 @@ macro_rules! is_a {
             Err(crate::error::Error::TypeMismatch)
         }
     };
-    ($kind:ident, $e:expr) => {
+    ($kind:ident, $($id:ident),+) => {
         {
-            if let v @ Value::$kind(_) = $e? {
-                Ok(v)
-            } else {
-                Err(crate::error::Error::TypeMismatch)
+            {
+                let res = vec![$(is_a!($kind, $id)),+];
+                let mut fail = Ok(());
+
+                for res in res.into_iter() {
+                    if res.is_err() {
+                        fail = res;
+                        break;
+                    }
+                }
+
+                fail
             }
         }
-    }
+    };
+    ($kind:ident, $e:expr) => {
+        if let v @ Value::$kind(_) = $e? {
+            Ok(v)
+        } else {
+            Err(crate::error::Error::TypeMismatch)
+        }
+    };
 }
 
 fn add_dummy() {

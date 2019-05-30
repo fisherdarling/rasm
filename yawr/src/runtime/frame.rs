@@ -1,10 +1,10 @@
-use crate::types::WasmResult;
 use crate::types::Value;
+use crate::types::WasmResult;
 
-use crate::runtime::Runtime;
 use crate::error::{Error, ExecResult};
+use crate::runtime::Runtime;
 
-use crate::function::{FuncRef, FuncReader};
+use crate::function::{FuncReader, FuncRef};
 
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
@@ -82,7 +82,6 @@ impl IndexMut<usize> for Frame {
     }
 }
 
-
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ValueStack {
     values: Vec<Value>,
@@ -91,9 +90,9 @@ pub struct ValueStack {
 impl ValueStack {
     pub fn with_capacity(cap: usize) -> ValueStack {
         ValueStack {
-            values: Vec::with_capacity(cap)
+            values: Vec::with_capacity(cap),
         }
-    } 
+    }
 
     pub fn push(&mut self, val: Value) {
         self.values.push(val);

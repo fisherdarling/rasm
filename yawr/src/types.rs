@@ -1,9 +1,9 @@
 pub use wasamere::types::*;
 
-use crate::error::{ExecResult, Error};
+use crate::error::{Error, ExecResult};
 
-use std::ops::{Add, Div, Mul, Sub};
 use std::convert::TryFrom;
+use std::ops::{Add, Div, Mul, Sub};
 // pub use wasamere::
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -23,7 +23,7 @@ impl Add for Value {
             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a + b)),
             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a + b)),
             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a + b)),
-            _ => Err(Error::TypeMismatch)
+            _ => Err(Error::TypeMismatch),
         }
     }
 }
@@ -37,7 +37,7 @@ impl Div for Value {
             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a / b)),
             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a / b)),
             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a / b)),
-            _ => Err(Error::TypeMismatch)
+            _ => Err(Error::TypeMismatch),
         }
     }
 }
@@ -50,7 +50,7 @@ impl Mul for Value {
             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a * b)),
             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a * b)),
             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a * b)),
-            _ => Err(Error::TypeMismatch)
+            _ => Err(Error::TypeMismatch),
         }
     }
 }
@@ -63,7 +63,7 @@ impl Sub for Value {
             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a - b)),
             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a - b)),
             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a - b)),
-            _ => Err(Error::TypeMismatch)
+            _ => Err(Error::TypeMismatch),
         }
     }
 }
@@ -86,7 +86,6 @@ impl TryFrom<Value> for bool {
     }
 }
 
-
 #[derive(Debug, Clone, Copy)]
 pub enum WasmResult {
     I32(u32),
@@ -96,15 +95,13 @@ pub enum WasmResult {
     Unit,
 }
 
-
 impl From<Value> for WasmResult {
     fn from(value: Value) -> Self {
         match value {
             Value::I32(a) => WasmResult::I32(a),
             Value::I64(a) => WasmResult::I64(a),
             Value::F32(a) => WasmResult::F32(a),
-            Value::F64(a) => WasmResult::F64(a), 
+            Value::F64(a) => WasmResult::F64(a),
         }
     }
 }
-
