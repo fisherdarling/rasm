@@ -154,6 +154,30 @@ impl Interpreter {
                         let res = relop!(I32, |a, b| a != b)(lhs, rhs)?;
                         current_frame.push(res);
                     }
+                    Instr::I32GtS => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = relop!(I32, |a, b| a as i32 > b as i32)(lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I32GtU => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = relop!(I32, |a, b| a > b)(lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I32LtS => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = relop!(I32, |a, b| (a as i32) < b as i32)(lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I32LtU => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = relop!(I32, |a, b| a < b)(lhs, rhs)?;
+                        current_frame.push(res);
+                    }
                     instr => return Err(Error::NotImplemented(instr.clone())),
                 }
             }

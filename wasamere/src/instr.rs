@@ -115,7 +115,7 @@ pub enum Instr {
     I32Eq,
     I32Ne,
     I32LtS,
-    I32LtI,
+    I32LtU,
     I32GtS,
     I32GtU,
     I32LeS,
@@ -128,7 +128,7 @@ pub enum Instr {
     I64Eq,
     I64Ne,
     I64LtS,
-    I64LtI,
+    I64LtU,
     I64GtS,
     I64GtU,
     I64LeS,
@@ -500,7 +500,7 @@ pub fn parse_num_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
         0x46 =>	value!(Instr::I32Eq) |
         0x47 =>	value!(Instr::I32Ne) |
         0x48 =>	value!(Instr::I32LtS) |
-        0x49 =>	value!(Instr::I32LtI) |
+        0x49 =>	value!(Instr::I32LtU) |
         0x4a =>	value!(Instr::I32GtS) |
         0x4b =>	value!(Instr::I32GtU) |
         0x4c =>	value!(Instr::I32LeS) |
@@ -511,7 +511,7 @@ pub fn parse_num_instr(input: &[u8], code: u8) -> IResult<&[u8], Instr> {
         0x51 =>	value!(Instr::I64Eq) |
         0x52 =>	value!(Instr::I64Ne) |
         0x53 =>	value!(Instr::I64LtS) |
-        0x54 =>	value!(Instr::I64LtI) |
+        0x54 =>	value!(Instr::I64LtU) |
         0x55 =>	value!(Instr::I64GtS) |
         0x56 =>	value!(Instr::I64GtU) |
         0x57 =>	value!(Instr::I64LeS) |

@@ -9,3 +9,5 @@ wasamere = { path = "../wasamere" }
 failure = "*"
 env_logger = "*"
 log = "*"
+clap = "*"
+structopt = "*"
