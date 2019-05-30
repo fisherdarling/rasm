@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use crate::parser::{PResult, Parse};
 use crate::types::index::{FuncIdx, GlobalIdx, LabelIdx, LocalIdx, TypeIdx};
 use crate::types::ResType;
@@ -12,10 +14,28 @@ pub struct Expression(pub Vec<Instr>);
 
 impl Parse for Expression {
     fn parse(input: &[u8]) -> PResult<Self> {
-        do_parse!(
+        let (rest, mut instrs) = do_parse!(
             input,
-            instrs: many_till!(parse_instr, tag!(&[0x0B])) >> (Expression(instrs.0))
-        )
+            instrs: many_till!(parse_instr, tag!(&[0x0B])) >> (instrs.0)
+        )?;
+
+        instrs.push(Instr::End);
+
+        Ok((rest, Expression(instrs)))
+    }
+}
+
+impl Deref for Expression {
+    type Target = [Instr];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Expression {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 
@@ -28,9 +48,9 @@ pub enum Instr {
     // Control Instructions:
     Unreachable,
     Nop,
-    Block(ResType, Vec<Instr>),
-    Loop(ResType, Vec<Instr>),
-    If(ResType, Vec<Instr>, Vec<Instr>),
+    Block(ResType, Expression),
+    Loop(ResType, Expression),
+    If(ResType, Expression, Expression),
     Br(LabelIdx),
     BrIf(LabelIdx),
     // Figure out meaning of l_N
@@ -247,8 +267,9 @@ named!(
     parse_block<Instr>,
     do_parse!(
         restype: call!(ResType::parse)
-            >> instrs: many_till!(parse_instr, tag!(&[0x0B]))
-            >> (Instr::Block(restype, instrs.0))
+            >> instrs: call!(Expression::parse)
+            // >> value!(Instr::End)
+            >> (Instr::Block(restype, instrs))
     )
 );
 
@@ -256,8 +277,8 @@ named!(
     parse_loop<Instr>,
     do_parse!(
         restype: call!(ResType::parse)
-            >> instrs: many_till!(parse_instr, tag!(&[0x0B]))
-            >> (Instr::Loop(restype, instrs.0))
+            >> instrs: call!(Expression::parse)
+            >> (Instr::Loop(restype, instrs))
     )
 );
 
@@ -271,9 +292,10 @@ named!(
             // value!(println!("Conseq: {:?}", conseq))
             >> altern:
                 switch!(value!(conseq.1 as u8),
-                    0x05 => map!(many_till!(parse_instr, tag!(&[0x0B])), |s| s.0) |
-                    0x0B => value!(Vec::<Instr>::new()))
-            >> (Instr::If(restype, conseq.0, altern))
+                    0x05 => call!(Expression::parse) |
+                    0x0B => value!(Expression(vec![Instr::End])))
+            >> conseq: map!(value!(conseq.0), |mut c| { c.push(Instr::End); Expression(c) })
+            >> (Instr::If(restype, conseq, altern))
     )
 );
 
