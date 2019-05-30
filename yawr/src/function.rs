@@ -63,7 +63,7 @@ impl Index<usize> for FuncInstance {
 #[derive(Debug, Clone)]
 pub struct FuncReader {
     instance: FuncRef,
-    pos: Option<usize>,
+    pos: Option<Cell<usize>>,
     finished: bool,
 }
 
@@ -77,21 +77,21 @@ impl FuncReader {
     }
 
     fn inc(&mut self) {
-        self.pos = match self.pos {
-            Some(pos) => Some(pos + 1),
-            None => Some(0),
+        self.pos = match &self.pos {
+            Some(pos) => Some(Cell::new(pos.get() + 1)),
+            None => Some(Cell::new(0)),
         };
     }
 
     fn dec(&mut self) {
-        self.pos = match self.pos {
-            Some(pos) => Some(pos - 1),
+        self.pos = match &self.pos {
+            Some(pos) => Some(Cell::new(pos.get() + 1)),
             None => None,
         }
     }
 
     pub fn pos(&self) -> Option<usize> {
-        self.pos
+        self.pos.clone().map(|c: Cell<usize>| c.get())
     }
 
     pub fn current(&self) -> Option<&Instr> {
@@ -139,7 +139,7 @@ impl FuncReader {
             return None;
         }
 
-        self.pos = Some(loc);
+        self.pos.replace(Cell::new(loc));
 
         self.current()
     }
