@@ -34,8 +34,8 @@ impl Frame {
         &self.locals
     }
 
-    pub fn reader(&mut self) -> &mut FuncReader {
-        &mut self.reader
+    pub fn reader(&self) -> &FuncReader {
+        &self.reader
     }
 }
 

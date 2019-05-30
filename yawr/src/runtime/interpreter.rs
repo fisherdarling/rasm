@@ -47,19 +47,25 @@ impl Interpreter {
 
     fn execute(&mut self) -> ExecResult<WasmResult> {
         let current_frame: &mut Frame = self.frames.inner().last_mut().ok_or(Error::EmptyFrameStack)?;
+        // let stack = &mut current_frame.stack;
+        let reader = current_frame.reader();
 
         loop {
-            let next_instr = current_frame.reader().next().expect("Next instruction must not be none").clone();
+            let next_instr = reader.next().expect("Next instruction must not be none");
 
             match next_instr {
                 Instr::End => {
                     // Handle return of function
                 },
                 Instr::I32Const(c) => {
-                    current_frame.stack.push(Value::I32(c));
+                    self.values.push(Value::I32(*c));
+                    // current_frame.stack.push(Value::I32(c.clone()));
                 }
                 Instr::I32Add => {
-                    // self.call_add();
+                    let (lhs, rhs) = self.values.pop_pair()?;
+
+                    let res = binop!(I32, |a, b| a + b)(lhs, rhs)?;
+                    self.values.push(res);
                 }
                 instr => return Err(Error::NotImplemented(instr.clone()))
             }

@@ -1,3 +1,5 @@
+#![feature(cell_update)]
+
 pub mod function;
 pub mod instr;
 pub mod module;

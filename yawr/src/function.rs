@@ -64,7 +64,7 @@ impl Index<usize> for FuncInstance {
 pub struct FuncReader {
     instance: FuncRef,
     pos: Option<Cell<usize>>,
-    finished: bool,
+    finished: Cell<bool>,
 }
 
 impl FuncReader {
@@ -72,21 +72,21 @@ impl FuncReader {
         FuncReader {
             instance: func,
             pos: None,
-            finished: false,
+            finished: Cell::new(false),
         }
     }
 
-    fn inc(&mut self) {
-        self.pos = match &self.pos {
-            Some(pos) => Some(Cell::new(pos.get() + 1)),
-            None => Some(Cell::new(0)),
-        };
+    fn inc(&self) {
+        match &self.pos {
+            Some(pos) => { pos.set(pos.get() + 1); },
+            None => {},
+        }
     }
 
-    fn dec(&mut self) {
-        self.pos = match &self.pos {
-            Some(pos) => Some(Cell::new(pos.get() + 1)),
-            None => None,
+    fn dec(&self) {
+        match &self.pos {
+            Some(pos) => { pos.set(pos.get() - 1); },
+            None => {},
         }
     }
 
@@ -108,9 +108,9 @@ impl FuncReader {
         self.instance.len()
     }
 
-    pub fn next(&mut self) -> Option<&Instr> {
+    pub fn next(&self) -> Option<&Instr> {
         if self.pos()? + 1 >= self.len() {
-            self.finished = true;
+            self.finished.replace(true);
 
             return None;
         }
@@ -120,10 +120,10 @@ impl FuncReader {
         self.current()
     }
 
-    pub fn prev(&mut self) -> Option<&Instr> {
+    pub fn prev(&self) -> Option<&Instr> {
         if self.pos()? == 0 {
             if self.len() > 0 {
-                self.finished = false;
+                self.finished.replace(false);
             }
 
             return None;
@@ -139,13 +139,16 @@ impl FuncReader {
             return None;
         }
 
-        self.pos.replace(Cell::new(loc));
+        match &self.pos {
+            Some(pos) => pos.set(loc),
+            None => panic!("Cannot goto without first executing next."),
+        }
 
         self.current()
     }
 
     pub fn finished(&self) -> bool {
-        self.finished
+        self.finished.get()
     }
 }
 
