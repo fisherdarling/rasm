@@ -10,7 +10,7 @@ fn main() {
 
     let args = vec![Value::I32(5), Value::I32(5)];
 
-    let res = runtime.invoke("add", &args);
+    let res = runtime.invoke("add", &args).unwrap();
 
     println!("Function: {:?}, Args: {:?}", "add", args);
     println!("Result: {:?}", res);

@@ -3,6 +3,7 @@ pub use wasamere::types::*;
 use crate::error::{ExecResult, Error};
 
 use std::ops::{Add, Div, Mul, Sub};
+use std::convert::TryFrom;
 // pub use wasamere::
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -70,6 +71,18 @@ impl Sub for Value {
 impl From<bool> for Value {
     fn from(other: bool) -> Self {
         Value::I32(other as u32)
+    }
+}
+
+impl TryFrom<Value> for bool {
+    type Error = crate::error::Error;
+
+    fn try_from(value: Value) -> Result<Self, Self::Error> {
+        if let Value::I32(c) = value {
+            Ok(c != 0)
+        } else {
+            Err(crate::error::Error::TypeMismatch)
+        }
     }
 }
 

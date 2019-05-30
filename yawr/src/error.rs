@@ -1,4 +1,5 @@
 use crate::types::index::FuncIdx;
+use crate::types::{ValType, Value};
 
 use failure::Fail;
 
@@ -10,6 +11,10 @@ pub enum Error {
     InvalidOperand,
     #[fail(display = "Type mismatch")]
     TypeMismatch,
+    #[fail(display = "The Number of arguments is different than what the signature requires.")]
+    FunctionArgumentCount,
+    #[fail(display = "Invalid argument types. Expected: {:?}, Got: {:?}", 0, 1)]
+    FunctionArgumentTypes(ValType, Value),
     #[fail(display = "Instruction not implemented: {:?}", 0)]
     NotImplemented(wasamere::instr::Instr),
     #[fail(display = "Corrupted Value Stack")]
@@ -20,4 +25,8 @@ pub enum Error {
     InvalidFuncIdx(FuncIdx),
     #[fail(display = "Empty Frame Stack")]
     EmptyFrameStack,
+    #[fail(display = "Empty Frame Value Stack")]
+    EmptyValueStack,
+    #[fail(display = "Cannot unpause a not paused Frame")]
+    UnpauseFrame,
 }

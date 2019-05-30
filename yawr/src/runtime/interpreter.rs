@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-// use std::ops::Deref;
-// use std::ops::DerefMut;
+use std::ops::{Deref, DerefMut};
+use std::convert::TryFrom;
 
 use crate::error::{ExecResult, Error};
 
@@ -8,13 +8,12 @@ use crate::runtime::frame::Frame;
 use crate::function::{FuncRef, FuncInstance, FuncReader, Function};
 use crate::types::{index::FuncIdx, Value, WasmResult, ResType, ValType};
 use crate::instr::{Instr, Expression};
-use crate::binop;
+use crate::{binop, relop, same_type, is_a};
 
 use log::*;
 
 #[derive(Debug, Clone, Default)]
 pub struct Interpreter {
-    values: ValueStack,
     frames: FrameStack,
     functions: HashMap<FuncIdx, Function>,
     resolver: HashMap<String, FuncIdx>,
@@ -36,7 +35,7 @@ impl Interpreter {
         let func_idx = self.resolver.get(&name).ok_or(Error::InvalidFunctionName(name))?;
         let function: &Function = self.functions.get(func_idx).ok_or(Error::InvalidFuncIdx(*func_idx))?;
 
-        let frame = function.instantiate(args);
+        let frame = function.instantiate(args)?;
 
         self.execute_with_frame(frame)
     }
@@ -48,25 +47,55 @@ impl Interpreter {
     }
 
     fn execute(&mut self) -> ExecResult<WasmResult> {
-        loop {
-            let current_frames_len = self.frames.len();
-            
-            debug!("Number of Stack Frames: {:?}", current_frames_len);
-            
-            let current_frame: &mut Frame = self.frames.inner().last_mut().ok_or(Error::EmptyFrameStack)?;
-            let mut reader = current_frame.reader();
+        'frame: loop {
+            let mut current_frame = self.pop_frame().ok_or(Error::EmptyFrameStack)?;
+            let current_func = current_frame.func.clone();
 
-            loop {
+            let mut reader = if current_frame.is_paused() {
+                current_frame.unpause()?
+            } else {
+                current_func.reader()
+            };
+
+            'instr: loop {
                 let next_instr = reader.next().expect("Next instruction must not be none");
 
                 debug!("Next Instr: {:?}", next_instr);
-                debug!("Value Stack: {:?}", self.values);
+                debug!("Value Stack: {:?}", current_frame.stack());
 
                 match next_instr {
+                    Instr::Drop => {
+                        let _ = current_frame.pop()?;
+                    },
+                    Instr::Select => {
+                        let value = is_a!(I32, current_frame.pop())?;
+
+                        let val_2 = current_frame.pop()?;
+                        let val_1 = current_frame.pop()?;
+
+                        same_type!(val_1, val_2)?;
+
+                        if bool::try_from(value)? {
+                            current_frame.push(val_1);
+                        } else {
+                            current_frame.push(val_2);
+                        }
+                    },
                     Instr::LocalGet(idx) => {
                         let value = current_frame[idx.index() as usize];
-                        self.values.push(value);
-                    }
+                        current_frame.stack_mut().push(value);
+                    },
+                    Instr::LocalSet(idx) => {
+                        let value = current_frame.pop()?;
+                        current_frame[idx.index() as usize] = value;
+                    },
+                    Instr::LocalTee(idx) => {
+                        let value = current_frame.pop()?;
+
+                        current_frame.push(value.clone());
+                        
+                        current_frame[idx.index() as usize] = value;
+                    },
                     Instr::End => {
                         debug!("[End], Reader: {:?}", reader.finished());
 
@@ -74,40 +103,35 @@ impl Interpreter {
                             continue;
                         }
 
-                        break;
-
-                        // match current_frame.func.res() {
-                        //     ResType::Unit => {},
-                        //     ResType::ValType(v) => {
-                        //         match (v, self.values.pop()?) {
-                        //             (ValType::I32, Value::I32(i)) => {},
-                        //             _ => {},
-                        //         }
-                        //     },
-                        // }
+                        break 'instr;
                     },
                     Instr::I32Const(c) => {
-                        self.values.push(Value::I32(*c));
-                        // current_frame.stack.push(Value::I32(c.clone()));
-                    }
+                        current_frame.push(Value::I32(*c));
+                    },
+                    Instr::I64Const(c) => {
+                        current_frame.push(Value::I64(*c));
+                    },
+                    Instr::F32Const(c) => {
+                        current_frame.push(Value::F32(*c));
+                    },
+                    Instr::F64Const(c) => {
+                        current_frame.push(Value::F64(*c));
+                    },
                     Instr::I32Add => {
-                        let (lhs, rhs) = self.values.pop_pair()?;
+                        let (lhs, rhs) = current_frame.pop_pair()?;
 
                         let res = binop!(I32, |a, b| a + b)(lhs, rhs)?;
-                        self.values.push(res);
-                    }
+                        current_frame.push(res);
+                    },
                     instr => return Err(Error::NotImplemented(instr.clone()))
                 }
             }
 
-            if current_frames_len == 1 {
-
-                // Handle Returning to the outer function:
-
-                let result = match current_frame.func.res() {
+            if self.frames.len() == 0 {
+                let result = match current_frame.func.res().clone() {
                     ResType::Unit => Ok(WasmResult::Unit),
                     ResType::ValType(v) => {
-                        match (v, self.values.pop()?) {
+                        match (v, current_frame.pop()?) {
                             (ValType::I32, r @ Value::I32(_)) => Ok(WasmResult::from(r)),
                             (ValType::I64, r @ Value::I64(_)) => Ok(WasmResult::from(r)),
                             (ValType::F32, r @ Value::F32(_)) => Ok(WasmResult::from(r)),
@@ -121,17 +145,36 @@ impl Interpreter {
 
                 return result;
             } else {
-                self.pop_frame();
+                let last_frame = self.peek_frame_mut().ok_or(Error::EmptyFrameStack)?;
+
+                match current_frame.func.res().clone() {
+                    ResType::Unit => {},
+                    ResType::ValType(v) => {
+                        let value = match (v, current_frame.pop()?) {
+                            (ValType::I32, r @ Value::I32(_)) => Ok(r),
+                            (ValType::I64, r @ Value::I64(_)) => Ok(r),
+                            (ValType::F32, r @ Value::F32(_)) => Ok(r),
+                            (ValType::F64, r @ Value::F64(_)) => Ok(r),
+                            _ => Err(Error::TypeMismatch)
+                        }?;
+
+                        last_frame.push(value);
+                    }
+                };
             }
         }
     }
 
     fn push_frame(&mut self, frame: Frame) {
-        self.frames.inner().push(frame);
+        self.frames.inner_mut().push(frame);
     }
 
     fn pop_frame(&mut self) -> Option<Frame> {
-        self.frames.inner().pop()
+        self.frames.inner_mut().pop()
+    }
+
+    fn peek_frame_mut(&mut self) -> Option<&mut Frame> {
+        self.frames.inner_mut().last_mut()
     }
 
 }
@@ -142,7 +185,11 @@ pub struct FrameStack {
 }
 
 impl FrameStack {
-    pub fn inner(&mut self) -> &mut Vec<Frame> {
+    pub fn inner(&self) -> &[Frame] {
+        &self.frames
+    }
+
+    pub fn inner_mut(&mut self) -> &mut Vec<Frame> {
         &mut self.frames
     }
 
@@ -152,36 +199,3 @@ impl FrameStack {
 }
 
 
-#[derive(Debug, Default, Clone, PartialEq)]
-pub struct ValueStack {
-    values: Vec<Value>,
-}
-
-impl ValueStack {
-    pub fn with_capacity(cap: usize) -> ValueStack {
-        ValueStack {
-            values: Vec::with_capacity(cap)
-        }
-    } 
-
-    pub fn push(&mut self, val: Value) {
-        self.values.push(val);
-    }
-
-    pub fn pop(&mut self) -> ExecResult<Value> {
-        let val = self.values.pop().ok_or(Error::ValueStack)?;
-
-        Ok(val)
-    }
-
-    pub fn pop_pair(&mut self) -> ExecResult<(Value, Value)> {
-        let rhs = self.values.pop().ok_or(Error::ValueStack)?;
-        let lhs = self.values.pop().ok_or(Error::ValueStack)?;
-
-        Ok((lhs, rhs))
-    }
-
-    pub fn len(&self) -> usize {
-        self.values.len()
-    }
-}

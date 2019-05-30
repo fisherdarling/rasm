@@ -31,6 +31,39 @@ macro_rules! relop {
     };
 }
 
+#[macro_export]
+macro_rules! same_type {
+    ($lhs:ident, $rhs:ident) => {
+        match ($lhs, $rhs) {
+            (Value::I32(_), Value::I32(_)) => Ok(()),
+            (Value::I64(_), Value::I64(_)) => Ok(()),
+            (Value::F32(_), Value::F32(_)) => Ok(()),
+            (Value::F64(_), Value::F64(_)) => Ok(()),
+            _ => Err(crate::error::Error::TypeMismatch),
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! is_a {
+    ($kind:ident, $id:ident) => {
+        if let Value::$kind(_) = $id {
+            Ok(())
+        } else {
+            Err(crate::error::Error::TypeMismatch)
+        }
+    };
+    ($kind:ident, $e:expr) => {
+        {
+            if let v @ Value::$kind(_) = $e? {
+                Ok(v)
+            } else {
+                Err(crate::error::Error::TypeMismatch)
+            }
+        }
+    }
+}
+
 fn add_dummy() {
     use crate::types::Value;
 

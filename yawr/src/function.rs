@@ -4,6 +4,7 @@ use crate::module::Module;
 use crate::types::Function as PFunction;
 use crate::types::{Locals, ResType, ValType, Value};
 use crate::runtime::frame::Frame;
+use crate::error::{ExecResult, Error};
 
 use std::rc::Rc;
 use std::cell::Cell;
@@ -184,8 +185,12 @@ impl Function {
         }
     }
 
-    pub fn instantiate(&self, args: &[Value]) -> Frame {
+    pub fn instantiate(&self, args: &[Value]) -> ExecResult<Frame> {
         let mut locals: Vec<Value> = Vec::new();
+
+        if args.len() != self.signature.params.len() {
+            return Err(Error::FunctionArgumentCount)
+        }
 
         for (arg, param) in args.into_iter().zip(self.signature.params.iter()) {
             match (arg, param) {
@@ -193,7 +198,7 @@ impl Function {
                 (a @ Value::I64(_), ValType::I64) => locals.push(a.clone()),
                 (a @ Value::F32(_), ValType::F32) => locals.push(a.clone()),
                 (a @ Value::F64(_), ValType::F64) => locals.push(a.clone()),
-                _ => panic!("Invalid argument types"),
+                _ => return Err(Error::FunctionArgumentTypes(*param, *arg)),
             }
         }
 
@@ -210,7 +215,7 @@ impl Function {
         
         let frame = Frame::new(locals, func);
 
-        frame
+        Ok(frame)
     } 
 }
 
