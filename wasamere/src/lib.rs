@@ -1,3 +1,5 @@
+#![feature(custom_attribute)]
+
 #[macro_use]
 extern crate nom;
 

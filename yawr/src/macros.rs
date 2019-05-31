@@ -1,13 +1,4 @@
 #[macro_export]
-// macro_rules! binop {
-//     ($kind:ident, $lhs:ident, $rhs:ident, $ret:expr) => {
-//         match ($lhs, $rhs) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind($ret(a, b))),
-//             _ => Err(crate::error::Error::TypeMismatch),
-//         }
-//     };
-// }
-#[macro_export]
 macro_rules! binop {
     ($kind:ident, $ret:expr) => {
         |a, b| match (a, b) {

@@ -679,14 +679,14 @@ mod tests {
 
     test_parse!(
         parse_if,
-        Instr => Instr::If(ResType::i_32(), vec![
+        Instr => Instr::If(ResType::i_32(), Expression(vec![
             Instr::LocalGet(LocalIdx(0)),
             Instr::LocalGet(LocalIdx(1)),
             Instr::Call(FuncIdx(15)),
             Instr::I32Load8U((0, 0)),
-        ], vec![
+        ]), Expression(vec![
             Instr::I32Const(0),
-        ]),
+        ])),
         IF_STMT,
         true
     );

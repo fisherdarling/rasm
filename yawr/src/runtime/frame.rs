@@ -19,6 +19,7 @@ pub struct Frame {
     pub(crate) stack: ValueStack,
     pub(crate) func: FuncRef,
     pub(crate) reader: Option<FuncReader>,
+    pub(crate) is_block: bool,
 }
 
 impl Frame {
@@ -28,7 +29,17 @@ impl Frame {
             stack: ValueStack::with_capacity(256),
             func,
             reader: None,
+            is_block: false,
         }
+    }
+
+    pub fn gen_block(&self, func: FuncRef) -> Frame {
+        let mut block = Frame::new(self.locals.clone(), func);
+
+        block.stack = self.stack().clone();
+        block.is_block = true;
+
+        block
     }
 
     pub fn locals(&self) -> &[Value] {

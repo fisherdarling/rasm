@@ -1,4 +1,4 @@
-#![feature(cell_update)]
+#![feature(cell_update, custom_attribute)]
 
 pub mod error;
 pub mod function;

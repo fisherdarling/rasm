@@ -90,9 +90,28 @@ named!(
     )
 );
 
+#[derive(Debug, Clone, PartialEq, Parse)]
+pub enum TestParse {
+    #[byte(0x70)]
+    First(String),
+    #[byte(0x35)]
+    Second,
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+
+    fn parse_testenum() {
+        let input = &[0x70];
+
+        let val = TestParse::parse(input).unwrap();
+
+        println!("{:?}", val);
+    }
 
     #[test]
     fn parse_valtype_vec() {
