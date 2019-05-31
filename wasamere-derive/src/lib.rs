@@ -4,7 +4,7 @@ use crate::proc_macro::TokenStream;
 
 use std::convert::TryInto;
 
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{
     parse2, parse_macro_input, AttrStyle, Attribute, Data, DataEnum, DataStruct, DeriveInput,
     Fields, FieldsNamed, FieldsUnnamed, Generics, Ident, Lit, LitInt, Variant,
@@ -39,38 +39,19 @@ fn gen_struct_impl(data: DataStruct, generics: Generics, name: &Ident) -> proc_m
 
     let fields = data.fields;
 
-    let field_tokens = match fields {
+    let fields_do_parse = match fields {
         Fields::Named(ref fields) => gen_named_fields(fields),
         Fields::Unnamed(ref fields) => gen_unnamed_fields(fields),
-        Fields::Unit => quote! {},
-    };
-
-    let self_return = match fields {
-        Fields::Named(_) => quote! {
-            Self { #field_tokens }
-        },
-        Fields::Unnamed(_) => quote! {
-            Self ( #field_tokens )
-        },
-        Fields::Unit => quote! {
-            Self ()
-        },
+        Fields::Unit => quote! { Ok((input, Self)) },
+        _ => panic!("Fields Unnamed"),
     };
 
     let expanded = quote! {
         impl #impl_generics crate::parser::Parse for #name #ty_generics #where_clause {
-            fn parse(input: &[u8]) -> crate::parser::PResult<Self> {
-                use log::debug;
+            fn parse(input: &[u8]) -> IResult<&[u8], Self> {
+                let res = #fields_do_parse;
 
-                let mut input = input;
-
-                debug!("Parsing {}", stringify!(#name));
-
-                let value = #self_return;
-
-                debug!("Parsed {}: {:?}", stringify!(#name), value);
-
-                Ok((input, value))
+                res
             }
         }
     };
@@ -86,7 +67,11 @@ fn gen_enum_impl(
 ) -> proc_macro2::TokenStream {
     // TODO: Handle Prefix Tagging
 
-    let variant_parsers: Vec<_> = data.variants.iter().map(|v| gen_variant_block(name, v)).collect();
+    let variant_parsers: Vec<_> = data
+        .variants
+        .iter()
+        .map(|v| gen_variant_block(name, v))
+        .collect();
 
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();;
 
@@ -128,18 +113,27 @@ fn gen_variant_block(enum_name: &Ident, variant: &Variant) -> proc_macro2::Token
 
     let expanded = match kind.ident.to_string().as_str() {
         "byte" => gen_byte_block(enum_name, variant_name, &variant.fields, attr.tts.clone()),
-        other => { println!("{}", other); panic!("Attr Path Block") },
+        other => {
+            println!("{}", other);
+            panic!("Attr Path Block")
+        }
     };
 
     expanded
 }
 
-fn gen_byte_block(enum_name: &Ident, variant_name: &Ident, fields: &Fields, stream: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+fn gen_byte_block(
+    enum_name: &Ident,
+    variant_name: &Ident,
+    fields: &Fields,
+    stream: proc_macro2::TokenStream,
+) -> proc_macro2::TokenStream {
     let lit: u8 = match stream.into_iter().next().unwrap() {
-        TokenTree::Group(g) => parse2::<LitInt>(g.stream()).unwrap()
-                                .value()
-                                .try_into()
-                                .unwrap(),
+        TokenTree::Group(g) => parse2::<LitInt>(g.stream())
+            .unwrap()
+            .value()
+            .try_into()
+            .unwrap(),
         _ => panic!("Token Tree Panic"),
     };
 
@@ -151,29 +145,25 @@ fn gen_byte_block(enum_name: &Ident, variant_name: &Ident, fields: &Fields, stre
         }
         Fields::Unnamed(fields) => {
             let field_tokens = gen_unnamed_fields(&fields);
-            
-            quote!(
-                call!(
-                    |mut input: &[u8]| {
-                        // let mut input = input;
 
-                        Ok((input, #enum_name::#variant_name(#field_tokens)))
-                    }
-                )
-            )
-        },
+            quote!(call!(
+                |mut input: &[u8]| {
+                    // let mut input = input;
+
+                    Ok((input, #enum_name::#variant_name(#field_tokens)))
+                }
+            ))
+        }
         Fields::Named(fields) => {
             let field_tokens = gen_named_fields(&fields);
 
-            quote!(
-                call!(
-                    |mut input: &[u8]| {
-                        // let mut input = input;
+            quote!(call!(
+                |mut input: &[u8]| {
+                    // let mut input = input;
 
-                        Ok((input, #enum_name::#variant_name { #field_tokens }))
-                    }
-                )
-            )
+                    Ok((input, #enum_name::#variant_name { #field_tokens }))
+                }
+            ))
         }
 
         _ => panic!("Field Panic Enum"),
@@ -186,20 +176,6 @@ fn gen_byte_block(enum_name: &Ident, variant_name: &Ident, fields: &Fields, stre
     match_arm
 }
 
-// fn gen_variant_named_fields(enum_name: &Ident, )
-
-fn gen_parse_block() -> proc_macro2::TokenStream {
-    let expanded = quote! {
-        {
-            let (new_input, value) = Parse::parse(input)?;
-            input = new_input;
-            value
-        }
-    };
-
-    expanded
-}
-
 fn gen_named_fields(fields: &FieldsNamed) -> proc_macro2::TokenStream {
     // let gen = Vec::new();
 
@@ -208,30 +184,45 @@ fn gen_named_fields(fields: &FieldsNamed) -> proc_macro2::TokenStream {
         .iter()
         .map(|f| f.ident.clone().unwrap())
         .collect();
+    let idents2 = idents.clone();
 
-    let blocks: Vec<_> = fields.named.iter().map(|_| gen_parse_block()).collect();
+    let types: Vec<_> = fields.named.iter().map(|f| f.ty.clone()).collect();
 
     let expanded = quote! {
-        #(#idents: #blocks),*
+        nom::do_parse!(input,
+            #(
+                #idents: call!(<#types>::parse) >>
+            )*
+            (Self { #(#idents2),* } )
+        )
     };
 
     expanded
 }
 
 fn gen_unnamed_fields(fields: &FieldsUnnamed) -> proc_macro2::TokenStream {
-    let blocks: Vec<_> = fields.unnamed.iter().map(|_| gen_parse_block()).collect();
+    let idents: Vec<_> = fields
+        .unnamed
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            let name = format!("field_{}", i);
+            let ident = Ident::new(&name, proc_macro2::Span::call_site());
+            ident
+        })
+        .collect();
+    let idents2 = idents.clone();
+
+    let types: Vec<_> = fields.unnamed.iter().map(|f| f.ty.clone()).collect();
 
     let expanded = quote! {
-        #(#blocks),*
+        nom::do_parse!(input,
+            #(
+                #idents: call!(<#types>::parse) >>
+            )*
+            (Self ( #(#idents2),* ) )
+        )
     };
 
     expanded
 }
-
-// #[cfg(test)]
-// mod tests {
-//     #[test]
-//     fn it_works() {
-//         assert_eq!(2 + 2, 4);
-//     }
-// }
