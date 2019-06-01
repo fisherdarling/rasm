@@ -7,7 +7,8 @@ use std::convert::TryInto;
 use quote::{quote, ToTokens};
 use syn::{
     parse2, parse_macro_input, AttrStyle, Attribute, Data, DataEnum, DataStruct, DeriveInput,
-    Fields, FieldsNamed, FieldsUnnamed, Generics, Ident, Lit, LitInt, Variant,
+    Fields, FieldsNamed, FieldsUnnamed, Generics, Ident, Lit, LitInt, Variant, Field, Meta,
+    MetaList, NestedMeta
 };
 
 use proc_macro2::TokenTree;
@@ -186,12 +187,13 @@ fn gen_named_fields(fields: &FieldsNamed) -> proc_macro2::TokenStream {
         .collect();
     let idents2 = idents.clone();
 
-    let types: Vec<_> = fields.named.iter().map(|f| f.ty.clone()).collect();
+    // let types: Vec<_> = fields.named.iter().map(|f| f.ty.clone()).collect();
+    let parsers: Vec<_> = fields.named.iter().map(gen_field_parser).collect();
 
     let expanded = quote! {
         nom::do_parse!(input,
             #(
-                #idents: call!(<#types>::parse) >>
+                #idents: #parsers >>
             )*
             (Self { #(#idents2),* } )
         )
@@ -213,16 +215,77 @@ fn gen_unnamed_fields(fields: &FieldsUnnamed) -> proc_macro2::TokenStream {
         .collect();
     let idents2 = idents.clone();
 
-    let types: Vec<_> = fields.unnamed.iter().map(|f| f.ty.clone()).collect();
+    let parsers: Vec<_> = fields.unnamed.iter().map(gen_field_parser).collect();
+
+    // println!("Parsers: {:#?}", parsers);
 
     let expanded = quote! {
         nom::do_parse!(input,
             #(
-                #idents: call!(<#types>::parse) >>
+                #idents: #parsers >>
             )*
             (Self ( #(#idents2),* ) )
         )
     };
 
+    println!("Expanded: {}", expanded);
+
     expanded
 }
+
+fn gen_field_parser(field: &Field) -> proc_macro2::TokenStream {
+    if field.attrs.is_empty() {
+        let ty = &field.ty;
+
+        let expanded = quote! {
+            call!(<#ty>::parse)
+        };
+        
+        expanded
+    } else {
+        let meta = &field.attrs[0].parse_meta().unwrap();
+        
+        let parser = match meta {
+            Meta::List(list) => {
+                gen_parser_meta_list(list, field)
+            },
+            m => unimplemented!("Meta"),
+        };
+
+        parser
+    }
+}
+
+fn gen_parser_meta_list(list: &MetaList, field: &Field) -> proc_macro2::TokenStream {
+    let kind: String = list.ident.to_string();
+    
+    match kind.as_str() {
+        "tag" => {
+            let byte = get_byte_literal(&list);
+            let ty = &field.ty;
+            
+            let expanded = quote! {
+                do_parse!(
+                    tag!(&[#byte]) >>
+                    value: call!(<#ty>::parse) >>
+                    (value)
+                )
+            };
+
+            println!("MetaList: {}", expanded);
+
+            expanded
+        }
+        _ => unimplemented!("Unimplemented field attribute")
+    }
+}
+
+fn get_byte_literal(list: &MetaList) -> u8 {
+    if let NestedMeta::Literal(Lit::Int(int)) = list.nested.iter().next().unwrap() {
+        int.value().try_into().unwrap()
+    } else {
+        panic!("Invalid attribute literal.")
+    }
+}
+
+// fn get_attr_path()

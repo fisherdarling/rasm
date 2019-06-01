@@ -28,7 +28,21 @@ pub struct Signature;
 pub struct Expression;
 
 #[derive(Parse)]
-pub struct MyStruct(Expression, Signature);
+pub struct UnnamedField(Expression, Signature);
+
+#[derive(Parse)]
+pub struct NamedField {
+    expr: Expression,
+    sig: Signature,
+}
+
+
+#[derive(Parse)]
+pub struct FieldAttr {
+    #[tag(0x10)]
+    expr: Expression,
+    sig: Signature,
+}
 
 fn main() {
     // let input: &[u8] = &[];

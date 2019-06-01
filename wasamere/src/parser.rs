@@ -90,13 +90,13 @@ named!(
     )
 );
 
-#[derive(Debug, Clone, PartialEq, Parse)]
-pub enum TestParse {
-    #[byte(0x70)]
-    First(String),
-    #[byte(0x35)]
-    Second,
-}
+// #[derive(Debug, Clone, PartialEq, Parse)]
+// pub enum TestParse {
+//     #[byte(0x70)]
+//     First(String),
+//     #[byte(0x35)]
+//     Second,
+// }
 
 
 #[cfg(test)]
