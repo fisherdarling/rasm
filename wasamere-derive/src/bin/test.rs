@@ -18,13 +18,10 @@ mod parser {
 
 use nom::IResult;
 
-// #[derive(Parse)]
-// pub struct TestStruct(u32, TypeIdx);
-
-#[derive(Parse)]
+#[derive(Debug, Parse)]
 pub struct Signature;
 
-#[derive(Parse)]
+#[derive(Debug, Parse)]
 pub struct Expression;
 
 #[derive(Parse)]
@@ -36,14 +33,20 @@ pub struct NamedField {
     sig: Signature,
 }
 
-
-#[derive(Parse)]
+#[derive(Debug, Parse)]
 pub struct FieldAttr {
-    #[tag(0x10)]
+    // #[parser()]
     expr: Expression,
+    // #[tag(0x10)]
     sig: Signature,
 }
 
 fn main() {
-    // let input: &[u8] = &[];
+    use crate::parser::Parse;
+    
+    let input: &[u8] = &[0x10, 0x11, 0x12];
+
+    let (input, res) = FieldAttr::parse(input).unwrap();
+
+    println!("{:?}", res);
 }
