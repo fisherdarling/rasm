@@ -44,6 +44,12 @@ impl<T: Parse> Parse for Vec<T> {
     }
 }
 
+impl<T: Parse> Parse for Option<T> {
+    fn parse(input: &[u8]) -> PResult<Self> {
+        opt!(input, complete!(T::parse))
+    }
+}
+
 impl Parse for String {
     fn parse(input: &[u8]) -> PResult<Self> {
         let (input, bytes) = <Vec<u8>>::parse(input)?;
