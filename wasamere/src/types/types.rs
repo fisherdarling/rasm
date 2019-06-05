@@ -233,4 +233,6 @@ pub mod index {
     impl_index!(GlobalIdx);
     impl_index!(LocalIdx);
     impl_index!(LabelIdx);
+    impl_index!(Align);
+    impl_index!(Offset);
 }
