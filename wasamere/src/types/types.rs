@@ -2,13 +2,21 @@ use self::index::*;
 use crate::instr::Expression;
 use crate::parser::{PResult, Parse};
 
-use nom::Err as NomErr;
+use crate::StructNom;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+use nom::Err as NomErr;
+use nom::le_u8;
+
+#[derive(Debug, Copy, Clone, PartialEq, StructNom)]
+#[switch(le_u8)]
 pub enum ValType {
+    #[byte(0x7F)]
     I32,
+    #[byte(0x7E)]
     I64,
+    #[byte(0x7D)]
     F32,
+    #[byte(0x7C)]
     F64,
 }
 
@@ -26,9 +34,12 @@ impl Parse for ValType {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, StructNom)]
+#[switch(le_u8)]
 pub enum ResType {
+    #[range(0x7C, 0x7F)]
     ValType(ValType),
+    #[byte(0x40)]
     Unit,
 }
 
@@ -54,6 +65,14 @@ impl ResType {
     }
 }
 
+named!(test_parse<()>,
+    do_parse!(
+        thing: value!(10) >>
+        value!(println!("{:?}", thing)) >>
+        (())
+    )
+);
+
 impl Parse for ResType {
     fn parse(input: &[u8]) -> PResult<Self> {
         let (input, code) = u8::parse(input)?;
@@ -69,8 +88,8 @@ impl Parse for ResType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct FuncType(pub Vec<ValType>, pub ResType);
+#[derive(Debug, Clone, PartialEq, StructNom)]
+pub struct FuncType(#[tag(0x60)] pub Vec<ValType>, pub ResType);
 
 impl FuncType {
     pub fn new(params: Vec<ValType>, results: Vec<ResType>) -> Self {
@@ -106,7 +125,8 @@ impl Parse for Function {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, StructNom)]
+#[parser = "crate::parser::parse_limit"]
 pub struct Limit {
     pub min: u32,
     pub max: Option<u32>,
@@ -118,8 +138,10 @@ impl Parse for Limit {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, StructNom)]
+#[switch(le_u8)]
 pub enum ElemType {
+    #[byte(0x70)]
     FuncRef,
 }
 
@@ -146,9 +168,12 @@ pub struct GlobalType(pub ValType, pub Mut);
 #[derive(Debug, Clone, PartialEq, Parse)]
 pub struct Global(pub GlobalType, pub Expression);
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, StructNom)]
+#[switch(le_u8)]
 pub enum Mut {
+    #[byte(0x00)]
     Const,
+    #[byte(0x01)]
     Var,
 }
 
@@ -169,7 +194,6 @@ pub struct Locals(pub Vec<ValType>);
 
 impl Parse for Locals {
     fn parse(input: &[u8]) -> PResult<Self> {
-        use nom::le_u8;
 
         let mut values = Vec::new();
 

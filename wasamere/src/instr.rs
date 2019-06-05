@@ -4,13 +4,26 @@ use crate::parser::{PResult, Parse};
 use crate::types::index::{FuncIdx, GlobalIdx, LabelIdx, LocalIdx, TypeIdx};
 use crate::types::ResType;
 
-use crate::leb_u32;
+use crate::{leb_u32, StructNom};
 use nom::{le_f32, le_f64, le_u32, le_u64, le_u8, IResult};
 
 pub type MemArg = (u32, u32);
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, StructNom)]
 pub struct Expression(pub Vec<Instr>);
+
+impl StructNom for Vec<Instr> {
+    fn nom(input: &[u8]) -> IResult<&[u8], Self> {
+        let (rest, mut instrs) = do_parse!(
+            input,
+            instrs: many_till!(parse_instr, tag!(&[0x0B])) >> (instrs.0)
+        )?;
+
+        instrs.push(Instr::End);
+
+        Ok((rest, instrs))
+    }
+}
 
 impl Parse for Expression {
     fn parse(input: &[u8]) -> PResult<Self> {
@@ -41,11 +54,9 @@ impl DerefMut for Expression {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Instr {
-    // Ast Only:
+    // Control Instructions:
     End,
     Else,
-
-    // Control Instructions:
     Unreachable,
     Nop,
     Block(ResType, Expression),

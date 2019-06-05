@@ -1,10 +1,12 @@
-#![feature(custom_attribute)]
+#![feature(custom_attribute, specialization)]
 
 #[macro_use]
 extern crate nom;
 
 #[macro_use]
 extern crate wasamere_derive;
+
+use structnom::{generate_structnom, StructNom};
 
 pub mod error;
 pub mod instr;
@@ -15,6 +17,18 @@ pub mod section;
 pub mod types;
 
 use nom::{le_u8, IResult};
+
+generate_structnom!(little);
+
+pub trait LEB32 {}
+
+impl<T: LEB32 + From<u32>> StructNom for T {
+    fn nom(input: &[u8]) -> nom::IResult<&[u8], Self> {
+        let (input, res) = leb_u32(input)?;
+
+        Ok((input, Self::from(res)))
+    }
+}
 
 pub fn leb_u32(input: &[u8]) -> IResult<&[u8], u32> {
     let (rest, byte) = le_u8(input)?;

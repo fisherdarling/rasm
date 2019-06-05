@@ -14,6 +14,8 @@ macro_rules! impl_index {
             }
         }
 
+        impl crate::LEB32 for $id {}
+
         impl crate::parser::Parse for $id {
             fn parse(input: &[u8]) -> nom::IResult<&[u8], Self> {
                 use log::debug;
@@ -23,6 +25,20 @@ macro_rules! impl_index {
                 debug!("Parsed {:?}: {:?}", stringify!($id), value);
 
                 Ok((input, Self(value)))
+            }
+        }
+
+        impl std::ops::Deref for $id {
+            type Target = u32;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl std::ops::DerefMut for $id {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
             }
         }
 
