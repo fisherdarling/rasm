@@ -112,11 +112,11 @@ mod tests {
     #[test]
 
     fn parse_testenum() {
-        let input = &[0x70];
+        // let input = &[0x70];
 
-        let val = TestParse::parse(input).unwrap();
+        // let val = TestParse::parse(input).unwrap();
 
-        println!("{:?}", val);
+        // println!("{:?}", val);
     }
 
     #[test]

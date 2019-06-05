@@ -30,6 +30,16 @@ impl<T: LEB32 + From<u32>> StructNom for T {
     }
 }
 
+impl StructNom for String {
+    fn nom(input: &[u8]) -> nom::IResult<&[u8], Self> {
+        let (input, bytes) = <Vec<u8>>::nom(input)?;
+
+        let string = String::from_utf8(bytes).unwrap();
+
+        Ok((input, string))
+    }
+}
+
 pub fn leb_u32(input: &[u8]) -> IResult<&[u8], u32> {
     let (rest, byte) = le_u8(input)?;
 

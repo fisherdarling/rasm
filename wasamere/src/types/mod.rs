@@ -125,6 +125,7 @@ mod tests {
             Instr::LocalGet(LocalIdx(0)),
             Instr::LocalGet(LocalIdx(1)),
             Instr::I32Add,
+            Instr::End,
         ])),
         &[0x07, 0x00, 0x20, 0x00, 0x20, 0x01, 0x6a, 0x0b]
     );
@@ -152,7 +153,7 @@ mod tests {
 
         println!("{:#?}", function);
 
-        panic!();
+        // panic!();
     }
 
 }

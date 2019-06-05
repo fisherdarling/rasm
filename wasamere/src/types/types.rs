@@ -5,7 +5,7 @@ use crate::parser::{PResult, Parse};
 use crate::StructNom;
 
 use nom::Err as NomErr;
-use nom::le_u8;
+use nom::{le_u8, IResult};
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
 #[switch(le_u8)]
@@ -103,7 +103,7 @@ impl Parse for FuncType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, StructNom)]
 pub struct Function(pub Locals, pub Expression);
 
 impl Parse for Function {
@@ -156,16 +156,16 @@ impl Parse for ElemType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Parse)]
+#[derive(Debug, Clone, PartialEq, Parse, StructNom)]
 pub struct Element(pub TableIdx, pub Expression, pub Vec<FuncIdx>);
 
-#[derive(Debug, Copy, Clone, PartialEq, Parse)]
+#[derive(Debug, Copy, Clone, PartialEq, Parse, StructNom)]
 pub struct TableType(pub ElemType, pub Limit);
 
-#[derive(Debug, Copy, Clone, PartialEq, Parse)]
+#[derive(Debug, Copy, Clone, PartialEq, Parse, StructNom)]
 pub struct GlobalType(pub ValType, pub Mut);
 
-#[derive(Debug, Clone, PartialEq, Parse)]
+#[derive(Debug, Clone, PartialEq, Parse, StructNom)]
 pub struct Global(pub GlobalType, pub Expression);
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
@@ -191,6 +191,33 @@ impl Parse for Mut {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Locals(pub Vec<ValType>);
+
+impl StructNom for Locals {
+    fn nom(input: &[u8]) -> IResult<&[u8], Self> {
+        let mut values = Vec::new();
+
+        let (input, ()) = do_parse!(
+            input,
+            num: call!(le_u8) >>
+            // value!({println!("Num locals {}", num)}) >>    
+            count!(do_parse!(
+                inner_num: call!(le_u8) >>
+                // value!({println!("inner_num {}", num)}) >>    
+                val: call!(ValType::nom) >>
+                ({
+                    for i in 0..inner_num {
+                        values.push(val.clone());
+                    }
+                })
+            ), num as usize) >>
+            (())
+        )?;
+
+        // println!("Input after parsing locals: {:?}", input);
+
+        Ok((input, Locals(values)))
+    }
+}
 
 impl Parse for Locals {
     fn parse(input: &[u8]) -> PResult<Self> {
@@ -220,12 +247,12 @@ impl Parse for Locals {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Parse)]
+#[derive(Debug, Clone, PartialEq, Parse, StructNom)]
 pub struct Data(pub index::MemIdx, pub Expression, pub Vec<u8>);
 
 pub mod index {
     use crate::impl_index;
-
+    
     impl_index!(TypeIdx);
     impl_index!(FuncIdx);
     impl_index!(TableIdx);

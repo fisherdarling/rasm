@@ -13,6 +13,9 @@ use crate::section::{
     GlobalSection, ImportSection, MemSection, StartSection, TableSection, TypeSection,
 };
 
+use crate::section::section::Section;
+use crate::StructNom;
+
 pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
 pub static VERSION: u32 = 0x01_00_00_00;
 
@@ -252,6 +255,31 @@ pub fn parse_module(input: &[u8]) -> IResult<&[u8], ParsedModule> {
     }
 
     Ok((input, module))
+}
+
+#[derive(Debug, Default, Clone, PartialEq, StructNom)]
+pub struct TestModule {
+    #[parser = "nom::le_u32"]
+    magic: u32,
+    #[parser = "nom::le_u32"]
+    version: u32,
+    sections: Vec<Section>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_module() {
+        let bytes = include_bytes!("../examples/add.wasm");
+
+        let (rest, test_module) = TestModule::nom(bytes).unwrap();
+
+        println!("{:?}", test_module);
+
+
+    }
 }
 
 // named!(parse_module<Module>,

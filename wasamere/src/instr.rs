@@ -696,6 +696,7 @@ mod tests {
             Instr::LocalGet(LocalIdx(0)),
             Instr::LocalGet(LocalIdx(1)),
             Instr::I32Add,
+            Instr::End,
         ]),
         &[0x20, 0x00, 0x20, 0x01, 0x6a, 0x0b]
     );
@@ -706,9 +707,11 @@ mod tests {
             Instr::LocalGet(LocalIdx(0)),
             Instr::LocalGet(LocalIdx(1)),
             Instr::Call(FuncIdx(15)),
-            Instr::I32Load8U((0, 0)),
+            Instr::I32Load8U(0.into(), 0.into()),
+            Instr::End,
         ]), Expression(vec![
             Instr::I32Const(0),
+            Instr::End,
         ])),
         IF_STMT,
         true
