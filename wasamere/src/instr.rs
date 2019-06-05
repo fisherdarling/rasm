@@ -54,22 +54,17 @@ impl DerefMut for Expression {
 #[switch(le_u8)]
 pub enum Instr {
     // Control Instructions:
-    #[byte(0x00)]
+    #[range_start(0x00)]
     Unreachable,
-    #[byte(0x01)]
     Nop,
-    #[byte(0x02)]
     Block(ResType, Expression),
-    #[byte(0x03)]
     Loop(ResType, Expression),
-    #[byte(0x04)]
     #[parser = "parse_if"]
     If(ResType, Expression, Expression),
-    #[byte(0x05)]
+    #[range_end(0x05)]
     End,
-    #[byte(0x0B)]
+    #[range_start(0x0B)]
     Else,
-    #[range_start(0x0C)]
     Br(LabelIdx),
     BrIf(LabelIdx),
     // Figure out meaning of l_N
