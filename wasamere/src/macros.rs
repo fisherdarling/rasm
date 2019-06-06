@@ -3,7 +3,7 @@
 // use nom::IResult;
 
 #[macro_export]
-macro_rules! impl_index {
+macro_rules! impl_leb32_wrapper {
     ($id:ident) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub struct $id(pub(crate) u32);

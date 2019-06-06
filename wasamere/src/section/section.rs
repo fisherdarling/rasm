@@ -35,7 +35,7 @@ pub struct TableSection(pub Vec<TableType>);
 #[derive(Debug, Clone, PartialEq, StructNom)]
 pub struct TypeSection(pub Vec<FuncType>);
 
-crate::impl_index!(Size);
+crate::impl_leb32_wrapper!(Size);
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
 #[switch(le_u8)]

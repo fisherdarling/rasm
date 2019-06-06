@@ -131,15 +131,15 @@ impl StructNom for Locals {
 pub struct Data(pub index::MemIdx, pub Expression, pub Vec<u8>);
 
 pub mod index {
-    use crate::impl_index;
+    use crate::impl_leb32_wrapper;
 
-    impl_index!(TypeIdx);
-    impl_index!(FuncIdx);
-    impl_index!(TableIdx);
-    impl_index!(MemIdx);
-    impl_index!(GlobalIdx);
-    impl_index!(LocalIdx);
-    impl_index!(LabelIdx);
-    impl_index!(Align);
-    impl_index!(Offset);
+    impl_leb32_wrapper!(TypeIdx);
+    impl_leb32_wrapper!(FuncIdx);
+    impl_leb32_wrapper!(TableIdx);
+    impl_leb32_wrapper!(MemIdx);
+    impl_leb32_wrapper!(GlobalIdx);
+    impl_leb32_wrapper!(LocalIdx);
+    impl_leb32_wrapper!(LabelIdx);
+    impl_leb32_wrapper!(Align);
+    impl_leb32_wrapper!(Offset);
 }
