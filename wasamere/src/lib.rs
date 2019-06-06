@@ -4,9 +4,6 @@
 #[macro_use]
 extern crate nom;
 
-#[macro_use]
-extern crate wasamere_derive;
-
 use structnom::{generate_structnom, StructNom};
 
 pub mod error;

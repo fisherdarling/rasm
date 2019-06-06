@@ -11,5 +11,5 @@ env_logger = "*"
 log = "*"
 nom = "*"
 failure = "*"
-wasamere-derive = { path = "../wasamere-derive" }
+# wasamere-derive = { path = "../wasamere-derive" }
 structnom = { path = "../../structnom/structnom" }

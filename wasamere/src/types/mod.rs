@@ -8,7 +8,6 @@ mod tests {
     use super::types::index::*;
     use super::types::*;
     use crate::instr::{Expression, Instr};
-    use crate::parser::Parse;
     use crate::test_parse;
     use crate::leb_u32;
 
