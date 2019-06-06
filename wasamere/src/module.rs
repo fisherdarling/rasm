@@ -266,6 +266,24 @@ pub struct TestModule {
     sections: Vec<Section>,
 }
 
+impl StructNom for Vec<Section> {
+    fn nom(input: &[u8]) -> nom::IResult<&[u8], Self> {
+        let mut sections = Vec::new();
+
+        let (mut input, mut next) = opt!(input, complete!(Section::nom))?;
+
+        while let Some(sec) = next {
+            sections.push(sec);
+
+            let (new_input, new_next) = opt!(input, complete!(Section::nom))?;
+            input = new_input;
+            next = new_next;
+        }
+
+        Ok((input, sections))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -277,8 +295,6 @@ mod tests {
         let (rest, test_module) = TestModule::nom(bytes).unwrap();
 
         println!("{:?}", test_module);
-
-
     }
 }
 

@@ -1,13 +1,10 @@
-use crate::StructNom;
 use crate::parser::Parse;
 use crate::types::index::FuncIdx;
 use crate::types::{Data, Element, FuncType, Function, Global, Limit, TableType};
+use crate::StructNom;
 use nom::le_u8;
 
-use crate::section::{
-    import::ImportSection,
-    export::ExportSection,
-};
+use crate::section::{export::ExportSection, import::ImportSection};
 
 #[derive(Debug, Clone, PartialEq, Parse, StructNom)]
 pub struct CodeSection(pub Vec<Function>);

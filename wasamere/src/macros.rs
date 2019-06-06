@@ -63,7 +63,7 @@ macro_rules! test_parse {
         fn $name() {
             let input: &[u8] = $bytes;
 
-            let (input, value) = <$test>::parse(&input).unwrap();
+            let (input, value) = <$test>::nom(&input).unwrap();
 
             assert!(input.is_empty());
 
@@ -75,7 +75,7 @@ macro_rules! test_parse {
         fn $name() {
             let input: &[u8] = $bytes;
 
-            let (input, value) = <$test>::parse(&input).unwrap();
+            let (input, value) = <$test>::nom(&input).unwrap();
 
             if $debug {
                 println!("{:?}, {:?}", value, input);

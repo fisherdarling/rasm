@@ -10,6 +10,9 @@ mod tests {
     use crate::instr::{Expression, Instr};
     use crate::parser::Parse;
     use crate::test_parse;
+    use crate::leb_u32;
+
+    use crate::StructNom;
 
     static VALTYPES: &[u8] = &[0x7F, 0x7E, 0x7D, 0x7C];
 
@@ -99,19 +102,33 @@ mod tests {
         0x0b,       // end (if)
         ];
 
+    #[test]
+    fn broken_large_func() {
+        let input = LARGE_FUNC;
+
+        let (input, func_size) = leb_u32(input).unwrap();
+        let (input, locals) = Locals::nom(input).unwrap();
+        let (input, block) = Instr::nom(input).unwrap();
+        let (input, if_stmt) = Instr::nom(input).unwrap();
+
+        println!("{:x?}, {:#?}, {:#?}", func_size, locals, block);
+        println!("{:#?}", if_stmt);
+
+    }
+
     test_parse!(parse_valtypes, 
         Vec<ValType> => vec![ValType::I32, ValType::I64, ValType::F32, ValType::F64], 
         &[&[0x04], VALTYPES].concat()
     );
 
     test_parse!(parse_restypes,
-        Vec<ResType> => vec![ResType::i_32(), ResType::i_64(), ResType::f_32(), 
-                            ResType::f_64(), ResType::unit()],
+        Vec<ResType> => vec![ResType::I32, ResType::I64, ResType::F32, 
+                            ResType::F64, ResType::Unit],
         &[&[0x05], VALTYPES, &[0x40]].concat()
     );
 
     test_parse!(parse_functype,
-        FuncType => FuncType(vec![ValType::I32, ValType::I32], ResType::i_32()),
+        FuncType => FuncType(vec![ValType::I32, ValType::I32], vec![ResType::I32]),
         &[0x60, 0x02, 0x7f, 0x7f, 0x01, 0x7f]
     );
 
@@ -149,11 +166,9 @@ mod tests {
     fn large_func_body() {
 
         let input = LARGE_FUNC;
-        let (input, function) = Function::parse(input).expect("Unable to parse code");
+        let (input, function) = Function::nom(input).expect("Unable to parse code");
 
         println!("{:#?}", function);
-
-        // panic!();
     }
 
 }

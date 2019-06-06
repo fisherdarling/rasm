@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::parser::{PResult, Parse};
-use crate::types::index::{FuncIdx, GlobalIdx, LabelIdx, LocalIdx, TypeIdx, Offset, Align};
+use crate::types::index::{Align, FuncIdx, GlobalIdx, LabelIdx, LocalIdx, Offset, TypeIdx};
 use crate::types::ResType;
 
 use crate::{leb_u32, StructNom};
@@ -127,7 +127,7 @@ pub enum Instr {
 
     // Numeric Instructions:
     #[range_start(0x41)]
-    I32Const(u32),
+    I32Const(#[parser = "leb_u32"] u32),
     I64Const(u64),
     F32Const(f32),
     F64Const(f64),
@@ -689,6 +689,41 @@ mod tests {
         0x05, 0x41, 0x00, // i32.const: 0
         0x0b, // end (else)
     ];
+
+    static BLOCK: &[u8] = &[
+        0x02, 0x7f, // Instr (2): Block | ResType: I32
+        0x41, 0x00, // i32.const: 0
+        0x41, 0x32, // i32.const: 0x32
+        0x20, 0x00, // local.get: 0
+        0x10, 0x05, // call: FuncIdx(5)
+        0x41, 0x00, // i32.const: 0
+        0x41, 0x32, // i32.const: 0x32
+        0x20, 0x01, // local.get: 1
+        0x10, 0x0a, // call: FuncIdx(10)
+        0x71,       // i32.and
+        0x0b,       // end
+    ];
+
+
+    test_parse!(
+        parse_block,
+        Instr => Instr::Block(
+            ResType::I32,
+            Expression(vec![
+                Instr::I32Const(0),
+                Instr::I32Const(0x32),
+                Instr::LocalGet(0.into()),
+                Instr::Call(5.into()),
+                Instr::I32Const(0),
+                Instr::I32Const(0x32),
+                Instr::LocalGet(1.into()),
+                Instr::Call(10.into()),
+                Instr::I32And,
+                Instr::End
+            ])
+        ),
+        BLOCK
+    );
 
     test_parse!(
         parse_expression,

@@ -1,4 +1,5 @@
 #![feature(custom_attribute, specialization)]
+#![allow(unused)]
 
 #[macro_use]
 extern crate nom;

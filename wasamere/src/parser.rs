@@ -104,7 +104,6 @@ named!(
 //     Second,
 // }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

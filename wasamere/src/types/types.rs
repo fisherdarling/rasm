@@ -7,6 +7,8 @@ use crate::StructNom;
 use nom::Err as NomErr;
 use nom::{le_u8, IResult};
 
+use crate::leb_u32;
+
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
 #[switch(le_u8)]
 pub enum ValType {
@@ -37,11 +39,39 @@ impl Parse for ValType {
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
 #[switch(le_u8)]
 pub enum ResType {
-    #[range(0x7C, 0x7F)]
-    ValType(ValType),
+    #[byte(0x7F)]
+    I32,
+    #[byte(0x7E)]
+    I64,
+    #[byte(0x7D)]
+    F32,
+    #[byte(0x7C)]
+    F64,
     #[byte(0x40)]
     Unit,
+    #[byte(0x00)]
+    ValType(ValType),
 }
+
+// impl crate::StructNom for ResType {
+//     fn nom(input: &[u8]) -> nom::IResult<&[u8], Self> {
+//         do_parse!(
+//             input,
+//             val: switch!(le_u8, 
+//                 0x7C..=0x7F => do_parse!(
+//                     value: do_parse! (
+//                         field_0: call!(<ValType>::nom) >> 
+//                         (ResType::ValType(field_0))) >> 
+//                     value!(println!("{:?}", value)) >> 
+//                     (value)) | 
+//                 0x40 => do_parse!(
+//                     value: value! (ResType::Unit) >> 
+//                     value!(println!("{:?}",value)) >> 
+//                     (value))) >> 
+//             (val)
+//         )
+//     }
+// }
 
 impl ResType {
     pub const fn i_32() -> ResType {
@@ -65,12 +95,9 @@ impl ResType {
     }
 }
 
-named!(test_parse<()>,
-    do_parse!(
-        thing: value!(10) >>
-        value!(println!("{:?}", thing)) >>
-        (())
-    )
+named!(
+    test_parse<()>,
+    do_parse!(thing: value!(10) >> value!(println!("{:?}", thing)) >> (()))
 );
 
 impl Parse for ResType {
@@ -89,11 +116,11 @@ impl Parse for ResType {
 }
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
-pub struct FuncType(#[tag(0x60)] pub Vec<ValType>, pub ResType);
+pub struct FuncType(#[tag(0x60)] pub Vec<ValType>, pub Vec<ResType>);
 
 impl FuncType {
     pub fn new(params: Vec<ValType>, results: Vec<ResType>) -> Self {
-        Self(params, *results.get(0).unwrap_or(&ResType::Unit))
+        Self(params, results)
     }
 }
 
@@ -104,15 +131,15 @@ impl Parse for FuncType {
 }
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
-pub struct Function(pub Locals, pub Expression);
+pub struct Function(#[call(leb_u32)] pub Locals, pub Expression);
 
 impl Parse for Function {
     fn parse(input: &[u8]) -> PResult<Self> {
         use log::debug;
 
-        debug!("Parsing Function");
+        // debug!("Parsing Function");
 
-        let (input, body_size) = u32::parse(input)?;
+        // let (input, body_size) = u32::parse(input)?;
 
         let (input, locals) = Locals::parse(input)?;
         let (input, expression) = Expression::parse(input)?;
@@ -190,7 +217,7 @@ impl Parse for Mut {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Locals(pub Vec<ValType>);
+pub struct Locals(#[debug] pub Vec<ValType>);
 
 impl StructNom for Locals {
     fn nom(input: &[u8]) -> IResult<&[u8], Self> {
@@ -221,7 +248,6 @@ impl StructNom for Locals {
 
 impl Parse for Locals {
     fn parse(input: &[u8]) -> PResult<Self> {
-
         let mut values = Vec::new();
 
         let (input, ()) = do_parse!(
@@ -252,7 +278,7 @@ pub struct Data(pub index::MemIdx, pub Expression, pub Vec<u8>);
 
 pub mod index {
     use crate::impl_index;
-    
+
     impl_index!(TypeIdx);
     impl_index!(FuncIdx);
     impl_index!(TableIdx);
