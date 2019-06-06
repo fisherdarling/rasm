@@ -6,7 +6,7 @@ use env_logger::try_init;
 fn main() {
     let _ = try_init().unwrap();
 
-    let source = include_bytes!("../../examples/add.wasm");
+    let _source = include_bytes!("../../examples/add.wasm");
 
     // let module = ParsedModule::from_bytes(source);
 

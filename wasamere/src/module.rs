@@ -1,11 +1,3 @@
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
-
-use nom::{le_u32, le_u8, IResult};
-
-use crate::leb_u32;
-
 use crate::section::section::Section;
 use crate::StructNom;
 
@@ -47,7 +39,7 @@ mod tests {
     fn test_module() {
         let bytes = include_bytes!("../examples/add.wasm");
 
-        let (rest, test_module) = ParsedModule::nom(bytes).unwrap();
+        let (_rest, test_module) = ParsedModule::nom(bytes).unwrap();
 
         println!("{:?}", test_module);
     }

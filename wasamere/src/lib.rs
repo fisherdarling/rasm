@@ -10,7 +10,6 @@ pub mod error;
 pub mod instr;
 mod macros;
 pub mod module;
-pub mod parser;
 pub mod section;
 pub mod types;
 

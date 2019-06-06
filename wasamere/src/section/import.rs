@@ -1,5 +1,4 @@
 use crate::types::index::TypeIdx;
-use crate::leb_u32;
 use crate::types::{GlobalType, Limit, TableType};
 
 use crate::StructNom;

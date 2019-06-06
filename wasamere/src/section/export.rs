@@ -1,5 +1,4 @@
 use crate::types::index::*;
-use crate::leb_u32;
 use crate::StructNom;
 
 use nom::le_u8;

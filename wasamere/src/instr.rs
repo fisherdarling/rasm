@@ -1,9 +1,9 @@
-use std::ops::{Deref, DerefMut};
 use crate::types::index::{Align, FuncIdx, GlobalIdx, LabelIdx, LocalIdx, Offset, TypeIdx};
 use crate::types::ResType;
+use std::ops::{Deref, DerefMut};
 
 use crate::{leb_u32, StructNom};
-use nom::{le_f32, le_f64, le_u32, le_u64, le_u8, IResult};
+use nom::{le_u8, IResult};
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
 pub struct Expression(pub Vec<Instr>);
@@ -286,7 +286,7 @@ named!(
 mod tests {
     use super::*;
     use crate::test_parse;
-    use crate::types::index::*;
+
     use crate::types::*;
 
     static IF_STMT: &[u8] = &[
@@ -311,10 +311,9 @@ mod tests {
         0x41, 0x32, // i32.const: 0x32
         0x20, 0x01, // local.get: 1
         0x10, 0x0a, // call: FuncIdx(10)
-        0x71,       // i32.and
-        0x0b,       // end
+        0x71, // i32.and
+        0x0b, // end
     ];
-
 
     test_parse!(
         parse_block,

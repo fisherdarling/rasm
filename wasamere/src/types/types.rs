@@ -3,7 +3,6 @@ use crate::instr::Expression;
 
 use crate::StructNom;
 
-use nom::Err as NomErr;
 use nom::{le_u8, IResult};
 
 use crate::leb_u32;
@@ -43,11 +42,32 @@ pub struct FuncType(#[tag(0x60)] pub Vec<ValType>, pub Vec<ResType>);
 pub struct Function(#[call(leb_u32)] pub Locals, pub Expression);
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
-#[parser = "crate::parser::parse_limit"]
+#[parser = "parse_limit"]
 pub struct Limit {
     pub min: u32,
     pub max: Option<u32>,
 }
+
+named!(
+    pub parse_limit<Limit>,
+    map!(
+        switch!(le_u8,
+            0x00 => count!(leb_u32, 1) |
+            0x01 => count!(leb_u32, 2)
+        ),
+        |s| if s.len() == 1 {
+            Limit {
+                min: s[0],
+                max: None,
+            }
+        } else {
+            Limit {
+                min: s[0],
+                max: Some(s[1]),
+            }
+        }
+    )
+);
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
 #[switch(le_u8)]
@@ -93,7 +113,7 @@ impl StructNom for Locals {
                 // value!({println!("inner_num {}", num)}) >>    
                 val: call!(ValType::nom) >>
                 ({
-                    for i in 0..inner_num {
+                    for _i in 0..inner_num {
                         values.push(val.clone());
                     }
                 })

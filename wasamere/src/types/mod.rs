@@ -108,7 +108,7 @@ mod tests {
         let (input, func_size) = leb_u32(input).unwrap();
         let (input, locals) = Locals::nom(input).unwrap();
         let (input, block) = Instr::nom(input).unwrap();
-        let (input, if_stmt) = Instr::nom(input).unwrap();
+        let (_input, if_stmt) = Instr::nom(input).unwrap();
 
         println!("{:x?}, {:#?}, {:#?}", func_size, locals, block);
         println!("{:#?}", if_stmt);
@@ -165,7 +165,7 @@ mod tests {
     fn large_func_body() {
 
         let input = LARGE_FUNC;
-        let (input, function) = Function::nom(input).expect("Unable to parse code");
+        let (_input, function) = Function::nom(input).expect("Unable to parse code");
 
         println!("{:#?}", function);
     }
