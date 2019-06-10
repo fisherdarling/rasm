@@ -13,14 +13,14 @@ pub struct Export {
 }
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
-#[switch(le_u8)]
+#[snom(switch = le_u8)]
 pub enum ExportDesc {
-    #[byte(0x00)]
+    #[snom(val = 0x00)]
     Func(TypeIdx),
-    #[byte(0x01)]
+    #[snom(val = 0x01)]
     Table(TableIdx),
-    #[byte(0x02)]
+    #[snom(val = 0x02)]
     Mem(MemIdx),
-    #[byte(0x03)]
+    #[snom(val = 0x03)]
     Global(GlobalIdx),
 }

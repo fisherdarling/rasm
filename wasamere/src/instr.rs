@@ -36,19 +36,19 @@ impl DerefMut for Expression {
 }
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
-#[switch(le_u8)]
+#[snom(switch = le_u8)]
 pub enum Instr {
     // Control Instructions:
-    #[range_start(0x00)]
+    #[snom(range(start = 0x00))]
     Unreachable,
     Nop,
     Block(ResType, Expression),
     Loop(ResType, Expression),
-    #[parser = "parse_if"]
+    #[snom(parser = parse_if)]
     If(ResType, Expression, Expression),
-    #[range_end(0x05)]
+    #[snom(range(end = 0x05))]
     End,
-    #[range_start(0x0B)]
+    #[snom(range(start = 0x0B))]
     Else,
     Br(LabelIdx),
     BrIf(LabelIdx),
@@ -56,26 +56,26 @@ pub enum Instr {
     BrTable(Vec<LabelIdx>, LabelIdx),
     Return,
     Call(FuncIdx),
-    #[range_end(0x11)]
+    #[snom(range(end = 0x11))]
     CallIndirect(TypeIdx),
 
     // Parametric Instructions:
-    #[byte(0x1A)]
+    #[snom(val = 0x1A)]
     Drop,
-    #[byte(0x1B)]
+    #[snom(val = 0x1B)]
     Select,
 
     // Variable Instructions:
-    #[range_start(0x20)]
+    #[snom(range(start = 0x20))]
     LocalGet(LocalIdx),
     LocalSet(LocalIdx),
     LocalTee(LocalIdx),
     GlobalGet(GlobalIdx),
-    #[range_end(0x24)]
+    #[snom(range(end = 0x24))]
     GlobalSet(GlobalIdx),
 
     // Memory Instructions:
-    #[range_start(0x28)]
+    #[snom(range(start = 0x28))]
     I32Load(Align, Offset),
     I64Load(Align, Offset),
 
@@ -107,12 +107,12 @@ pub enum Instr {
     I64Store16(Align, Offset),
     I64Store32(Align, Offset),
     MemSize,
-    #[range_end(0x40)]
+    #[snom(range(end = 0x40))]
     MemGrow,
 
     // Numeric Instructions:
-    #[range_start(0x41)]
-    I32Const(#[parser = "leb_u32"] u32),
+    #[snom(range(start = 0x41))]
+    I32Const(#[snom(parser = leb_u32)] u32),
     I64Const(u64),
     F32Const(f32),
     F64Const(f64),
@@ -261,7 +261,7 @@ pub enum Instr {
     I32ReinterpF32,
     I64ReinterpF64,
     F32ReinterpI32,
-    #[range_end(0xBF)]
+    #[snom(range(end = 0xBF))]
     F64ReinterpI64,
 }
 

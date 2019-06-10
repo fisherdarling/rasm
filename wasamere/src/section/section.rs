@@ -38,9 +38,9 @@ pub struct TypeSection(pub Vec<FuncType>);
 crate::impl_leb32_wrapper!(Size);
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
-#[switch(le_u8)]
+#[snom(switch = le_u8)]
 pub enum Section {
-    #[range_start(0)]
+    #[snom(range(start = 0))]
     Custom(Size, CustomSection),
     Type(Size, TypeSection),
     Import(Size, ImportSection),
@@ -52,6 +52,6 @@ pub enum Section {
     Start(Size, StartSection),
     Element(Size, ElementSection),
     Code(Size, CodeSection),
-    #[range_end(11)]
+    #[snom(range(end = 11))]
     Data(Size, DataSection),
 }

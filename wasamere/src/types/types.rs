@@ -8,30 +8,30 @@ use nom::{le_u8, IResult};
 use crate::leb_u32;
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
-#[switch(le_u8)]
+#[snom(switch = le_u8)]
 pub enum ValType {
-    #[byte(0x7F)]
+    #[snom(val = 0x7F)]
     I32,
-    #[byte(0x7E)]
+    #[snom(val = 0x7E)]
     I64,
-    #[byte(0x7D)]
+    #[snom(val = 0x7D)]
     F32,
-    #[byte(0x7C)]
+    #[snom(val = 0x7C)]
     F64,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
-#[switch(le_u8)]
+#[snom(switch = le_u8)]
 pub enum ResType {
-    #[byte(0x7F)]
+    #[snom(val = 0x7F)]
     I32,
-    #[byte(0x7E)]
+    #[snom(val = 0x7E)]
     I64,
-    #[byte(0x7D)]
+    #[snom(val = 0x7D)]
     F32,
-    #[byte(0x7C)]
+    #[snom(val = 0x7C)]
     F64,
-    #[byte(0x40)]
+    #[snom(val = 0x40)]
     Unit,
 }
 
@@ -42,7 +42,7 @@ pub struct FuncType(#[tag(0x60)] pub Vec<ValType>, pub Vec<ResType>);
 pub struct Function(#[call(leb_u32)] pub Locals, pub Expression);
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
-#[parser = "parse_limit"]
+#[snom(parser = parse_limit)]
 pub struct Limit {
     pub min: u32,
     pub max: Option<u32>,
@@ -70,9 +70,9 @@ named!(
 );
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
-#[switch(le_u8)]
+#[snom(switch = le_u8)]
 pub enum ElemType {
-    #[byte(0x70)]
+    #[snom(val = 0x70)]
     FuncRef,
 }
 
@@ -89,16 +89,16 @@ pub struct GlobalType(pub ValType, pub Mut);
 pub struct Global(pub GlobalType, pub Expression);
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
-#[switch(le_u8)]
+#[snom(switch = le_u8)]
 pub enum Mut {
-    #[byte(0x00)]
+    #[snom(val = 0x00)]
     Const,
-    #[byte(0x01)]
+    #[snom(val = 0x01)]
     Var,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Locals(#[debug] pub Vec<ValType>);
+pub struct Locals(pub Vec<ValType>);
 
 impl StructNom for Locals {
     fn nom(input: &[u8]) -> IResult<&[u8], Self> {

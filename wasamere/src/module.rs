@@ -6,9 +6,9 @@ pub static VERSION: u32 = 0x01_00_00_00;
 
 #[derive(Debug, Default, Clone, PartialEq, StructNom)]
 pub struct ParsedModule {
-    #[parser = "nom::le_u32"]
+    #[snom(parser = nom::le_u32)]
     magic: u32,
-    #[parser = "nom::le_u32"]
+    #[snom(parser = nom::le_u32)]
     version: u32,
     sections: Vec<Section>,
 }

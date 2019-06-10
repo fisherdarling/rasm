@@ -16,14 +16,14 @@ pub struct Import {
 }
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
-#[switch(le_u8)]
+#[snom(switch = le_u8)]
 pub enum ImportDesc {
-    #[byte(0x00)]
+    #[snom(val = 0x00)]
     Func(TypeIdx),
-    #[byte(0x01)]
+    #[snom(val = 0x01)]
     Table(TableType),
-    #[byte(0x02)]
+    #[snom(val = 0x02)]
     Mem(Limit),
-    #[byte(0x03)]
+    #[snom(val = 0x03)]
     Global(GlobalType),
 }
