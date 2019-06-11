@@ -1,16 +1,20 @@
-use crate::section::section::Section;
+use crate::section::Section;
 use crate::StructNom;
 
-pub static MAGIC_NUMBER: u32 = 0x00_61_73_6D;
+pub static MAGIC_NUMBER: &[u8] = &[0x00, 0x61, 0x73, 0x6D];
 pub static VERSION: u32 = 0x01_00_00_00;
 
 #[derive(Debug, Default, Clone, PartialEq, StructNom)]
 pub struct ParsedModule {
-    #[snom(parser = nom::le_u32)]
-    magic: u32,
-    #[snom(parser = nom::le_u32)]
-    version: u32,
-    sections: Vec<Section>,
+    #[snom(tag(MAGIC_NUMBER))] // All modules start with the magic number
+    #[snom(take(4))]           // The version is always 4 bytes
+    sections: Vec<Section>
+}
+
+impl ParsedModule {
+    pub fn sections(&self) -> &[Section] {
+        &self.sections
+    }
 }
 
 impl StructNom for Vec<Section> {

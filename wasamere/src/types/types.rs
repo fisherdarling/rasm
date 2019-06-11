@@ -36,10 +36,10 @@ pub enum ResType {
 }
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
-pub struct FuncType(#[tag(0x60)] pub Vec<ValType>, pub Vec<ResType>);
+pub struct FuncType(#[snom(tag(0x60))] pub Vec<ValType>, pub Vec<ResType>);
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
-pub struct Function(#[call(leb_u32)] pub Locals, pub Expression);
+pub struct Function(#[snom(call(leb_u32))] pub Locals, pub Expression);
 
 #[derive(Debug, Copy, Clone, PartialEq, StructNom)]
 #[snom(parser = parse_limit)]

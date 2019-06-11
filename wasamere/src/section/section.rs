@@ -55,3 +55,98 @@ pub enum Section {
     #[snom(range(end = 11))]
     Data(Size, DataSection),
 }
+
+impl Section {
+
+    pub fn map_custom(&self) -> Option<&CustomSection> {
+        if let Section::Custom(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+
+    pub fn map_type(&self) -> Option<&TypeSection> {
+        if let Section::Type(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+    pub fn map_import(&self) -> Option<&ImportSection> {
+        if let Section::Import(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+    pub fn map_func(&self) -> Option<&FuncSection> {
+        if let Section::Func(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+    pub fn map_table(&self) -> Option<&TableSection> {
+        if let Section::Table(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+    pub fn map_mem(&self) -> Option<&MemSection> {
+        if let Section::Mem(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+    
+    pub fn map_global(&self) -> Option<&GlobalSection> {
+        if let Section::Global(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+
+    pub fn map_export(&self) -> Option<&ExportSection> {
+        if let Section::Export(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+
+    pub fn map_start(&self) -> Option<&StartSection> {
+        if let Section::Start(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+
+    pub fn map_element(&self) -> Option<&ElementSection> {
+        if let Section::Element(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+
+    pub fn map_code(&self) -> Option<&CodeSection> {
+        if let Section::Code(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+
+    pub fn map_data(&self) -> Option<&DataSection> {
+        if let Section::Data(ref size, ref v) = self {
+            Some(v)
+        } else {
+            None
+        }
+    }
+}

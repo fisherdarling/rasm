@@ -1,6 +1,7 @@
 use crate::types::index::{Align, FuncIdx, GlobalIdx, LabelIdx, LocalIdx, Offset, TypeIdx};
 use crate::types::ResType;
 use std::ops::{Deref, DerefMut};
+use std::iter::Iterator;
 
 use crate::{leb_u32, StructNom};
 use nom::{le_u8, IResult};
@@ -263,7 +264,30 @@ pub enum Instr {
     F32ReinterpI32,
     #[snom(range(end = 0xBF))]
     F64ReinterpI64,
+
+    #[snom(skip)]
+    BlockMarker,
+    #[snom(skip)]
+    LoopMarker,
+    #[snom(skip)]
+    IfMarker,
+    #[snom(skip)]
+    ConseqMarker,
+    #[snom(skip)]
+    AlternMarker,
 }
+
+// impl Iterator for Instr {
+//     type Item = Instr;
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         match self {
+//             Instr::Block(ref res, ref expr) {
+
+//             }
+//         }
+//     } 
+// }
 
 named!(
     parse_if<Instr>,
