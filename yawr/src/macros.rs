@@ -32,6 +32,19 @@ macro_rules! same_type {
 }
 
 #[macro_export]
+macro_rules! valid_result {
+    ($should_be:ident, $value:ident) => {
+        match ($should_be, $value) {
+            (ResType::I32, Value::I32(_)) => Ok(()),
+            (ResType::I64, Value::I64(_)) => Ok(()),
+            (ResType::F32, Value::F32(_)) => Ok(()),
+            (ResType::F64, Value::F64(_)) => Ok(()),
+            _ => Err(crate::error::Error::TypeMismatch),
+        }
+    }
+}
+
+#[macro_export]
 macro_rules! is_a {
     ($kind:ident, $id:ident) => {
         if let Value::$kind(_) = $id {
@@ -66,11 +79,18 @@ macro_rules! is_a {
     };
 }
 
-fn add_dummy() {
-    use crate::types::Value;
-
-    let a = Value::I32(5);
-    let b = Value::I32(10);
-
-    binop!(I32, |a, b| a + b)(a, b);
+#[macro_export]
+macro_rules! truthy {
+    ($id:ident) => {
+        bool::try_from($id)
+    }
 }
+
+// fn add_dummy() {
+//     use crate::types::Value;
+
+//     let a = Value::I32(5);
+//     let b = Value::I32(10);
+
+//     binop!(I32, |a, b| a + b)(a, b).unwrap();
+// }

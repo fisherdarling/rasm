@@ -1,5 +1,5 @@
 use crate::types::Value;
-use crate::types::WasmResult;
+use crate::types::{WasmResult, ResType};
 
 use crate::error::{Error, ExecResult};
 use crate::runtime::Runtime;
@@ -13,13 +13,21 @@ pub enum StackElem {
     Value(Value),
 }
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum LabelType {
+    Block(ResType, usize),
+    If(ResType, usize, usize),
+    Loop(ResType, usize),
+}
+
 #[derive(Debug, Clone)]
 pub struct Frame {
-    pub(crate) locals: Vec<Value>,
-    pub(crate) stack: ValueStack,
-    pub(crate) func: FuncRef,
-    pub(crate) reader: Option<FuncReader>,
-    pub(crate) is_block: bool,
+    pub locals: Vec<Value>,
+    pub stack: ValueStack,
+    pub label_stack: Vec<LabelType>,
+    pub func: FuncRef,
+    pub reader: Option<FuncReader>,
+    pub is_block: bool,
 }
 
 impl Frame {
@@ -27,6 +35,7 @@ impl Frame {
         Frame {
             locals,
             stack: ValueStack::with_capacity(256),
+            label_stack: Vec::new(),
             func,
             reader: None,
             is_block: false,
@@ -113,6 +122,10 @@ impl ValueStack {
         let val = self.values.pop().ok_or(Error::ValueStack)?;
 
         Ok(val)
+    }
+
+    pub fn peek(&self) -> Option<&Value> {
+        self.values.last()
     }
 
     pub fn pop_pair(&mut self) -> ExecResult<(Value, Value)> {

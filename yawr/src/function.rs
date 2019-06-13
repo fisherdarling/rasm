@@ -133,7 +133,6 @@ impl FuncReader {
         }
 
         self.inc();
-
         self.current()
     }
 
@@ -143,7 +142,6 @@ impl FuncReader {
         }
 
         self.dec();
-
         self.current()
     }
 
@@ -226,9 +224,15 @@ pub struct Signature {
 
 impl From<crate::types::FuncType> for Signature {
     fn from(func: crate::types::FuncType) -> Self {
+        let res = if func.1.is_empty() {
+            ResType::Unit
+        } else {
+            func.1[0]
+        };
+        
         Self {
             params: func.0,
-            result: func.1,
+            result: res,
         }
     }
 }

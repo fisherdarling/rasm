@@ -22,6 +22,50 @@ impl StructNom for Vec<Instr> {
     }
 }
 
+impl Expression {
+    pub fn flatten(self) -> Expression {
+        let mut acc = Vec::with_capacity(self.0.len());
+
+        for instr in self.0.into_iter() {
+            flatten_rec(&mut acc, instr);
+        }
+
+        Expression(acc)
+    }
+}
+
+fn flatten_rec(acc: &mut Vec<Instr>, instr: Instr) {
+    match instr {
+        Instr::Block(res, expr) => {
+            acc.push(Instr::Nop);
+            let idx = acc.len() - 1;
+
+            expr.0.into_iter().for_each(|i| flatten_rec(acc, i));
+
+            acc[idx] = Instr::BlockMarker(res, acc.len() - 1);
+        },
+        Instr::Loop(res, expr) => {
+            let idx = acc.len();
+            acc.push(Instr::LoopMarker(res, idx));
+
+            expr.0.into_iter().for_each(|i| flatten_rec(acc, i));
+        },
+        Instr::If(res, e1, e2) => {
+            acc.push(Instr::Nop);
+            let idx = acc.len() - 1;
+
+            e1.0.into_iter().for_each(|i| flatten_rec(acc, i));
+            let first_end = acc.len() - 1;
+
+            e2.0.into_iter().for_each(|i| flatten_rec(acc, i));
+            let second_end = acc.len() - 1;
+
+            acc[idx] = Instr::IfMarker(res, first_end, second_end);
+        },
+        non_expr_instr => acc.push(non_expr_instr),
+    }
+}
+
 impl Deref for Expression {
     type Target = [Instr];
 

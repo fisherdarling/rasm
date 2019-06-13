@@ -1,4 +1,4 @@
-use crate::types::index::FuncIdx;
+use crate::types::index::{LabelIdx, FuncIdx};
 use crate::types::{ValType, Value};
 
 use failure::Fail;
@@ -27,6 +27,8 @@ pub enum Error {
     EmptyFrameStack,
     #[fail(display = "Empty Frame Value Stack")]
     EmptyValueStack,
+    #[fail(display = "Branch depth too deep: {:?}", 0)]
+    BranchDepth(LabelIdx),
     #[fail(display = "Cannot unpause a not paused Frame")]
     UnpauseFrame,
 }

@@ -12,7 +12,7 @@ use std::iter;
 fn main() {
     let _ = try_init().unwrap();
 
-    let source = include_bytes!("../../examples/large_func.wasm");
+    let source = include_bytes!("../../examples/small_test.wasm");
 
     let (rest, module) = ParsedModule::nom(source).unwrap();
     let code = module.sections().iter().find_map(Section::map_code).expect("Unable to find code section").clone();
@@ -36,8 +36,6 @@ fn main() {
     }
 }
 
-
-
 fn flatten(acc: &mut Vec<Instr>, instr: Instr) {
     match instr {
         Instr::Block(res, expr) => {
@@ -51,6 +49,7 @@ fn flatten(acc: &mut Vec<Instr>, instr: Instr) {
         Instr::Loop(res, expr) => {
             let idx = acc.len();
             acc.push(Instr::LoopMarker(res, idx));
+
             expr.0.into_iter().for_each(|i| flatten(acc, i));
         },
         Instr::If(res, e1, e2) => {
@@ -58,12 +57,12 @@ fn flatten(acc: &mut Vec<Instr>, instr: Instr) {
             let idx = acc.len() - 1;
 
             e1.0.into_iter().for_each(|i| flatten(acc, i));
-            let first = acc.len() - 1;
+            let first_end = acc.len() - 1;
 
             e2.0.into_iter().for_each(|i| flatten(acc, i));
-            let second = acc.len() - 1;
+            let second_end = acc.len() - 1;
 
-            acc[idx] = Instr::IfMarker(res, first, second);
+            acc[idx] = Instr::IfMarker(res, first_end, second_end);
         },
         non_expr_instr => acc.push(non_expr_instr),
     }

@@ -86,7 +86,7 @@ impl TryFrom<Value> for bool {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WasmResult {
     I32(u32),
     I64(u64),
