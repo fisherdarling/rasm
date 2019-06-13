@@ -266,28 +266,12 @@ pub enum Instr {
     F64ReinterpI64,
 
     #[snom(skip)]
-    BlockMarker,
+    BlockMarker(ResType, usize),
     #[snom(skip)]
-    LoopMarker,
+    LoopMarker(ResType, usize),
     #[snom(skip)]
-    IfMarker,
-    #[snom(skip)]
-    ConseqMarker,
-    #[snom(skip)]
-    AlternMarker,
+    IfMarker(ResType, usize, usize),
 }
-
-// impl Iterator for Instr {
-//     type Item = Instr;
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         match self {
-//             Instr::Block(ref res, ref expr) {
-
-//             }
-//         }
-//     } 
-// }
 
 named!(
     parse_if<Instr>,

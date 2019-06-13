@@ -5,7 +5,7 @@
 #[macro_export]
 macro_rules! impl_leb32_wrapper {
     ($id:ident) => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+        #[derive(Copy, Clone, PartialEq, Eq, Hash)]
         pub struct $id(pub(crate) u32);
 
         impl $id {
@@ -39,6 +39,12 @@ macro_rules! impl_leb32_wrapper {
         impl Into<u32> for $id {
             fn into(self) -> u32 {
                 self.0
+            }
+        }
+
+        impl std::fmt::Debug for $id {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(f, "idx: {}", self.0)
             }
         }
     };

@@ -3,7 +3,7 @@ use crate::StructNom;
 
 use nom::le_u8;
 
-#[derive(Debug, Clone, PartialEq, StructNom)]
+#[derive(Debug, Default, Clone, PartialEq, StructNom)]
 pub struct ExportSection(pub Vec<Export>);
 
 #[derive(Debug, Clone, PartialEq, StructNom)]

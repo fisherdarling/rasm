@@ -5,7 +5,7 @@ use crate::StructNom;
 
 use nom::le_u8;
 
-#[derive(Debug, Clone, PartialEq, StructNom)]
+#[derive(Debug, Default, Clone, PartialEq, StructNom)]
 pub struct ImportSection(pub Vec<Import>);
 
 #[derive(Debug, Clone, PartialEq, StructNom)]

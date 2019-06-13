@@ -17,18 +17,23 @@ fn main() {
     let (rest, module) = ParsedModule::nom(source).unwrap();
     let code = module.sections().iter().find_map(Section::map_code).expect("Unable to find code section").clone();
 
-    for function in code.0.into_iter() {
-        let mut acc = Vec::new();
+    let func = &code.0[0];
 
-        for instr in function.1.into_iter() {
-            flatten(&mut acc, instr.clone());
-        }
+    let mut acc = Vec::new();
 
-        println!("Flattend: {:#?}", acc);
+    let test: Vec<Instr> = Vec::new();
+
+    println!("==== BEFORE ====");
+    println!("{:#?}", func);
+
+    for instr in &(func.1).0 {
+        flatten(&mut acc, instr.clone());
     }
 
-
-    // println!("{:#?}", code);
+    println!("==== AFTER  ====");
+    for (i, instr) in acc.iter().enumerate() {
+        println!("[{:2?}]: {:?}", i, instr);
+    }
 }
 
 
@@ -36,19 +41,29 @@ fn main() {
 fn flatten(acc: &mut Vec<Instr>, instr: Instr) {
     match instr {
         Instr::Block(res, expr) => {
-            acc.push(Instr::BlockMarker);
-            expr.0.into_iter().for_each( |i| flatten(acc, i));
+            acc.push(Instr::Nop);
+            let idx = acc.len() - 1;
+
+            expr.0.into_iter().for_each(|i| flatten(acc, i));
+
+            acc[idx] = Instr::BlockMarker(res, acc.len() - 1);
         },
         Instr::Loop(res, expr) => {
-            acc.push(Instr::LoopMarker);
-            expr.0.into_iter().for_each( |i| flatten(acc, i));
+            let idx = acc.len();
+            acc.push(Instr::LoopMarker(res, idx));
+            expr.0.into_iter().for_each(|i| flatten(acc, i));
         },
         Instr::If(res, e1, e2) => {
-            acc.push(Instr::IfMarker);
-            acc.push(Instr::ConseqMarker);
-            e1.0.into_iter().for_each( |i| flatten(acc, i));
-            acc.push(Instr::AlternMarker);
-            e2.0.into_iter().for_each( |i| flatten(acc, i));
+            acc.push(Instr::Nop);
+            let idx = acc.len() - 1;
+
+            e1.0.into_iter().for_each(|i| flatten(acc, i));
+            let first = acc.len() - 1;
+
+            e2.0.into_iter().for_each(|i| flatten(acc, i));
+            let second = acc.len() - 1;
+
+            acc[idx] = Instr::IfMarker(res, first, second);
         },
         non_expr_instr => acc.push(non_expr_instr),
     }

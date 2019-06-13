@@ -15,6 +15,10 @@ impl ParsedModule {
     pub fn sections(&self) -> &[Section] {
         &self.sections
     }
+
+    pub fn parse_bytes(input: &[u8]) -> Self {
+        ParsedModule::nom(input).unwrap().1
+    }
 }
 
 impl StructNom for Vec<Section> {
