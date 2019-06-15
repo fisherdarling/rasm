@@ -26,7 +26,7 @@ macro_rules! gen_binop {
         macro_rules! $name {
             ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
                 match ($lhs, $rhs) {
-                    (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).$func((b as $cast)))),
+                    (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).$func((b as $cast)).try_into().unwrap())),
                     _ => Err(crate::error::Error::TypeMismatch),
                 }
             };
@@ -106,7 +106,7 @@ macro_rules! gen_unop {
         macro_rules! $name {
             ($kind:ident, $val:ident) => {
                 if let Value::$kind(v) = $val {
-                    Value::$kind(v.$func())
+                    Ok(Value::$kind(v.$func().into()))
                 } else {
                     Err(crate::error::Error::TypeMismatch)
                 }
@@ -115,13 +115,13 @@ macro_rules! gen_unop {
 
         gen_unop! { $($tail)* }
     };
-    ($(,)? $name:ident => [$op:tt] $($tail:tt)*) => {
+    ($(,)? $name:ident => [!] $($tail:tt)*) => {
         
         #[macro_export]
         macro_rules! $name {
             ($kind:ident, $val:ident) => {
                 if let Value::$kind(v) = $val {
-                    Value::$kind($op v)
+                    Ok(Value::$kind(v * -1.0))
                 } else {
                     Err(crate::error::Error::TypeMismatch)
                 }
