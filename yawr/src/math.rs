@@ -26,7 +26,7 @@ macro_rules! gen_binop {
         macro_rules! $name {
             ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
                 match ($lhs, $rhs) {
-                    (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).$func((b as $cast)).try_into().unwrap())),
+                    (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).$func(b as $cast).try_into().unwrap())),
                     _ => Err(crate::error::Error::TypeMismatch),
                 }
             };
@@ -72,7 +72,7 @@ macro_rules! gen_binop {
         macro_rules! $name {
             ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
                 match ($lhs, $rhs) {
-                    (Value::$kind(a), Value::$kind(b)) => Ok(Value::from((a as $cast) $op ((b as $cast)))),
+                    (Value::$kind(a), Value::$kind(b)) => Ok(Value::from(a as $cast $op (b as $cast))),
                     _ => Err(crate::error::Error::TypeMismatch),
                 }
             };
@@ -270,6 +270,51 @@ pub fn wrap(value: Value) -> Result<Value, Error> {
         Err(Error::TypeMismatch)
     }
 }
+
+#[macro_export]
+macro_rules! shr {
+    ($kind:ident, $lhs:ident, $rhs:ident $(, $cast:ty)?) => {
+        match ($lhs, $rhs) {
+            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a $(as $cast)? >> b)),
+            _ => Err(crate::error::Error::TypeMismatch),
+        } 
+    }
+}
+
+#[macro_export]
+macro_rules! shl {
+    ($kind:ident, $lhs:ident, $rhs:ident) => {
+        match ($lhs, $rhs) {
+            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a << b)),
+            _ => Err(crate::error::Error::TypeMismatch),
+        } 
+    }
+}
+
+#[macro_export]
+macro_rules! rotr {
+    ($kind:ident, $lhs:ident, $rhs:ident) => {
+        match ($lhs, $rhs) {
+            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a.rotate_right(b))),
+            _ => Err(crate::error::Error::TypeMismatch),
+        } 
+    }
+}
+
+#[macro_export]
+macro_rules! rotl {
+    ($kind:ident, $lhs:ident, $rhs:ident) => {
+        match ($lhs, $rhs) {
+            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a.rotate_right(b))),
+            _ => Err(crate::error::Error::TypeMismatch),
+        } 
+    }
+}
+
+// #[inline]
+// pub fn shr(lhs: Value, rhs: Value, signed: bool) -> Result<Value, Error> {
+
+// }
 
 // #[macro_export]
 // macro_rules! iadd {

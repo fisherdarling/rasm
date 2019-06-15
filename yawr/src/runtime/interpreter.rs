@@ -208,18 +208,6 @@ impl Interpreter {
 
                         current_frame[idx.index() as usize] = value;
                     }
-                    Instr::I32Add => {
-                        let (lhs, rhs) = current_frame.pop_pair()?;
-
-                        let res = iadd!(I32, lhs, rhs)?;
-                        current_frame.push(res);
-                    }
-                    Instr::I64Add => {
-                        let (lhs, rhs) = current_frame.pop_pair()?;
-
-                        let res = iadd!(I64, lhs, rhs)?;
-                        current_frame.push(res);
-                    }
 
                     // I32 RELOP
                     Instr::I32Const(c) => {
@@ -525,6 +513,37 @@ impl Interpreter {
                         let res = ixor!(I32, lhs, rhs)?;
                         current_frame.push(res);
                     }
+                    Instr::I32Shl => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = shl!(I32, lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I32ShrS => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = shr!(I32, lhs, rhs, i32)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I32ShrU => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = shr!(I32, lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I32Rotl => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = rotl!(I32, lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I32Rotr => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = rotr!(I32, lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    
 
                     // I64 BINOP / UNOP TODO SHL/R(S/U) ROTL/ROTR
                     Instr::I64Clz => {
@@ -604,6 +623,36 @@ impl Interpreter {
                         let (lhs, rhs) = current_frame.pop_pair()?;
 
                         let res = ixor!(I64, lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I64Shl => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = shl!(I64, lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I64ShrS => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = shr!(I64, lhs, rhs, i32)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I64ShrU => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = shr!(I64, lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I64Rotl => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = rotl!(I64, lhs, rhs)?;
+                        current_frame.push(res);
+                    }
+                    Instr::I64Rotr => {
+                        let (lhs, rhs) = current_frame.pop_pair()?;
+
+                        let res = rotr!(I64, lhs, rhs)?;
                         current_frame.push(res);
                     }
                     
@@ -915,8 +964,8 @@ impl Interpreter {
                         current_frame.push(res);
                     }
 
-                    // Demote
-                    Instr::F32DemoteF64 => {
+                    // Promote
+                    Instr::F64PromoteF32 => {
                         let value = current_frame.pop()?;
 
                         let res = math::promote(value)?;
@@ -924,13 +973,6 @@ impl Interpreter {
                     }
 
                     // Reinterp
-                    Instr::F32DemoteF64 => {
-                        let value = current_frame.pop()?;
-
-                        let res = math::promote(value)?;
-                        current_frame.push(res);
-                    }
-
                     Instr::I32ReinterpF32 => {
                         let value = current_frame.pop()?;
 
