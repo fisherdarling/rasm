@@ -31,4 +31,6 @@ pub enum Error {
     BranchDepth(LabelIdx),
     #[fail(display = "Cannot unpause a not paused Frame")]
     UnpauseFrame,
+    #[fail(display = "Undefined Float")]
+    UndefinedFloat
 }

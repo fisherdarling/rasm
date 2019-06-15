@@ -9,6 +9,7 @@ use crate::instr::{Expression, Instr};
 use crate::runtime::frame::{Frame, LabelType};
 use crate::types::{index::FuncIdx, ResType, ValType, Value, WasmResult};
 use crate::{binop, is_a, relop, same_type, truthy, valid_result};
+use crate::math::*;
 
 use log::*;
 

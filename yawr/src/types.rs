@@ -2,6 +2,7 @@ pub use wasamere::types::*;
 
 use crate::error::{Error, ExecResult};
 
+use std::mem::transmute;
 use std::convert::TryFrom;
 // use std::ops::{Add, Div, Mul, Sub};
 // pub use wasamere::
@@ -23,7 +24,38 @@ impl Value {
             ValType::F64 => Value::F64(Default::default()),
         }
     }
+
+    pub fn reinterpret(self) -> Value {
+        match self {
+            Value::I32(v) => Value::F32(unsafe { transmute::<u32, f32>(v) } ),
+            Value::I64(v) => Value::F64(unsafe { transmute::<u64, f64>(v) } ),
+            Value::F32(v) => Value::I32(unsafe { transmute::<f32, u32>(v) } ),
+            Value::F64(v) => Value::I64(unsafe { transmute::<f64, u64>(v) } ),
+        }
+    }
 }
+
+macro_rules! impl_value_from {
+    ($to:ident, $cast:ty, $ty:ty) => {
+        impl From<$ty> for Value {
+            fn from(other: $ty) -> Self {
+                Value::$to(other as $cast)
+            }
+        }
+    }
+}
+
+impl_value_from!(I32, u32, u8);
+impl_value_from!(I32, u32, u16);
+impl_value_from!(I32, u32, u32);
+impl_value_from!(I32, u32, i32);
+
+impl_value_from!(I64, u64, u64);
+impl_value_from!(I64, u64, i64);
+
+impl_value_from!(F32, f32, f32);
+impl_value_from!(F64, f64, f64);
+
 
 // pub trait Arithmetic {
 //     pub fn add(&self, other: &Self) -> Self;

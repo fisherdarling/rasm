@@ -1,3 +1,6 @@
+use crate::types::Value;
+use crate::error::Error;
+
 // #[macro_export]
 // macro_rules! math_binop {
 //     ($kind:ident, $lhs:ident, $rhs:ident, $func:ident) => {
@@ -179,20 +182,94 @@ gen_unop! {
     fabs => abs,
     fneg => [!],
     fceil => ceil,
-    ffloor => flor,
+    ffloor => floor,
     ftrunc => trunc,
     fnearest => round,
     fsqrt => sqrt,
 }
 
+pub fn iextend(value: Value, signed: bool) -> Result<Value, Error> {
+    if let Value::I32(v) = value {
+        if signed {
+            Ok(Value::I64((v as i32) as u64))
+        } else {
+            Ok(Value::I64(v as u64))
+        }
+    } else {
+        Err(Error::TypeMismatch)
+    }
+} 
 
+#[macro_export]
+macro_rules! trunc {
+    ($to:ident, $from:ident, $cast:ty, $val:ident) => {
+        if let Value::$from(v) = $val {
+            if v.is_infinite() || v.is_nan() {
+                Err(Error::UndefinedFloat)
+            } else {
+                Ok(Value::from(v.trunc() as $cast))
+            }
+        } else {
+            Err(Error::TypeMismatch)
+        }
+    };
+}
 
+#[macro_export]
+macro_rules! convert {
+    ($from:ident => $to:ty, $val:ident $(, $cast:ty)?) => {
+        if let Value::$from(value) = $val {
+            Ok(Value::from((value $(as $cast)?) as $to))
+        } else {
+            Err(Error::TypeMismatch)
+        }
+    }
+}
 
+pub fn promote(value: Value) -> Result<Value, Error> {
+    if let Value::F32(v) = value {
+        Ok(Value::F64(f64::from(v)))
+    } else {
+        Err(Error::TypeMismatch)
+    }
+}
 
+pub fn demote(value: Value) -> Result<Value, Error> {
+    if let Value::F64(v) = value {
+        if v.is_nan() {
+            Ok(Value::F32(std::f32::NAN))
+        } else if v.is_infinite() {
+            if v.is_sign_positive() {
+                Ok(Value::F32(std::f32::INFINITY))
+            } else {
+                Ok(Value::F32(std::f32::NEG_INFINITY))
+            }
+        } else {
+            Ok(Value::F32(v as f32))
+        }
+    } else {
+        Err(Error::TypeMismatch)
+    }
+}
 
+#[macro_export]
+macro_rules! reinterp {
+    ($to:ident, $val:ident) => {
+        if let v @ Value::$to(_) = $val.reinterpret() {
+            Ok(v)
+        } else {
+            Err(Error::TypeMismatch)
+        }
+    }
+}
 
-
-
+pub fn wrap(value: Value) -> Result<Value, Error> {
+    if let Value::I64(v) = value {
+        Ok(Value::I32((v % u32::max_value() as u64) as u32))
+    } else {
+        Err(Error::TypeMismatch)
+    }
+}
 
 // #[macro_export]
 // macro_rules! iadd {
@@ -232,11 +309,16 @@ gen_unop! {
 // }
 
 fn test() {
-    use crate::types::Value;
+    // use crate::types::Value;
 
     let (a, b) = (Value::I32(5), Value::I32(5));
 
     // math_binop!(I32, a, b, wrapping_rem);
 
     iand!(I32, a, b);
+
+
+    // let value = Value::I32(10);
+
+    // let res = trunc!(I64, F32, u64, value).unwrap();
 }
