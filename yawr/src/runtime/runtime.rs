@@ -2,7 +2,7 @@ use crate::function::Function;
 use crate::module::Module;
 use crate::runtime::frame::{Frame, StackElem};
 use crate::runtime::interpreter::Interpreter;
-use crate::store::Store;
+use crate::store_old::Store;
 
 use crate::types::index::{FuncIdx, LocalIdx};
 use crate::types::{ResType, ValType, Value, WasmResult};

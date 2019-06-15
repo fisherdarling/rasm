@@ -6,6 +6,12 @@ macro_rules! binop {
             _ => Err(crate::error::Error::TypeMismatch),
         };
     };
+    ($kind:ident, $op:tt) => {
+        |a, b| match (a, b) {
+            (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a $op b)),
+            _ => Err(crate::error::Error::TypeMismatch),
+        };
+    };
 }
 
 #[macro_export]
@@ -13,6 +19,18 @@ macro_rules! relop {
     ($kind:ident, $ret:expr) => {
         |a, b| match (a, b) {
             (Value::$kind(a), Value::$kind(b)) => Ok(Value::from($ret(a, b))),
+            _ => Err(crate::error::Error::TypeMismatch),
+        }
+    };
+    ($kind:ident, $op:tt) => {
+        |a, b| match (a, b) {
+            (Value::$kind(a), Value::$kind(b)) => Ok(Value::from(a $op b)),
+            _ => Err(crate::error::Error::TypeMismatch),
+        }
+    };
+    ($kind:ident, $op:tt, cast: $cast:ty) => {
+        |a, b| match (a, b) {
+            (Value::$kind(a), Value::$kind(b)) => Ok(Value::from((a as $cast) $op (b as $cast))),
             _ => Err(crate::error::Error::TypeMismatch),
         }
     };
@@ -78,6 +96,13 @@ macro_rules! is_a {
         }
     };
 }
+
+
+// mod math {
+
+// }
+
+
 
 #[macro_export]
 macro_rules! truthy {

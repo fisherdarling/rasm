@@ -205,7 +205,7 @@ pub enum Instr {
     F64Ge,
 
     // I32 Binop:
-    I32Cls,
+    I32Clz,
     I32Ctz,
     I32Popcnt,
     I32Add,

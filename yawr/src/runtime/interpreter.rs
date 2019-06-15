@@ -221,7 +221,7 @@ impl Interpreter {
                     Instr::I32Add => {
                         let (lhs, rhs) = current_frame.pop_pair()?;
 
-                        let res = binop!(I32, |a, b| a + b)(lhs, rhs)?;
+                        let res = binop!(I32, +)(lhs, rhs)?;
                         current_frame.push(res);
                     }
                     Instr::I32Eqz => {
@@ -233,25 +233,25 @@ impl Interpreter {
                     Instr::I32Eq => {
                         let (lhs, rhs) = current_frame.pop_pair()?;
 
-                        let res = relop!(I32, |a, b| a == b)(lhs, rhs)?;
+                        let res = relop!(I32, ==)(lhs, rhs)?;
                         current_frame.push(res);
                     }
                     Instr::I32Ne => {
                         let (lhs, rhs) = current_frame.pop_pair()?;
 
-                        let res = relop!(I32, |a, b| a != b)(lhs, rhs)?;
+                        let res = relop!(I32, !=)(lhs, rhs)?;
                         current_frame.push(res);
                     }
                     Instr::I32GtS => {
                         let (lhs, rhs) = current_frame.pop_pair()?;
 
-                        let res = relop!(I32, |a, b| a as i32 > b as i32)(lhs, rhs)?;
+                        let res = relop!(I32, >, cast: i32)(lhs, rhs)?;
                         current_frame.push(res);
                     }
                     Instr::I32GtU => {
                         let (lhs, rhs) = current_frame.pop_pair()?;
 
-                        let res = relop!(I32, |a, b| a > b)(lhs, rhs)?;
+                        let res = relop!(I32, >)(lhs, rhs)?;
                         current_frame.push(res);
                     }
                     Instr::I32LtS => {

@@ -3,7 +3,7 @@ pub use wasamere::types::*;
 use crate::error::{Error, ExecResult};
 
 use std::convert::TryFrom;
-use std::ops::{Add, Div, Mul, Sub};
+// use std::ops::{Add, Div, Mul, Sub};
 // pub use wasamere::
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -14,59 +14,76 @@ pub enum Value {
     F64(f64),
 }
 
-impl Add for Value {
-    type Output = ExecResult<Value>;
-
-    fn add(self, rhs: Value) -> Self::Output {
-        match (self, rhs) {
-            (Value::I32(a), Value::I32(b)) => Ok(Value::I32(a + b)),
-            (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a + b)),
-            (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a + b)),
-            (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a + b)),
-            _ => Err(Error::TypeMismatch),
+impl Value {
+    pub fn default_valtype(ty: ValType) -> Value {
+        match ty {
+            ValType::I32 => Value::I32(Default::default()),
+            ValType::I64 => Value::I64(Default::default()),
+            ValType::F32 => Value::F32(Default::default()),
+            ValType::F64 => Value::F64(Default::default()),
         }
     }
 }
 
-impl Div for Value {
-    type Output = ExecResult<Value>;
+// pub trait Arithmetic {
+//     pub fn add(&self, other: &Self) -> Self;
+//     pub fn sub(&self, other: &Self) -> Self;
+    
+// }
 
-    fn div(self, rhs: Value) -> Self::Output {
-        match (self, rhs) {
-            (Value::I32(a), Value::I32(b)) => Ok(Value::I32(a / b)),
-            (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a / b)),
-            (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a / b)),
-            (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a / b)),
-            _ => Err(Error::TypeMismatch),
-        }
-    }
-}
-impl Mul for Value {
-    type Output = ExecResult<Value>;
+// impl Add for Value {
+//     type Output = ExecResult<Value>;
 
-    fn mul(self, rhs: Value) -> Self::Output {
-        match (self, rhs) {
-            (Value::I32(a), Value::I32(b)) => Ok(Value::I32(a * b)),
-            (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a * b)),
-            (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a * b)),
-            (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a * b)),
-            _ => Err(Error::TypeMismatch),
-        }
-    }
-}
-impl Sub for Value {
-    type Output = ExecResult<Value>;
+//     fn add(self, rhs: Value) -> Self::Output {
+//         match (self, rhs) {
+//             (Value::I32(a), Value::I32(b)) => Ok(Value::I32(a + b)),
+//             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a + b)),
+//             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a + b)),
+//             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a + b)),
+//             _ => Err(Error::TypeMismatch),
+//         }
+//     }
+// }
 
-    fn sub(self, rhs: Value) -> Self::Output {
-        match (self, rhs) {
-            (Value::I32(a), Value::I32(b)) => Ok(Value::I32(a - b)),
-            (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a - b)),
-            (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a - b)),
-            (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a - b)),
-            _ => Err(Error::TypeMismatch),
-        }
-    }
-}
+// impl Div for Value {
+//     type Output = ExecResult<Value>;
+
+//     fn div(self, rhs: Value) -> Self::Output {
+//         match (self, rhs) {
+//             (Value::I32(a), Value::I32(b)) => Ok(Value::I32(a / b)),
+//             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a / b)),
+//             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a / b)),
+//             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a / b)),
+//             _ => Err(Error::TypeMismatch),
+//         }
+//     }
+// }
+// impl Mul for Value {
+//     type Output = ExecResult<Value>;
+
+//     fn mul(self, rhs: Value) -> Self::Output {
+//         match (self, rhs) {
+//             (Value::I32(a), Value::I32(b)) => Ok(Value::I32(a * b)),
+//             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a * b)),
+//             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a * b)),
+//             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a * b)),
+//             _ => Err(Error::TypeMismatch),
+//         }
+//     }
+// }
+// impl Sub for Value {
+//     type Output = ExecResult<Value>;
+
+//     fn sub(self, rhs: Value) -> Self::Output {
+//         match (self, rhs) {
+//             (Value::I32(a), Value::I32(b)) => Ok(Value::I32(a - b)),
+//             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a - b)),
+//             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a - b)),
+//             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a - b)),
+//             _ => Err(Error::TypeMismatch),
+//         }
+//     }
+// }
 
 impl From<bool> for Value {
     fn from(other: bool) -> Self {

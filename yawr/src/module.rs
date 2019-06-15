@@ -8,7 +8,7 @@ use wasamere::section::{Export, Section};
 pub struct Module {
     pub(crate) funcs: Vec<Function>,
     pub(crate) exports: Vec<Export>,
-    // mems:
+    // pub(crate) mems: Vec<
     // globals:
 }
 
