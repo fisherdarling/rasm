@@ -6,13 +6,13 @@ use crate::error::Error;
 //     ($kind:ident, $lhs:ident, $rhs:ident, $func:ident) => {
 //         match ($lhs, $rhs) {
 //             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a.$func(b))),
-//             _ => Err(crate::error::Error::TypeMismatch),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
 //         }
 //     };
 //     ($kind:ident, $lhs:ident, $rhs:ident, $func:ident, $cast:ty) => {
 //         match ($lhs, $rhs) {
 //             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).$func((b as $cast)))),
-//             _ => Err(crate::error::Error::TypeMismatch),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
 //         }
 //     };
 // }
@@ -27,7 +27,7 @@ macro_rules! gen_binop {
             ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
                 match ($lhs, $rhs) {
                     (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).$func(b as $cast).try_into().unwrap())),
-                    _ => Err(crate::error::Error::TypeMismatch),
+                    _ => Err(crate::error::Error::TypeMismatch(line!())),
                 }
             };
         }
@@ -42,7 +42,7 @@ macro_rules! gen_binop {
             ($kind:ident, $lhs:ident, $rhs:ident) => {
                 match ($lhs, $rhs) {
                     (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a.$func(b))),
-                    _ => Err(crate::error::Error::TypeMismatch),
+                    _ => Err(crate::error::Error::TypeMismatch(line!())),
                 }
             };
         }
@@ -57,7 +57,7 @@ macro_rules! gen_binop {
             ($kind:ident, $lhs:ident, $rhs:ident) => {
                 match ($lhs, $rhs) {
                     (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a $op b)),
-                    _ => Err(crate::error::Error::TypeMismatch),
+                    _ => Err(crate::error::Error::TypeMismatch(line!())),
                 }
             };
         }
@@ -73,7 +73,7 @@ macro_rules! gen_binop {
             ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
                 match ($lhs, $rhs) {
                     (Value::$kind(a), Value::$kind(b)) => Ok(Value::from(a as $cast $op (b as $cast))),
-                    _ => Err(crate::error::Error::TypeMismatch),
+                    _ => Err(crate::error::Error::TypeMismatch(line!())),
                 }
             };
         }
@@ -88,7 +88,7 @@ macro_rules! gen_binop {
             ($kind:ident, $lhs:ident, $rhs:ident) => {
                 match ($lhs, $rhs) {
                     (Value::$kind(a), Value::$kind(b)) => Ok(Value::from(a $op b)),
-                    _ => Err(crate::error::Error::TypeMismatch),
+                    _ => Err(crate::error::Error::TypeMismatch(line!())),
                 }
             };
         }
@@ -106,9 +106,9 @@ macro_rules! gen_unop {
         macro_rules! $name {
             ($kind:ident, $val:ident) => {
                 if let Value::$kind(v) = $val {
-                    Ok(Value::$kind(v.$func().into()))
+                    Ok(Value::$kind(v.$func().try_into().unwrap()))
                 } else {
-                    Err(crate::error::Error::TypeMismatch)
+                    Err(crate::error::Error::TypeMismatch(line!()))
                 }
             };
         }
@@ -123,7 +123,7 @@ macro_rules! gen_unop {
                 if let Value::$kind(v) = $val {
                     Ok(Value::$kind(v * -1.0))
                 } else {
-                    Err(crate::error::Error::TypeMismatch)
+                    Err(crate::error::Error::TypeMismatch(line!()))
                 }
             };
         }
@@ -191,12 +191,12 @@ gen_unop! {
 pub fn iextend(value: Value, signed: bool) -> Result<Value, Error> {
     if let Value::I32(v) = value {
         if signed {
-            Ok(Value::I64((v as i32) as u64))
+            Ok(Value::I64(v as i64))
         } else {
-            Ok(Value::I64(v as u64))
+            Ok(Value::I64((v as u32) as i64))
         }
     } else {
-        Err(Error::TypeMismatch)
+        Err(Error::TypeMismatch(line!()))
     }
 } 
 
@@ -210,7 +210,7 @@ macro_rules! trunc {
                 Ok(Value::from(v.trunc() as $cast))
             }
         } else {
-            Err(Error::TypeMismatch)
+            Err(Error::TypeMismatch(line!()))
         }
     };
 }
@@ -221,7 +221,7 @@ macro_rules! convert {
         if let Value::$from(value) = $val {
             Ok(Value::from((value $(as $cast)?) as $to))
         } else {
-            Err(Error::TypeMismatch)
+            Err(Error::TypeMismatch(line!()))
         }
     }
 }
@@ -230,7 +230,7 @@ pub fn promote(value: Value) -> Result<Value, Error> {
     if let Value::F32(v) = value {
         Ok(Value::F64(f64::from(v)))
     } else {
-        Err(Error::TypeMismatch)
+        Err(Error::TypeMismatch(line!()))
     }
 }
 
@@ -248,7 +248,7 @@ pub fn demote(value: Value) -> Result<Value, Error> {
             Ok(Value::F32(v as f32))
         }
     } else {
-        Err(Error::TypeMismatch)
+        Err(Error::TypeMismatch(line!()))
     }
 }
 
@@ -258,16 +258,16 @@ macro_rules! reinterp {
         if let v @ Value::$to(_) = $val.reinterpret() {
             Ok(v)
         } else {
-            Err(Error::TypeMismatch)
+            Err(Error::TypeMismatch(line!()))
         }
     }
 }
 
 pub fn wrap(value: Value) -> Result<Value, Error> {
     if let Value::I64(v) = value {
-        Ok(Value::I32((v % u32::max_value() as u64) as u32))
+        Ok(Value::I32((v % u32::max_value() as i64) as i32))
     } else {
-        Err(Error::TypeMismatch)
+        Err(Error::TypeMismatch(line!()))
     }
 }
 
@@ -275,8 +275,8 @@ pub fn wrap(value: Value) -> Result<Value, Error> {
 macro_rules! shr {
     ($kind:ident, $lhs:ident, $rhs:ident $(, $cast:ty)?) => {
         match ($lhs, $rhs) {
-            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a $(as $cast)? >> b)),
-            _ => Err(crate::error::Error::TypeMismatch),
+            (Value::$kind(a), Value::I64(b)) => Ok(Value::from(a $(as $cast)? >> (b as u32))),
+            _ => Err(crate::error::Error::TypeMismatch(line!())),
         } 
     }
 }
@@ -285,8 +285,8 @@ macro_rules! shr {
 macro_rules! shl {
     ($kind:ident, $lhs:ident, $rhs:ident) => {
         match ($lhs, $rhs) {
-            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a << b)),
-            _ => Err(crate::error::Error::TypeMismatch),
+            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a << (b as u32))),
+            _ => Err(crate::error::Error::TypeMismatch(line!())),
         } 
     }
 }
@@ -295,8 +295,8 @@ macro_rules! shl {
 macro_rules! rotr {
     ($kind:ident, $lhs:ident, $rhs:ident) => {
         match ($lhs, $rhs) {
-            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a.rotate_right(b))),
-            _ => Err(crate::error::Error::TypeMismatch),
+            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a.rotate_right(b as u32))),
+            _ => Err(crate::error::Error::TypeMismatch(line!())),
         } 
     }
 }
@@ -305,8 +305,8 @@ macro_rules! rotr {
 macro_rules! rotl {
     ($kind:ident, $lhs:ident, $rhs:ident) => {
         match ($lhs, $rhs) {
-            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a.rotate_right(b))),
-            _ => Err(crate::error::Error::TypeMismatch),
+            (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a.rotate_right(b as u32))),
+            _ => Err(crate::error::Error::TypeMismatch(line!())),
         } 
     }
 }
@@ -321,7 +321,7 @@ macro_rules! rotl {
 //     ($kind:ident, $lhs:ident, $rhs:ident) => {
 //         match ($lhs, $rhs) {
 //             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a.wrapping_add(b))),
-//             _ => Err(crate::error::Error::TypeMismatch),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
 //         }
 //     };
 // }
@@ -331,7 +331,7 @@ macro_rules! rotl {
 //     ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
 //         match ($lhs, $rhs) {
 //             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).wrapping_div((b as $cast)))),
-//             _ => Err(crate::error::Error::TypeMismatch),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
 //         }
 //     };
 // }
@@ -341,7 +341,7 @@ macro_rules! rotl {
 //     ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
 //         match ($lhs, $rhs) {
 //             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).wrapping_rem((b as $cast)))),
-//             _ => Err(crate::error::Error::TypeMismatch),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
 //         }
 //     };
 // }

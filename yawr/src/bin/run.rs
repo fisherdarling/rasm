@@ -14,7 +14,7 @@ struct Args {
     #[structopt(short = "f", long = "invoke")]
     pub func: String,
     #[structopt(short = "a")]
-    pub args: Vec<u32>,
+    pub args: Vec<i32>,
 }
 
 fn main() {

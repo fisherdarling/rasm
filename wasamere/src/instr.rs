@@ -157,8 +157,8 @@ pub enum Instr {
 
     // Numeric Instructions:
     #[snom(range(start = 0x41))]
-    I32Const(#[snom(parser = leb_u32)] u32),
-    I64Const(u64),
+    I32Const(#[snom(parser = crate::leb_i32)] i32),
+    I64Const(#[snom(parser = crate::leb_i64)] i64),
     F32Const(f32),
     F64Const(f64),
 

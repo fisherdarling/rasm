@@ -9,8 +9,8 @@ pub type ExecResult<T> = Result<T, Error>;
 pub enum Error {
     #[fail(display = "Invalid Operand Type")]
     InvalidOperand,
-    #[fail(display = "Type mismatch")]
-    TypeMismatch,
+    #[fail(display = "Type mismatch: {}", 0)]
+    TypeMismatch(u32),
     #[fail(display = "The Number of arguments is different than what the signature requires.")]
     FunctionArgumentCount,
     #[fail(display = "Invalid argument types. Expected: {:?}, Got: {:?}", 0, 1)]

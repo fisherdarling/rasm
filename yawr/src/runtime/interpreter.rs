@@ -75,7 +75,7 @@ impl Interpreter {
             'instr: loop {
                 let next_instr = reader.next().expect("Next instruction must not be none").clone();
 
-                debug!("Next Instr: {:?}", next_instr);
+                debug!("[{:2?}] [Instr] {:?}", reader.pos().unwrap(), next_instr);
                 // debug!("Value Stack: {:?}", current_frame.stack());
 
                 match next_instr {
@@ -126,11 +126,67 @@ impl Interpreter {
                         debug!("Branch Target: {:?}", target);
                         match target {
                             LabelType::If(result, true_end, false_end) => {
+                                if result == ResType::Unit {
+                                    reader.goto(false_end);
+                                } else if let Some(value) = current_frame.stack().peek() {
+                                    valid_result!(result, value)?;
+                                    reader.goto(false_end);
+                                } else {
+                                    return Err(Error::TypeMismatch(line!()));
+                                }
+                            },
+                            LabelType::Block(result, block_end) => {
+                                if result == ResType::Unit {
+                                    reader.goto(block_end);
+                                } else if let Some(value) = current_frame.stack().peek() {
+                                    valid_result!(result, value)?;
+                                    reader.goto(block_end);
+                                } else {
+                                    return Err(Error::TypeMismatch(line!()));
+                                }
+                            },
+                            LabelType::Loop(result, loop_start) => {
+                                if result == ResType::Unit {
+                                    reader.goto(loop_start);
+                                    debug!("Reader Position: {:?}", reader.pos());
+                                    current_frame.label_stack.push(LabelType::Loop(result, loop_start));
+                                } else if let Some(value) = current_frame.stack().peek() {
+                                    valid_result!(result, value)?;
+                                    reader.goto(loop_start);
+                                    debug!("Reader Position: {:?}", reader.pos());
+                                    current_frame.label_stack.push(LabelType::Loop(result, loop_start));
+                                } else {
+                                    return Err(Error::TypeMismatch(line!()));
+                                }
+                            }
+                        }   
+                    }
+                    Instr::BrIf(idx) => {
+                        let check = current_frame.pop()?;
+
+                        if !truthy!(check)? {
+                            debug!("\t---> BrIf NOP");
+                            continue;
+                        }
+
+
+                        for i in 0..*idx {
+                            current_frame.label_stack.pop().ok_or(Error::BranchDepth(idx))?;
+                        }
+
+                        if current_frame.label_stack.is_empty() {
+                            break 'instr;
+                        }
+
+                        let target = current_frame.label_stack.pop().ok_or(Error::BranchDepth(idx))?;
+                        debug!("Branch Target: {:?}", target);
+                        match target {
+                            LabelType::If(result, true_end, false_end) => {
                                 if let Some(value) = current_frame.stack().peek() {
                                     valid_result!(result, value)?;
                                     reader.goto(false_end);
                                 } else if result != ResType::Unit {
-                                    return Err(Error::TypeMismatch);
+                                    return Err(Error::TypeMismatch(line!()));
                                 }
                             },
                             LabelType::Block(result, block_end) => {
@@ -138,7 +194,7 @@ impl Interpreter {
                                     valid_result!(result, value)?;
                                     reader.goto(block_end);
                                 } else if result != ResType::Unit {
-                                    return Err(Error::TypeMismatch);
+                                    return Err(Error::TypeMismatch(line!()));
                                 }
                             },
                             LabelType::Loop(result, loop_start) => {
@@ -152,12 +208,10 @@ impl Interpreter {
                                     debug!("Reader Position: {:?}", reader.pos());
                                     current_frame.label_stack.push(LabelType::Loop(result, loop_start));
                                 } else {
-                                    return Err(Error::TypeMismatch);
+                                    return Err(Error::TypeMismatch(line!()));
                                 }
                             }
                         }   
-
-
                     }
                     Instr::End => {
                         debug!("[End], Reader: {:?}, Scope: {:?}", reader.finished(), current_frame.label_stack);
@@ -174,21 +228,21 @@ impl Interpreter {
                                     valid_result!(result, value)?;
                                     reader.goto(false_end);
                                 } else if result != ResType::Unit {
-                                    return Err(Error::TypeMismatch);
+                                    return Err(Error::TypeMismatch(line!()));
                                 }
                             },
                             LabelType::Block(result, _block_end) => {
                                 if let Some(value) = current_frame.stack().peek() {
                                     valid_result!(result, value)?;
                                 } else if result != ResType::Unit {
-                                    return Err(Error::TypeMismatch);
+                                    return Err(Error::TypeMismatch(line!()));
                                 }
                             },
                             LabelType::Loop(result, _loop_end) => {
                                 if let Some(value) = current_frame.stack().peek() {
                                     valid_result!(result, value)?;
                                 } else if result != ResType::Unit {
-                                    return Err(Error::TypeMismatch);
+                                    return Err(Error::TypeMismatch(line!()));
                                 }
                             }
                         }                        
@@ -211,10 +265,10 @@ impl Interpreter {
 
                     // I32 RELOP
                     Instr::I32Const(c) => {
-                        current_frame.push(Value::I32(c));
+                        current_frame.push(Value::I32(c as i32));
                     }
                     Instr::I64Const(c) => {
-                        current_frame.push(Value::I64(c));
+                        current_frame.push(Value::I64(c as i64));
                     }
                     Instr::F32Const(c) => {
                         current_frame.push(Value::F32(c));
@@ -1000,9 +1054,10 @@ impl Interpreter {
                     instr => return Err(Error::NotImplemented(instr.clone())),
                 }
 
-                
-
-                debug!("Label Stack: {:?}", current_frame.label_stack);
+                debug!("\t---> [Locals] {:?}", current_frame.locals);
+                debug!("\t---> [Values] {:#?}", current_frame.stack);
+                debug!("\t---> [Labels] {:?}", current_frame.label_stack);
+                debug!("");
             }
 
             if self.frames.len() == 0 {
@@ -1013,7 +1068,7 @@ impl Interpreter {
                         (ResType::I64, r @ Value::I64(_)) => Ok(WasmResult::from(r)),
                         (ResType::F32, r @ Value::F32(_)) => Ok(WasmResult::from(r)),
                         (ResType::F64, r @ Value::F64(_)) => Ok(WasmResult::from(r)),
-                        _ => Err(Error::TypeMismatch),
+                        _ => Err(Error::TypeMismatch(line!())),
                     },
                 };
 
@@ -1031,7 +1086,7 @@ impl Interpreter {
                             (ResType::I64, r @ Value::I64(_)) => Ok(r),
                             (ResType::F32, r @ Value::F32(_)) => Ok(r),
                             (ResType::F64, r @ Value::F64(_)) => Ok(r),
-                            _ => Err(Error::TypeMismatch),
+                            _ => Err(Error::TypeMismatch(line!())),
                         }?;
 
                         last_frame.push(value);

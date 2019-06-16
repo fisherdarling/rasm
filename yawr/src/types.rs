@@ -9,8 +9,8 @@ use std::convert::TryFrom;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Value {
-    I32(u32),
-    I64(u64),
+    I32(i32),
+    I64(i64),
     F32(f32),
     F64(f64),
 }
@@ -27,10 +27,10 @@ impl Value {
 
     pub fn reinterpret(self) -> Value {
         match self {
-            Value::I32(v) => Value::F32(unsafe { transmute::<u32, f32>(v) } ),
-            Value::I64(v) => Value::F64(unsafe { transmute::<u64, f64>(v) } ),
-            Value::F32(v) => Value::I32(unsafe { transmute::<f32, u32>(v) } ),
-            Value::F64(v) => Value::I64(unsafe { transmute::<f64, u64>(v) } ),
+            Value::I32(v) => Value::F32(unsafe { transmute::<i32, f32>(v) } ),
+            Value::I64(v) => Value::F64(unsafe { transmute::<i64, f64>(v) } ),
+            Value::F32(v) => Value::I32(unsafe { transmute::<f32, i32>(v) } ),
+            Value::F64(v) => Value::I64(unsafe { transmute::<f64, i64>(v) } ),
         }
     }
 }
@@ -45,13 +45,13 @@ macro_rules! impl_value_from {
     }
 }
 
-impl_value_from!(I32, u32, u8);
-impl_value_from!(I32, u32, u16);
-impl_value_from!(I32, u32, u32);
-impl_value_from!(I32, u32, i32);
+impl_value_from!(I32, i32, u8);
+impl_value_from!(I32, i32, u16);
+impl_value_from!(I32, i32, u32);
+impl_value_from!(I32, i32, i32);
 
-impl_value_from!(I64, u64, u64);
-impl_value_from!(I64, u64, i64);
+impl_value_from!(I64, i64, u64);
+impl_value_from!(I64, i64, i64);
 
 impl_value_from!(F32, f32, f32);
 impl_value_from!(F64, f64, f64);
@@ -72,7 +72,7 @@ impl_value_from!(F64, f64, f64);
 //             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a + b)),
 //             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a + b)),
 //             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a + b)),
-//             _ => Err(Error::TypeMismatch),
+//             _ => Err(Error::TypeMismatch(line!())),
 //         }
 //     }
 // }
@@ -86,7 +86,7 @@ impl_value_from!(F64, f64, f64);
 //             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a / b)),
 //             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a / b)),
 //             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a / b)),
-//             _ => Err(Error::TypeMismatch),
+//             _ => Err(Error::TypeMismatch(line!())),
 //         }
 //     }
 // }
@@ -99,7 +99,7 @@ impl_value_from!(F64, f64, f64);
 //             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a * b)),
 //             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a * b)),
 //             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a * b)),
-//             _ => Err(Error::TypeMismatch),
+//             _ => Err(Error::TypeMismatch(line!())),
 //         }
 //     }
 // }
@@ -112,14 +112,14 @@ impl_value_from!(F64, f64, f64);
 //             (Value::I64(a), Value::I64(b)) => Ok(Value::I64(a - b)),
 //             (Value::F32(a), Value::F32(b)) => Ok(Value::F32(a - b)),
 //             (Value::F64(a), Value::F64(b)) => Ok(Value::F64(a - b)),
-//             _ => Err(Error::TypeMismatch),
+//             _ => Err(Error::TypeMismatch(line!())),
 //         }
 //     }
 // }
 
 impl From<bool> for Value {
     fn from(other: bool) -> Self {
-        Value::I32(other as u32)
+        Value::I32(other as i32)
     }
 }
 
@@ -130,15 +130,15 @@ impl TryFrom<Value> for bool {
         if let Value::I32(c) = value {
             Ok(c != 0)
         } else {
-            Err(crate::error::Error::TypeMismatch)
+            Err(crate::error::Error::TypeMismatch(line!()))
         }
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WasmResult {
-    I32(u32),
-    I64(u64),
+    I32(i32),
+    I64(i64),
     F32(f32),
     F64(f64),
     Unit,

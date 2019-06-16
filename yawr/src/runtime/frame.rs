@@ -6,6 +6,7 @@ use crate::runtime::Runtime;
 
 use crate::function::{FuncReader, FuncRef};
 
+use std::fmt;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 #[derive(Debug, Clone)]
@@ -102,7 +103,7 @@ impl IndexMut<usize> for Frame {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Default, Clone, PartialEq)]
 pub struct ValueStack {
     values: Vec<Value>,
 }
@@ -137,5 +138,11 @@ impl ValueStack {
 
     pub fn len(&self) -> usize {
         self.values.len()
+    }
+}
+
+impl fmt::Debug for ValueStack {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self.values)
     }
 }

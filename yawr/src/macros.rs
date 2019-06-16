@@ -1,40 +1,40 @@
-#[macro_export]
-macro_rules! binop {
-    ($kind:ident, $ret:expr) => {
-        |a, b| match (a, b) {
-            (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind($ret(a, b))),
-            _ => Err(crate::error::Error::TypeMismatch),
-        };
-    };
-    ($kind:ident, $op:tt) => {
-        |a, b| match (a, b) {
-            (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a $op b)),
-            _ => Err(crate::error::Error::TypeMismatch),
-        };
-    };
-}
+// #[macro_export]
+// macro_rules! binop {
+//     ($kind:ident, $ret:expr) => {
+//         |a, b| match (a, b) {
+//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind($ret(a, b))),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
+//         };
+//     };
+//     ($kind:ident, $op:tt) => {
+//         |a, b| match (a, b) {
+//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a $op b)),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
+//         };
+//     };
+// }
 
-#[macro_export]
-macro_rules! relop {
-    ($kind:ident, $ret:expr) => {
-        |a, b| match (a, b) {
-            (Value::$kind(a), Value::$kind(b)) => Ok(Value::from($ret(a, b))),
-            _ => Err(crate::error::Error::TypeMismatch),
-        }
-    };
-    ($kind:ident, $op:tt) => {
-        |a, b| match (a, b) {
-            (Value::$kind(a), Value::$kind(b)) => Ok(Value::from(a $op b)),
-            _ => Err(crate::error::Error::TypeMismatch),
-        }
-    };
-    ($kind:ident, $op:tt, cast: $cast:ty) => {
-        |a, b| match (a, b) {
-            (Value::$kind(a), Value::$kind(b)) => Ok(Value::from((a as $cast) $op (b as $cast))),
-            _ => Err(crate::error::Error::TypeMismatch),
-        }
-    };
-}
+// #[macro_export]
+// macro_rules! relop {
+//     ($kind:ident, $ret:expr) => {
+//         |a, b| match (a, b) {
+//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::from($ret(a, b))),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
+//         }
+//     };
+//     ($kind:ident, $op:tt) => {
+//         |a, b| match (a, b) {
+//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::from(a $op b)),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
+//         }
+//     };
+//     ($kind:ident, $op:tt, cast: $cast:ty) => {
+//         |a, b| match (a, b) {
+//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::from((a as $cast) $op (b as $cast))),
+//             _ => Err(crate::error::Error::TypeMismatch(line!())),
+//         }
+//     };
+// }
 
 #[macro_export]
 macro_rules! same_type {
@@ -44,7 +44,7 @@ macro_rules! same_type {
             (Value::I64(_), Value::I64(_)) => Ok(()),
             (Value::F32(_), Value::F32(_)) => Ok(()),
             (Value::F64(_), Value::F64(_)) => Ok(()),
-            _ => Err(crate::error::Error::TypeMismatch),
+            _ => Err(crate::error::Error::TypeMismatch(line!())),
         }
     };
 }
@@ -57,7 +57,7 @@ macro_rules! valid_result {
             (ResType::I64, Value::I64(_)) => Ok(()),
             (ResType::F32, Value::F32(_)) => Ok(()),
             (ResType::F64, Value::F64(_)) => Ok(()),
-            _ => Err(crate::error::Error::TypeMismatch),
+            _ => Err(crate::error::Error::TypeMismatch(line!())),
         }
     }
 }
@@ -68,7 +68,7 @@ macro_rules! is_a {
         if let Value::$kind(_) = $id {
             Ok(())
         } else {
-            Err(crate::error::Error::TypeMismatch)
+            Err(crate::error::Error::TypeMismatch(line!()))
         }
     };
     ($kind:ident, $($id:ident),+) => {
@@ -92,7 +92,7 @@ macro_rules! is_a {
         if let v @ Value::$kind(_) = $e? {
             Ok(v)
         } else {
-            Err(crate::error::Error::TypeMismatch)
+            Err(crate::error::Error::TypeMismatch(line!()))
         }
     };
 }

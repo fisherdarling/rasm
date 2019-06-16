@@ -68,6 +68,30 @@ pub fn leb_u32(input: &[u8]) -> IResult<&[u8], u32> {
     Ok((slice, result))
 }
 
+pub fn leb_i64(mut input: &[u8]) -> IResult<&[u8], i64> {
+    let mut result: i64 = 0;
+    let mut shift = 0;
+    loop {
+        let (new_input, byte) = le_u8(input)?;
+        input = new_input;
+        result |= i64::from(byte & 0x7F) << shift;
+        if shift >= 57 {
+            let continuation_bit = (byte & 0x80) != 0;
+            let sign_and_unused_bit = ((byte << 1) as i8) >> (64 - shift);
+            if continuation_bit || (sign_and_unused_bit != 0 && sign_and_unused_bit != -1) {
+                panic!("Invalid LEB128 encoded u64");
+            }
+            return Ok((input, result));
+        }
+        shift += 7;
+        if (byte & 0x80) == 0 {
+            break;
+        }
+    }
+    let ashift = 64 - shift;
+    Ok((input, (result << ashift) >> ashift))
+}
+
 pub fn leb_i32(input: &[u8]) -> IResult<&[u8], i32> {
     let (rest, byte) = le_u8(input)?;
 
