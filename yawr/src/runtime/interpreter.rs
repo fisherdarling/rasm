@@ -231,7 +231,6 @@ impl Interpreter {
 
                         continue 'frame;
                     }
-
                     Instr::End => {
                         debug!("[End], Reader: {:?}, Scope: {:?}", reader.finished(), current_frame.label_stack);
 

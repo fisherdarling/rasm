@@ -3,6 +3,7 @@ use structopt::StructOpt;
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::Read;
+use std::time::Instant;
 
 use yawr::runtime::Runtime;
 use yawr::types::Value;
@@ -14,7 +15,7 @@ struct Args {
     #[structopt(short = "f", long = "invoke")]
     pub func: String,
     #[structopt(short = "a")]
-    pub args: Vec<i32>,
+    pub args: Vec<i64>,
 }
 
 fn main() {
@@ -31,10 +32,11 @@ fn main() {
     let mut func_args = Vec::new();
 
     for value in args.args {
-        func_args.push(Value::I32(value));
+        func_args.push(Value::I64(value));
     } 
 
-    println!("Function: {:?}, Args: {:?}", args.func, func_args);
+    let start = Instant::now();
+    println!("{}({:?})", args.func, func_args);
     let res = runtime.invoke(args.func, &func_args).unwrap();
-    println!("Result: {:?}", res);
+    println!("[{:?}]: {:?}", start.elapsed(), res);
 }
