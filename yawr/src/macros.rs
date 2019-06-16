@@ -97,6 +97,22 @@ macro_rules! is_a {
     };
 }
 
+#[macro_export]
+macro_rules! get {
+    ($from:ident, $id:ident) => {
+        match $id {
+            Value::$from(v) => Ok(v),
+            _ => Err(crate::error::Error::TypeMismatch(line!())),
+        }
+    };
+    ($from:ident, $e:expr) => {
+        match $e {
+            Value::$from(v) => Ok(v),
+            _ => Err(crate::error::Error::TypeMismatch(line!())),
+        }
+    }
+}
+
 
 // mod math {
 

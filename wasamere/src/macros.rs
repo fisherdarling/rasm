@@ -9,8 +9,15 @@ macro_rules! impl_leb32_wrapper {
         pub struct $id(pub(crate) u32);
 
         impl $id {
+            
+            #[inline]
             pub fn index(&self) -> u32 {
                 self.0
+            }
+
+            #[inline]
+            pub fn as_usize(&self) -> usize {
+                self.0 as usize
             }
         }
 

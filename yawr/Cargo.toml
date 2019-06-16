@@ -11,3 +11,11 @@ env_logger = "*"
 log = "*"
 clap = "*"
 structopt = "*"
+byteorder = "*"
+
+[dev-dependencies]
+criterion = "0.2"
+
+[[bench]]
+name = "fib"
+harness = false

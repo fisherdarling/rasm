@@ -1,22 +1,13 @@
-use crate::types::Value;
+use crate::types::{Value, index::{Offset, Align}};
 use crate::error::Error;
 
-// #[macro_export]
-// macro_rules! math_binop {
-//     ($kind:ident, $lhs:ident, $rhs:ident, $func:ident) => {
-//         match ($lhs, $rhs) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a.$func(b))),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         }
-//     };
-//     ($kind:ident, $lhs:ident, $rhs:ident, $func:ident, $cast:ty) => {
-//         match ($lhs, $rhs) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).$func((b as $cast)))),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         }
-//     };
+// pub fn convert_offset(offset: Offset) -> usize {
+//     offset.index() as usize
 // }
 
+// pub fn convert_align(offset: Offset) -> usize {
+//     offset.index() as usize
+// }
 
 #[macro_export]
 macro_rules! gen_binop {

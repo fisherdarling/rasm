@@ -38,5 +38,5 @@ fn main() {
     let start = Instant::now();
     println!("{}({:?})", args.func, func_args);
     let res = runtime.invoke(args.func, &func_args).unwrap();
-    println!("[{:?}]: {:?}", start.elapsed(), res);
+    println!("[ {:?} ]: {:?}", start.elapsed(), res);
 }

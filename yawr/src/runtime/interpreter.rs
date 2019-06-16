@@ -7,10 +7,13 @@ use crate::error::{Error, ExecResult};
 use crate::function::{FuncInstance, FuncReader, FuncRef, Function};
 use crate::instr::{Expression, Instr};
 use crate::runtime::frame::{Frame, LabelType};
-use crate::types::{index::FuncIdx, ResType, ValType, Value, WasmResult};
+use crate::types::{index::{FuncIdx, Offset}, ResType, ValType, Value, WasmResult};
 // use crate::{binop, is_a, relop, same_type, truthy, valid_result};
 use crate::*;
 use crate::math;
+use crate::store::Store;
+
+use crate::store::memory::MemInst;
 
 use log::*;
 
@@ -19,20 +22,24 @@ pub struct Interpreter {
     frames: FrameStack,
     functions: HashMap<FuncIdx, Function>,
     resolver: HashMap<String, FuncIdx>,
+    memory: MemInst,
 }
 
 impl Interpreter {
     pub fn new(
         functions: HashMap<FuncIdx, Function>,
         resolver: HashMap<String, FuncIdx>,
+        store: Store,
     ) -> Interpreter {
         Interpreter {
             functions,
             resolver,
+            memory: store.memory,
             ..Default::default()
         }
     }
 
+    #[inline]
     pub fn invoke<N: Into<String>, A: AsRef<[Value]>>(
         &mut self,
         name: N,
@@ -62,6 +69,8 @@ impl Interpreter {
     }
 
     fn execute(&mut self) -> ExecResult<WasmResult> {
+        debug!("Memory: {:?}", self.memory);
+
         'frame: loop {
             let mut current_frame = self.pop_frame().ok_or(Error::EmptyFrameStack)?;
             let current_func = current_frame.func.clone();
@@ -231,6 +240,9 @@ impl Interpreter {
 
                         continue 'frame;
                     }
+                    Instr::Return => {
+                        break 'instr;
+                    }
                     Instr::End => {
                         debug!("[End], Reader: {:?}, Scope: {:?}", reader.finished(), current_frame.label_stack);
 
@@ -281,7 +293,141 @@ impl Interpreter {
                         current_frame[idx.index() as usize] = value;
                     }
 
-                    // I32 RELOP
+                    // I32/64 Full Load
+                    Instr::I32Load(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i32(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::I64Load(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i64(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+
+                    // F32/64 Full Load
+                    Instr::F32Load(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_f32(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::F64Load(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_f64(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+
+                    // I32 Partial Mem Load
+                    Instr::I32Load8S(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i32_8_s(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::I32Load8U(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i32_8_u(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::I32Load16S(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i32_16_s(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::I32Load16U(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i32_16_u(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+
+                    // I64 Partial Mem Load
+                    Instr::I64Load8S(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i64_8_s(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::I64Load8U(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i64_8_u(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::I64Load16S(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i64_16_s(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::I64Load16U(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i64_16_u(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::I64Load32S(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i64_32_s(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+                    Instr::I64Load32U(align, offset) => {
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        let res = self.memory.load_i64_32_u(align, offset);
+                        current_frame.push(Value::from(res));
+                    }
+
+                    // Memory Storage Operators
+                    Instr::I32Store(align, offset) => {
+                        let value = get!(I32, current_frame.pop()?)?;
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        self.memory.store_i32(align, offset, value);
+                    }
+                    Instr::I64Store(align, offset) => {
+                        let value = get!(I64, current_frame.pop()?)?;
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        self.memory.store_i64(align, offset, value);
+                    }
+                    Instr::F32Store(align, offset) => {
+                        let value = get!(F32, current_frame.pop()?)?;
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        self.memory.store_f32(align, offset, value);
+                    }
+                    Instr::F64Store(align, offset) => {
+                        let value = get!(F64, current_frame.pop()?)?;
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        self.memory.store_f64(align, offset, value);
+                    }
+                    Instr::I32Store8(align, offset) => {
+                        let value = get!(I32, current_frame.pop()?)?;
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        self.memory.store_i32_8(align, offset, value);
+                    }
+                    Instr::I32Store16(align, offset) => {
+                        let value = get!(I32, current_frame.pop()?)?;
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        self.memory.store_i32_16(align, offset, value);
+                    }
+                    Instr::I64Store8(align, offset) => {
+                        let value = get!(I64, current_frame.pop()?)?;
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        self.memory.store_i64_8(align, offset, value);
+                    }
+                    Instr::I64Store16(align, offset) => {
+                        let value = get!(I64, current_frame.pop()?)?;
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        self.memory.store_i64_16(align, offset, value);
+                    }
+                    Instr::I64Store32(align, offset) => {
+                        let value = get!(I64, current_frame.pop()?)?;
+                        let offset = self.get_delta(offset, &mut current_frame)?;
+                        self.memory.store_i64_32(align, offset, value);
+                    }
+                    Instr::MemSize => {
+                        let size = self.memory.mem_size() as i32;
+                        current_frame.push(Value::from(size));
+                    }
+                    Instr::MemGrow => {
+                        let num_pages = get!(I32, current_frame.pop()?)?;
+                        self.memory.mem_grow(num_pages)?;
+                    }
+
+
+                    // Const operators
                     Instr::I32Const(c) => {
                         current_frame.push(Value::I32(c as i32));
                     }
@@ -294,6 +440,7 @@ impl Interpreter {
                     Instr::F64Const(c) => {
                         current_frame.push(Value::F64(c));
                     }
+                    // I32 RELOP
                     Instr::I32Eqz => {
                         let val = is_a!(I32, current_frame.pop())?;
 
@@ -1114,8 +1261,18 @@ impl Interpreter {
         }
     }
 
+    #[inline]
     fn push_frame(&mut self, frame: Frame) {
         self.frames.inner_mut().push(frame);
+    }
+    
+    #[inline]
+    fn get_delta(&mut self, offset: Offset, current_frame: &mut Frame) -> Result<Offset, Error> {
+        let delta = get!(I32, current_frame.pop()?)?;                
+        
+        let new_offset = Offset::from((*offset as i32 + delta) as u32);
+
+        Ok(new_offset)
     }
 
     fn pop_frame(&mut self) -> Option<Frame> {
@@ -1124,6 +1281,18 @@ impl Interpreter {
 
     fn peek_frame_mut(&mut self) -> Option<&mut Frame> {
         self.frames.inner_mut().last_mut()
+    }
+
+    pub fn get_index(expr: Expression) -> Option<usize> {
+        for instr in expr.0 {
+            match instr {
+                Instr::I32Const(idx) => {
+                    return Some(idx as usize)
+                }
+                _ => {}
+            }
+        }
+        None
     }
 }
 

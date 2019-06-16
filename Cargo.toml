@@ -5,3 +5,7 @@ members = [
     # "wasamere-derive",
     "yawr",
 ]
+
+[profile.release]
+lto = true
+opt-level = 3

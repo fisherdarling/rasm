@@ -2,7 +2,8 @@ use crate::function::Function;
 use crate::module::Module;
 use crate::runtime::frame::{Frame, StackElem};
 use crate::runtime::interpreter::Interpreter;
-use crate::store_old::Store;
+// use crate::store_old::Store;
+use crate::store::Store;
 
 use crate::types::index::{FuncIdx, LocalIdx};
 use crate::types::{ResType, ValType, Value, WasmResult};
@@ -19,6 +20,7 @@ pub struct Runtime {
     store: Store,
     resolver: HashMap<String, FuncIdx>,
     stack: Vec<StackElem>,
+    interpreter: Interpreter,
 }
 
 impl Runtime {
@@ -27,7 +29,11 @@ impl Runtime {
 
         let funcs: Vec<Function> = module.funcs;
         let exports: Vec<Export> = module.exports;
+        let mems = module.mems;
+        let data = module.data;
 
+        // debug!("Mems: {}")
+    
         let mut resolver: HashMap<String, FuncIdx> = HashMap::new();
 
         for Export { name, desc } in exports {
@@ -39,11 +45,14 @@ impl Runtime {
             }
         }
 
-        let store = Store::from_functions(funcs);
+
+        let store = Store::new_with_functions(mems, Some(data), funcs);
+        let interpreter = Interpreter::new(store.functions.clone(), resolver.clone(), store.clone());
 
         Runtime {
             store,
             resolver,
+            interpreter,
             stack: Vec::with_capacity(256),
         }
     }
@@ -53,8 +62,6 @@ impl Runtime {
         name: N,
         args: A,
     ) -> ExecResult<WasmResult> {
-        let mut runner = Interpreter::new(self.store.functions.clone(), self.resolver.clone());
-
-        runner.invoke(name, args)
+        self.interpreter.invoke(name, args)
     }
 }

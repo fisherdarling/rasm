@@ -1,5 +1,54 @@
-use crate::function::FuncRef;
+use std::collections::HashMap;
+use std::ops::Index;
 
+use crate::function::{Function, FuncRef};
+use crate::store::memory::MemInst;
+use crate::types::{Limit, Data, index::FuncIdx};
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Store {
-    funcs: Vec<FuncRef>
+    pub(crate) functions: HashMap<FuncIdx, Function>,
+    pub(crate) memory: MemInst,
+}
+
+impl Store {
+    pub fn new(mems: Option<Limit>, data: Option<Vec<Data>>, functions: HashMap<FuncIdx, Function>) -> Self {
+        let (min, max) = if let Some(Limit { min, max }) = mems {
+            (min, max)
+        } else {
+            (0, None)       
+        };
+
+        let mut memory = MemInst::new(min, max);
+        memory.init(data);
+        
+        Self { functions, memory }
+    }
+
+    pub fn new_with_functions(mems: Option<Limit>, data: Option<Vec<Data>>, functions: Vec<Function>) -> Self {
+        let (min, max) = if let Some(Limit { min, max }) = mems {
+            (min, max)
+        } else {
+            (0, None)       
+        };
+
+        let mut memory = MemInst::new(min, max);
+        memory.init(data);
+        
+        let map: HashMap<FuncIdx, Function> = functions
+            .into_iter()
+            .enumerate()
+            .map(|(i, f)| (FuncIdx::from(i as u32), f))
+            .collect();
+
+        Self { functions: map, memory }
+    }
+}
+
+impl<'a> Index<&'a FuncIdx> for Store {
+    type Output = Function;
+
+    fn index(&self, func: &'a FuncIdx) -> &Self::Output {
+        &self.functions[func]
+    }
 }

@@ -1,6 +1,8 @@
 use crate::types::index::{LabelIdx, FuncIdx};
 use crate::types::{ValType, Value};
 
+use std::collections::CollectionAllocErr;
+
 use failure::Fail;
 
 pub type ExecResult<T> = Result<T, Error>;
@@ -32,5 +34,11 @@ pub enum Error {
     #[fail(display = "Cannot unpause a not paused Frame")]
     UnpauseFrame,
     #[fail(display = "Undefined Float")]
-    UndefinedFloat
+    UndefinedFloat,
+    #[fail(display = "Memory offset must be as single `(i32.const offset)` instruction.")]
+    OffsetExpression,
+    #[fail(display = "Encountered an error growing the memory: {:?}", 0)]
+    MemoryGrow(CollectionAllocErr),
+    #[fail(display = "The maximum amount of memory was exceeded")]
+    MemoryExceeded
 }
