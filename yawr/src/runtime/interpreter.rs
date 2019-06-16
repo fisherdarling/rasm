@@ -213,6 +213,25 @@ impl Interpreter {
                             }
                         }   
                     }
+                    Instr::Call(idx) => {
+                        let function = self.functions.get(&idx).ok_or(Error::InvalidFuncIdx(idx.clone()))?;
+                        
+                        let num_values = function.argument_length();
+                        let mut args: Vec<Value> = vec![Value::I32(0); num_values];
+
+                        for i in 0..num_values {
+                            args[num_values - i - 1] = current_frame.pop()?;
+                        }
+
+                        let new_frame = function.instantiate(&args)?;
+                        
+                        current_frame.pause(reader);
+                        self.push_frame(current_frame);
+                        self.push_frame(new_frame);
+
+                        continue 'frame;
+                    }
+
                     Instr::End => {
                         debug!("[End], Reader: {:?}, Scope: {:?}", reader.finished(), current_frame.label_stack);
 

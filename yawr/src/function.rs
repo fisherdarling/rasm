@@ -182,6 +182,10 @@ impl Function {
         }
     }
 
+    pub fn argument_length(&self) -> usize {
+        self.signature.params.len()
+    }
+
     pub fn instantiate(&self, args: &[Value]) -> ExecResult<Frame> {
         let mut locals: Vec<Value> = Vec::new();
 
