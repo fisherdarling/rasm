@@ -44,14 +44,23 @@ use criterion::*;
 //     println!("Result: {:?}", res);
 // }
 
-fn fibonacci(c: &mut Criterion) {
+fn fibonacci_name(c: &mut Criterion) {
     let bytes = include_bytes!("../../examples/fib_bench.wasm");
-    let mut runtime = Runtime::from_bytes(&bytes);
+    let mut runtime = Runtime::from_bytes(bytes.as_slice());
 
     let args = vec![Value::I32(10)];
 
-    c.bench_function("fib 10", move |b| b.iter(|| runtime.invoke("fib", &args)));
+    c.bench_function("fib_name", move |b| b.iter(|| runtime.invoke("fib", &args)));
 }
 
-criterion_group!(benches, fibonacci);
+fn fibonacci_index(c: &mut Criterion) {
+    let bytes = include_bytes!("../../examples/fib_bench.wasm");
+    let mut runtime = Runtime::from_bytes(bytes.as_slice());
+
+    let args = vec![Value::I32(10)];
+
+    c.bench_function("fib_index", move |b| b.iter(|| runtime.invoke_index(0, &args)));
+}
+
+criterion_group!(benches, fibonacci_name, fibonacci_index);
 criterion_main!(benches);
