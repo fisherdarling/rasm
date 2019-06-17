@@ -15,12 +15,12 @@ use wasamere::section::export::{Export, ExportDesc};
 
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Runtime {
     store: Store,
     resolver: HashMap<String, FuncIdx>,
-    stack: Vec<StackElem>,
-    interpreter: Interpreter,
+    // stack: Vec<StackElem>,
+    // interpreter: Interpreter<'a>,
 }
 
 impl Runtime {
@@ -47,13 +47,13 @@ impl Runtime {
 
 
         let store = Store::new_with_functions(mems, Some(data), funcs);
-        let interpreter = Interpreter::new(store.functions.clone(), resolver.clone(), store.clone());
+        // let interpreter = Interpreter::new(&store.functions, &resolver, &mut store.memory);
 
         Runtime {
             store,
             resolver,
-            interpreter,
-            stack: Vec::with_capacity(256),
+            // interpreter,
+            // stack: Vec::with_capacity(256),
         }
     }
 
@@ -62,6 +62,8 @@ impl Runtime {
         name: N,
         args: A,
     ) -> ExecResult<WasmResult> {
-        self.interpreter.invoke(name, args)
+        let mut interpreter = Interpreter::new(&self.store.functions, &self.resolver, &mut self.store.memory);
+
+        interpreter.invoke(name, args)
     }
 }

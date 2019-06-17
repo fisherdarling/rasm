@@ -5,14 +5,14 @@ use crate::function::{Function, FuncRef};
 use crate::store::memory::MemInst;
 use crate::types::{Limit, Data, index::FuncIdx};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Store {
-    pub(crate) functions: HashMap<FuncIdx, Function>,
+    pub(crate) functions: HashMap<FuncIdx, FuncRef>,
     pub(crate) memory: MemInst,
 }
 
 impl Store {
-    pub fn new(mems: Option<Limit>, data: Option<Vec<Data>>, functions: HashMap<FuncIdx, Function>) -> Self {
+    pub fn new(mems: Option<Limit>, data: Option<Vec<Data>>, functions: HashMap<FuncIdx, FuncRef>) -> Self {
         let (min, max) = if let Some(Limit { min, max }) = mems {
             (min, max)
         } else {
@@ -35,10 +35,10 @@ impl Store {
         let mut memory = MemInst::new(min, max);
         memory.init(data);
         
-        let map: HashMap<FuncIdx, Function> = functions
+        let map: HashMap<FuncIdx, FuncRef> = functions
             .into_iter()
             .enumerate()
-            .map(|(i, f)| (FuncIdx::from(i as u32), f))
+            .map(|(i, f)| (FuncIdx::from(i as u32), FuncRef::new(f)))
             .collect();
 
         Self { functions: map, memory }

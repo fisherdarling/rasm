@@ -28,28 +28,21 @@ pub struct Frame {
     pub label_stack: Vec<LabelType>,
     pub func: FuncRef,
     pub reader: Option<FuncReader>,
-    pub is_block: bool,
 }
 
 impl Frame {
     pub fn new(locals: Vec<Value>, func: FuncRef) -> Frame {
         Frame {
             locals,
-            stack: ValueStack::with_capacity(256),
+            stack: ValueStack::with_capacity(10),
             label_stack: Vec::new(),
             func,
             reader: None,
-            is_block: false,
         }
     }
 
-    pub fn gen_block(&self, func: FuncRef) -> Frame {
-        let mut block = Frame::new(self.locals.clone(), func);
-
-        block.stack = self.stack().clone();
-        block.is_block = true;
-
-        block
+    pub fn res(&self) -> ResType {
+        self.func.res()
     }
 
     pub fn locals(&self) -> &[Value] {
@@ -138,6 +131,16 @@ impl ValueStack {
 
     pub fn len(&self) -> usize {
         self.values.len()
+    }
+
+    pub fn pop_args(&mut self, count: usize) -> ExecResult<Vec<Value>> {
+        let mut args: Vec<Value> = vec![Value::I32(0); count];
+
+        for i in 0..count {
+            args[count - i - 1] = self.pop()?;
+        }
+
+        Ok(args)
     }
 }
 

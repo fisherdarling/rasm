@@ -1,41 +1,3 @@
-// #[macro_export]
-// macro_rules! binop {
-//     ($kind:ident, $ret:expr) => {
-//         |a, b| match (a, b) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind($ret(a, b))),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         };
-//     };
-//     ($kind:ident, $op:tt) => {
-//         |a, b| match (a, b) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a $op b)),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         };
-//     };
-// }
-
-// #[macro_export]
-// macro_rules! relop {
-//     ($kind:ident, $ret:expr) => {
-//         |a, b| match (a, b) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::from($ret(a, b))),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         }
-//     };
-//     ($kind:ident, $op:tt) => {
-//         |a, b| match (a, b) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::from(a $op b)),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         }
-//     };
-//     ($kind:ident, $op:tt, cast: $cast:ty) => {
-//         |a, b| match (a, b) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::from((a as $cast) $op (b as $cast))),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         }
-//     };
-// }
-
 #[macro_export]
 macro_rules! same_type {
     ($lhs:ident, $rhs:ident) => {
@@ -57,6 +19,15 @@ macro_rules! valid_result {
             (ResType::I64, Value::I64(_)) => Ok(()),
             (ResType::F32, Value::F32(_)) => Ok(()),
             (ResType::F64, Value::F64(_)) => Ok(()),
+            _ => Err(crate::error::Error::TypeMismatch(line!())),
+        }
+    };
+    ($should_be:ident from $value:ident) => {
+        match ($should_be, $value) {
+            (ResType::I32, Value::I32(v)) => Ok(WasmResult::I32(v)),
+            (ResType::I64, Value::I64(v)) => Ok(WasmResult::I64(v)),
+            (ResType::F32, Value::F32(v)) => Ok(WasmResult::F32(v)),
+            (ResType::F64, Value::F64(v)) => Ok(WasmResult::F64(v)),
             _ => Err(crate::error::Error::TypeMismatch(line!())),
         }
     }
