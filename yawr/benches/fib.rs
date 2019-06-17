@@ -1,3 +1,6 @@
+#![feature(fixed_size_array)]
+use std::array::FixedSizeArray;
+
 use yawr::runtime::Runtime;
 use yawr::types::Value;
 
@@ -43,7 +46,7 @@ use criterion::*;
 
 fn fibonacci(c: &mut Criterion) {
     let bytes = include_bytes!("../../examples/fib_bench.wasm");
-    let mut runtime = Runtime::from_bytes(bytes);
+    let mut runtime = Runtime::from_bytes(&bytes);
 
     let args = vec![Value::I32(10)];
 

@@ -1,3 +1,6 @@
+#![feature(fixed_size_array)]
+use std::array::FixedSizeArray;
+
 use yawr::runtime::Runtime;
 use yawr::types::Value;
 
@@ -6,7 +9,7 @@ fn main() {
 
     let _ = env_logger::try_init().unwrap();
 
-    let mut runtime = Runtime::from_bytes(input);
+    let mut runtime = Runtime::from_bytes(input.as_slice());
 
     let args = vec![Value::I32(5), Value::I32(5)];
 

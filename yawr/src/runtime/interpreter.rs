@@ -32,14 +32,14 @@ pub enum InstrResult {
 pub struct Interpreter<'a> {
     frames: FrameStack,
     stack: ValueStack,
-    functions: &'a HashMap<FuncIdx, FuncRef>,
+    functions: &'a [FuncRef],
     resolver: &'a HashMap<String, FuncIdx>,
     memory: &'a mut MemInst,
 }
 
 impl Interpreter<'_> {
     pub fn new<'a>(
-        functions: &'a HashMap<FuncIdx, FuncRef>,
+        functions: &'a [FuncRef],
         resolver: &'a HashMap<String, FuncIdx>,
         memory: &'a mut MemInst,
     ) -> Interpreter<'a> {
@@ -67,7 +67,7 @@ impl Interpreter<'_> {
             .ok_or(Error::InvalidFunctionName(name))?;
         let function: &FuncRef = self
             .functions
-            .get(func_idx)
+            .get(func_idx.as_usize())
             .ok_or(Error::InvalidFuncIdx(*func_idx))?;
 
         let frame = function.instantiate(args)?;
@@ -75,6 +75,20 @@ impl Interpreter<'_> {
         self.execute_with_frame(frame)
     }
 
+    pub fn invoke_index<A: AsRef<[Value]>>(&mut self, idx: usize, args: A) -> ExecResult<WasmResult> {
+        let args: &[Value] = args.as_ref();
+
+        let function: &FuncRef = self
+            .functions
+            .get(idx)
+            .ok_or(Error::InvalidFuncIdx((idx as u32).into()))?;
+
+        let frame = function.instantiate(args)?;
+        
+        self.execute_with_frame(frame)
+    }
+
+    #[inline]
     fn execute_with_frame(&mut self, frame: Frame) -> ExecResult<WasmResult> {
         self.push_frame(frame);
 
@@ -112,7 +126,7 @@ impl Interpreter<'_> {
                     InstrResult::Call(idx) => {
                         let function = self
                             .functions
-                            .get(&idx)
+                            .get(idx.as_usize())
                             .ok_or(Error::InvalidFuncIdx(idx.clone()))?;
 
                         let num_values = function.argument_length();
@@ -164,6 +178,10 @@ impl Interpreter<'_> {
             Instr::Drop => {
                 let _ = self.stack.pop()?;
             }
+            Instr::Nop => {},
+            Instr::Unreachable => {
+                return Err(Error::TrapUnreachable);
+            },
             Instr::IfMarker(result, true_end, false_end) => {
                 let check = self.stack.pop()?;
                 self.current_frame()?
@@ -1292,6 +1310,9 @@ impl Interpreter<'_> {
 
                 let res = reinterp!(F64, value)?;
                 self.stack.push(res);
+            }
+            Instr::Loop(_, _) | Instr::If(_, _, _) | Instr::Block(_, _) | Instr::Else => {
+                return Err(Error::InvalidFuncFormat);
             }
             instr => return Err(Error::NotImplemented(instr.clone())),
         };

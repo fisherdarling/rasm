@@ -7,7 +7,7 @@ use crate::types::{index::FuncIdx, Data, Limit};
 
 #[derive(Debug, Clone)]
 pub struct Store {
-    pub(crate) functions: HashMap<FuncIdx, FuncRef>,
+    pub(crate) functions: Vec<FuncRef>,
     pub(crate) memory: MemInst,
 }
 
@@ -15,7 +15,7 @@ impl Store {
     pub fn new(
         mems: Option<Limit>,
         data: Option<Vec<Data>>,
-        functions: HashMap<FuncIdx, FuncRef>,
+        functions: Vec<FuncRef>,
     ) -> Self {
         let (min, max) = if let Some(Limit { min, max }) = mems {
             (min, max)
@@ -43,14 +43,10 @@ impl Store {
         let mut memory = MemInst::new(min, max);
         memory.init(data);
 
-        let map: HashMap<FuncIdx, FuncRef> = functions
-            .into_iter()
-            .enumerate()
-            .map(|(i, f)| (FuncIdx::from(i as u32), FuncRef::new(f)))
-            .collect();
+        let functions: Vec<FuncRef> = functions.into_iter().map(|v| FuncRef::new(v)).collect();
 
         Self {
-            functions: map,
+            functions,
             memory,
         }
     }
@@ -60,6 +56,6 @@ impl<'a> Index<&'a FuncIdx> for Store {
     type Output = Function;
 
     fn index(&self, func: &'a FuncIdx) -> &Self::Output {
-        &self.functions[func]
+        &self.functions[func.as_usize()]
     }
 }

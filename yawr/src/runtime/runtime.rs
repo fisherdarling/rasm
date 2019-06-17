@@ -2,8 +2,8 @@ use crate::function::Function;
 use crate::module::Module;
 use crate::runtime::frame::{Frame, StackElem};
 use crate::runtime::interpreter::Interpreter;
-// use crate::store_old::Store;
 use crate::store::Store;
+use crate::function::FuncRef;
 
 use crate::types::index::{FuncIdx, LocalIdx};
 use crate::types::{ResType, ValType, Value, WasmResult};
@@ -24,8 +24,8 @@ pub struct Runtime {
 }
 
 impl Runtime {
-    pub fn from_bytes(bytes: &[u8]) -> Runtime {
-        let module = Module::from_bytes(bytes);
+    pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Runtime {
+        let module = Module::from_bytes(bytes.as_ref());
 
         let funcs: Vec<Function> = module.funcs;
         let exports: Vec<Export> = module.exports;
@@ -45,7 +45,9 @@ impl Runtime {
             }
         }
 
-        let store = Store::new_with_functions(mems, Some(data), funcs);
+        let functions = funcs.into_iter().map(FuncRef::new).collect();
+
+        let store = Store::new(mems, Some(data), functions);
         // let interpreter = Interpreter::new(&store.functions, &resolver, &mut store.memory);
 
         Runtime {
@@ -68,5 +70,15 @@ impl Runtime {
         );
 
         interpreter.invoke(name, args)
+    }
+
+    pub fn invoke_index<A: AsRef<[Value]>>(&mut self, idx: usize, args: A) -> ExecResult<WasmResult> {
+        let mut interpreter = Interpreter::new(
+            &self.store.functions,
+            &self.resolver,
+            &mut self.store.memory,
+        );
+
+        interpreter.invoke_index(idx, args)
     }
 }

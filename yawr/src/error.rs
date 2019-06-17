@@ -25,6 +25,8 @@ pub enum Error {
     InvalidFunctionName(String),
     #[fail(display = "Invalid Function Index: {:?}", 0)]
     InvalidFuncIdx(FuncIdx),
+    #[fail(display = "Invalid Function Format. Functions must be `flattened` before execution.")]
+    InvalidFuncFormat,
     #[fail(display = "Empty Frame Stack")]
     EmptyFrameStack,
     #[fail(display = "Empty Frame Value Stack")]
@@ -41,4 +43,6 @@ pub enum Error {
     MemoryGrow(CollectionAllocErr),
     #[fail(display = "The maximum amount of memory was exceeded")]
     MemoryExceeded,
+    #[fail(display = "Unreachable Trap")]
+    TrapUnreachable,
 }
