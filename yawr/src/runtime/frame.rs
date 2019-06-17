@@ -1,5 +1,5 @@
 use crate::types::Value;
-use crate::types::{WasmResult, ResType};
+use crate::types::{ResType, WasmResult};
 
 use crate::error::{Error, ExecResult};
 use crate::runtime::Runtime;

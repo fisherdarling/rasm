@@ -1,8 +1,8 @@
 use structopt::StructOpt;
 
-use std::path::PathBuf;
 use std::fs::File;
 use std::io::Read;
+use std::path::PathBuf;
 use std::time::Instant;
 
 use yawr::runtime::Runtime;
@@ -25,7 +25,10 @@ fn main() {
     let _ = env_logger::try_init().unwrap();
 
     let mut bytes = Vec::new();
-    File::open(args.bin).unwrap().read_to_end(&mut bytes).unwrap();
+    File::open(args.bin)
+        .unwrap()
+        .read_to_end(&mut bytes)
+        .unwrap();
 
     let mut runtime = Runtime::from_bytes(&bytes);
 
@@ -33,7 +36,7 @@ fn main() {
 
     for value in args.args {
         func_args.push(Value::I64(value));
-    } 
+    }
 
     let start = Instant::now();
     println!("{}({:?})", args.func, func_args);

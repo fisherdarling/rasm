@@ -7,8 +7,8 @@ pub static VERSION: u32 = 0x01_00_00_00;
 #[derive(Debug, Default, Clone, PartialEq, StructNom)]
 pub struct ParsedModule {
     #[snom(tag(MAGIC_NUMBER))] // All modules start with the magic number
-    #[snom(take(4))]           // The version is always 4 bytes
-    sections: Vec<Section>
+    #[snom(take(4))] // The version is always 4 bytes
+    sections: Vec<Section>,
 }
 
 impl ParsedModule {

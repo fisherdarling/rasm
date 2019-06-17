@@ -57,7 +57,6 @@ pub enum Section {
 }
 
 impl Section {
-
     pub fn map_custom(&self) -> Option<&CustomSection> {
         if let Section::Custom(ref size, ref v) = self {
             Some(v)
@@ -101,7 +100,7 @@ impl Section {
             None
         }
     }
-    
+
     pub fn map_global(&self) -> Option<&GlobalSection> {
         if let Section::Global(ref size, ref v) = self {
             Some(v)

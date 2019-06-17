@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::ops::Index;
 
-use crate::function::{Function, FuncRef};
+use crate::function::{FuncRef, Function};
 use crate::store::memory::MemInst;
-use crate::types::{Limit, Data, index::FuncIdx};
+use crate::types::{index::FuncIdx, Data, Limit};
 
 #[derive(Debug, Clone)]
 pub struct Store {
@@ -12,36 +12,47 @@ pub struct Store {
 }
 
 impl Store {
-    pub fn new(mems: Option<Limit>, data: Option<Vec<Data>>, functions: HashMap<FuncIdx, FuncRef>) -> Self {
+    pub fn new(
+        mems: Option<Limit>,
+        data: Option<Vec<Data>>,
+        functions: HashMap<FuncIdx, FuncRef>,
+    ) -> Self {
         let (min, max) = if let Some(Limit { min, max }) = mems {
             (min, max)
         } else {
-            (0, None)       
+            (0, None)
         };
 
         let mut memory = MemInst::new(min, max);
         memory.init(data);
-        
+
         Self { functions, memory }
     }
 
-    pub fn new_with_functions(mems: Option<Limit>, data: Option<Vec<Data>>, functions: Vec<Function>) -> Self {
+    pub fn new_with_functions(
+        mems: Option<Limit>,
+        data: Option<Vec<Data>>,
+        functions: Vec<Function>,
+    ) -> Self {
         let (min, max) = if let Some(Limit { min, max }) = mems {
             (min, max)
         } else {
-            (0, None)       
+            (0, None)
         };
 
         let mut memory = MemInst::new(min, max);
         memory.init(data);
-        
+
         let map: HashMap<FuncIdx, FuncRef> = functions
             .into_iter()
             .enumerate()
             .map(|(i, f)| (FuncIdx::from(i as u32), FuncRef::new(f)))
             .collect();
 
-        Self { functions: map, memory }
+        Self {
+            functions: map,
+            memory,
+        }
     }
 }
 

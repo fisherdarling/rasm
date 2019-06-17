@@ -1,7 +1,7 @@
 use crate::types::index::{Align, FuncIdx, GlobalIdx, LabelIdx, LocalIdx, Offset, TypeIdx};
 use crate::types::ResType;
-use std::ops::{Deref, DerefMut};
 use std::iter::Iterator;
+use std::ops::{Deref, DerefMut};
 
 use crate::{leb_u32, StructNom};
 use nom::{le_u8, IResult};
@@ -43,13 +43,13 @@ fn flatten_rec(acc: &mut Vec<Instr>, instr: Instr) {
             expr.0.into_iter().for_each(|i| flatten_rec(acc, i));
 
             acc[idx] = Instr::BlockMarker(res, acc.len() - 1);
-        },
+        }
         Instr::Loop(res, expr) => {
             let idx = acc.len();
             acc.push(Instr::LoopMarker(res, idx));
 
             expr.0.into_iter().for_each(|i| flatten_rec(acc, i));
-        },
+        }
         Instr::If(res, e1, e2) => {
             acc.push(Instr::Nop);
             let idx = acc.len() - 1;
@@ -61,7 +61,7 @@ fn flatten_rec(acc: &mut Vec<Instr>, instr: Instr) {
             let second_end = acc.len() - 1;
 
             acc[idx] = Instr::IfMarker(res, first_end, second_end);
-        },
+        }
         non_expr_instr => acc.push(non_expr_instr),
     }
 }

@@ -83,9 +83,7 @@ impl FuncReader {
 
     fn inc(&mut self) {
         self.pos = match self.pos {
-            Some(pos) => {
-                Some(pos + 1)
-            }
+            Some(pos) => Some(pos + 1),
             None => {
                 if self.len() > 1 {
                     Some(0)
@@ -248,7 +246,7 @@ impl Function {
 
 impl Index<usize> for Function {
     type Output = Instr;
-    
+
     fn index(&self, index: usize) -> &Self::Output {
         &self.body.0[index]
     }
@@ -267,7 +265,7 @@ impl From<crate::types::FuncType> for Signature {
         } else {
             func.1[0]
         };
-        
+
         Self {
             params: func.0,
             result: res,

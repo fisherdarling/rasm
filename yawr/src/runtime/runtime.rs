@@ -33,7 +33,7 @@ impl Runtime {
         let data = module.data;
 
         // debug!("Mems: {}")
-    
+
         let mut resolver: HashMap<String, FuncIdx> = HashMap::new();
 
         for Export { name, desc } in exports {
@@ -41,10 +41,9 @@ impl Runtime {
                 ExportDesc::Func(idx) => {
                     resolver.insert(name, FuncIdx::from(idx.index()));
                 }
-                _ => {},
+                _ => {}
             }
         }
-
 
         let store = Store::new_with_functions(mems, Some(data), funcs);
         // let interpreter = Interpreter::new(&store.functions, &resolver, &mut store.memory);
@@ -62,7 +61,11 @@ impl Runtime {
         name: N,
         args: A,
     ) -> ExecResult<WasmResult> {
-        let mut interpreter = Interpreter::new(&self.store.functions, &self.resolver, &mut self.store.memory);
+        let mut interpreter = Interpreter::new(
+            &self.store.functions,
+            &self.resolver,
+            &mut self.store.memory,
+        );
 
         interpreter.invoke(name, args)
     }

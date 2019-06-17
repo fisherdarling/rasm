@@ -30,7 +30,7 @@ macro_rules! valid_result {
             (ResType::F64, Value::F64(v)) => Ok(WasmResult::F64(v)),
             _ => Err(crate::error::Error::TypeMismatch(line!())),
         }
-    }
+    };
 }
 
 #[macro_export]
@@ -81,21 +81,18 @@ macro_rules! get {
             Value::$from(v) => Ok(v),
             _ => Err(crate::error::Error::TypeMismatch(line!())),
         }
-    }
+    };
 }
-
 
 // mod math {
 
 // }
 
-
-
 #[macro_export]
 macro_rules! truthy {
     ($id:ident) => {
         bool::try_from($id)
-    }
+    };
 }
 
 // fn add_dummy() {

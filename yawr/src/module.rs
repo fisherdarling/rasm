@@ -1,6 +1,6 @@
 use crate::function::{Function, Signature};
 use crate::instr::{Expression, Instr};
-use crate::types::{Limit, Data};
+use crate::types::{Data, Limit};
 
 use wasamere::module::ParsedModule;
 use wasamere::section::{Export, Section};
@@ -17,12 +17,45 @@ impl Module {
     pub fn from_bytes(bytes: &[u8]) -> Module {
         let parsed_module = ParsedModule::parse_bytes(bytes);
 
-        let types = &parsed_module.sections().iter().find_map(Section::map_type).cloned().unwrap_or_default().0;
-        let funcsec = &parsed_module.sections().iter().find_map(Section::map_func).cloned().unwrap_or_default().0;
-        let bodies = &parsed_module.sections().iter().find_map(Section::map_code).cloned().unwrap_or_default().0;
-        let mems: Option<Limit> = parsed_module.sections().iter().find_map(Section::map_mem).cloned().unwrap_or_default().0.iter().nth(0).cloned();
-        let data: Vec<Data> = parsed_module.sections().iter().find_map(Section::map_data).cloned().unwrap_or_default().0;
-        
+        let types = &parsed_module
+            .sections()
+            .iter()
+            .find_map(Section::map_type)
+            .cloned()
+            .unwrap_or_default()
+            .0;
+        let funcsec = &parsed_module
+            .sections()
+            .iter()
+            .find_map(Section::map_func)
+            .cloned()
+            .unwrap_or_default()
+            .0;
+        let bodies = &parsed_module
+            .sections()
+            .iter()
+            .find_map(Section::map_code)
+            .cloned()
+            .unwrap_or_default()
+            .0;
+        let mems: Option<Limit> = parsed_module
+            .sections()
+            .iter()
+            .find_map(Section::map_mem)
+            .cloned()
+            .unwrap_or_default()
+            .0
+            .iter()
+            .nth(0)
+            .cloned();
+        let data: Vec<Data> = parsed_module
+            .sections()
+            .iter()
+            .find_map(Section::map_data)
+            .cloned()
+            .unwrap_or_default()
+            .0;
+
         let mut functions: Vec<Function> = Vec::new();
 
         for (typeidx, body) in funcsec.into_iter().zip(bodies.into_iter()) {
@@ -37,7 +70,13 @@ impl Module {
             functions.push(function);
         }
 
-        let exports = &parsed_module.sections().iter().find_map(Section::map_export).cloned().unwrap_or_default().0;
+        let exports = &parsed_module
+            .sections()
+            .iter()
+            .find_map(Section::map_export)
+            .cloned()
+            .unwrap_or_default()
+            .0;
 
         Module {
             data,

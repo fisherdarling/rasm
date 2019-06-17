@@ -1,5 +1,8 @@
-use crate::types::{Value, index::{Offset, Align}};
 use crate::error::Error;
+use crate::types::{
+    index::{Align, Offset},
+    Value,
+};
 
 // pub fn convert_offset(offset: Offset) -> usize {
 //     offset.index() as usize
@@ -12,7 +15,7 @@ use crate::error::Error;
 #[macro_export]
 macro_rules! gen_binop {
     ($(,)? $name:ident => $func:ident : typed $($tail:tt)*) => {
-        
+
         #[macro_export]
         macro_rules! $name {
             ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
@@ -27,7 +30,7 @@ macro_rules! gen_binop {
 
     };
     ($(,)? $name:ident => $func:ident $($tail:tt)*) => {
-        
+
         #[macro_export]
         macro_rules! $name {
             ($kind:ident, $lhs:ident, $rhs:ident) => {
@@ -42,7 +45,7 @@ macro_rules! gen_binop {
 
     };
     ($(,)? $name:ident => [$op:tt] $($tail:tt)*) => {
-        
+
         #[macro_export]
         macro_rules! $name {
             ($kind:ident, $lhs:ident, $rhs:ident) => {
@@ -58,7 +61,7 @@ macro_rules! gen_binop {
     };
     // Relops:
     ($(,)? $name:ident ?> [$op:tt] : typed $($tail:tt)*) => {
-        
+
         #[macro_export]
         macro_rules! $name {
             ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
@@ -73,7 +76,7 @@ macro_rules! gen_binop {
 
     };
     ($(,)? $name:ident ?> [$op:tt] $($tail:tt)*) => {
-        
+
         #[macro_export]
         macro_rules! $name {
             ($kind:ident, $lhs:ident, $rhs:ident) => {
@@ -92,7 +95,7 @@ macro_rules! gen_binop {
 
 macro_rules! gen_unop {
     ($(,)? $name:ident => $func:ident $($tail:tt)*) => {
-        
+
         #[macro_export]
         macro_rules! $name {
             ($kind:ident, $val:ident) => {
@@ -107,7 +110,7 @@ macro_rules! gen_unop {
         gen_unop! { $($tail)* }
     };
     ($(,)? $name:ident => [!] $($tail:tt)*) => {
-        
+
         #[macro_export]
         macro_rules! $name {
             ($kind:ident, $val:ident) => {
@@ -132,7 +135,7 @@ gen_binop! {
     ilt_u ?> [<],
     igt_s ?> [>] : typed,
     igt_u ?> [>],
-    
+
     ile_s ?> [<=] : typed,
     ile_u ?> [<=],
     ige_s ?> [>=] : typed,
@@ -144,7 +147,7 @@ gen_binop! {
     fgt ?> [>],
     fle ?> [<=],
     fge ?> [>=],
-    
+
     iadd => wrapping_add,
     isub => wrapping_sub,
     imul => wrapping_mul,
@@ -169,7 +172,7 @@ gen_unop! {
     iclz => leading_zeros,
     ictz => count_zeros,
     ipopcnt => count_ones,
-    
+
     fabs => abs,
     fneg => [!],
     fceil => ceil,
@@ -189,7 +192,7 @@ pub fn iextend(value: Value, signed: bool) -> Result<Value, Error> {
     } else {
         Err(Error::TypeMismatch(line!()))
     }
-} 
+}
 
 #[macro_export]
 macro_rules! trunc {
@@ -251,7 +254,7 @@ macro_rules! reinterp {
         } else {
             Err(Error::TypeMismatch(line!()))
         }
-    }
+    };
 }
 
 pub fn wrap(value: Value) -> Result<Value, Error> {
@@ -268,7 +271,7 @@ macro_rules! shr {
         match ($lhs, $rhs) {
             (Value::$kind(a), Value::I64(b)) => Ok(Value::from(a $(as $cast)? >> (b as u32))),
             _ => Err(crate::error::Error::TypeMismatch(line!())),
-        } 
+        }
     }
 }
 
@@ -278,8 +281,8 @@ macro_rules! shl {
         match ($lhs, $rhs) {
             (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a << (b as u32))),
             _ => Err(crate::error::Error::TypeMismatch(line!())),
-        } 
-    }
+        }
+    };
 }
 
 #[macro_export]
@@ -288,8 +291,8 @@ macro_rules! rotr {
         match ($lhs, $rhs) {
             (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a.rotate_right(b as u32))),
             _ => Err(crate::error::Error::TypeMismatch(line!())),
-        } 
-    }
+        }
+    };
 }
 
 #[macro_export]
@@ -298,8 +301,8 @@ macro_rules! rotl {
         match ($lhs, $rhs) {
             (Value::$kind(a), Value::I32(b)) => Ok(Value::from(a.rotate_right(b as u32))),
             _ => Err(crate::error::Error::TypeMismatch(line!())),
-        } 
-    }
+        }
+    };
 }
 
 // #[inline]
@@ -352,7 +355,6 @@ fn test() {
     // math_binop!(I32, a, b, wrapping_rem);
 
     iand!(I32, a, b);
-
 
     // let value = Value::I32(10);
 

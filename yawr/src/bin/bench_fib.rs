@@ -1,7 +1,7 @@
 use yawr::runtime::Runtime;
 use yawr::types::Value;
 
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
 fn main() {
     let input = include_bytes!("../../../examples/fib_bench.wasm");
@@ -18,7 +18,7 @@ fn main() {
 
     println!("Warming up with 5 runs...");
     let start = Instant::now();
-    
+
     for _ in 0..5 {
         runtime.invoke("fib", &args).unwrap();
     }
@@ -33,7 +33,7 @@ fn main() {
         runtime.invoke("fib", &args).unwrap();
         total += start.elapsed();
     }
-    
+
     println!("[average] {:?} [total] {:?}", total / 50, total);
 
     let res = runtime.invoke("fib", &args).unwrap();

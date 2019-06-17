@@ -1,7 +1,7 @@
 use yawr::runtime::Runtime;
 use yawr::types::Value;
 
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 
 use criterion::*;
 
@@ -11,7 +11,6 @@ use criterion::*;
 
 //     let _ = env_logger::try_init().unwrap();
 
-
 //     let args = vec![Value::I32(10)];
 
 //     // let res = runtime.invoke("fib", &args).unwrap();
@@ -20,7 +19,7 @@ use criterion::*;
 
 //     println!("Warming up with 5 runs...");
 //     let start = Instant::now();
-    
+
 //     for _ in 0..5 {
 //         runtime.invoke("fib", &args).unwrap();
 //     }
@@ -35,21 +34,21 @@ use criterion::*;
 //         runtime.invoke("fib", &args).unwrap();
 //         total += start.elapsed();
 //     }
-    
+
 //     println!("[average] {:?} [total] {:?}", total / 50, total);
 
-//     // let res = 
+//     // let res =
 //     println!("Result: {:?}", res);
 // }
 
 fn fibonacci(c: &mut Criterion) {
     let bytes = include_bytes!("../../examples/fib_bench.wasm");
     let mut runtime = Runtime::from_bytes(bytes);
-    
+
     let args = vec![Value::I32(10)];
-    
+
     c.bench_function("fib 10", move |b| b.iter(|| runtime.invoke("fib", &args)));
-}   
+}
 
 criterion_group!(benches, fibonacci);
 criterion_main!(benches);

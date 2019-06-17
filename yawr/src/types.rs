@@ -2,8 +2,8 @@ pub use wasamere::types::*;
 
 use crate::error::{Error, ExecResult};
 
-use std::mem::transmute;
 use std::convert::TryFrom;
+use std::mem::transmute;
 // use std::ops::{Add, Div, Mul, Sub};
 // pub use wasamere::
 
@@ -27,10 +27,10 @@ impl Value {
 
     pub fn reinterpret(self) -> Value {
         match self {
-            Value::I32(v) => Value::F32(unsafe { transmute::<i32, f32>(v) } ),
-            Value::I64(v) => Value::F64(unsafe { transmute::<i64, f64>(v) } ),
-            Value::F32(v) => Value::I32(unsafe { transmute::<f32, i32>(v) } ),
-            Value::F64(v) => Value::I64(unsafe { transmute::<f64, i64>(v) } ),
+            Value::I32(v) => Value::F32(unsafe { transmute::<i32, f32>(v) }),
+            Value::I64(v) => Value::F64(unsafe { transmute::<i64, f64>(v) }),
+            Value::F32(v) => Value::I32(unsafe { transmute::<f32, i32>(v) }),
+            Value::F64(v) => Value::I64(unsafe { transmute::<f64, i64>(v) }),
         }
     }
 }
@@ -42,7 +42,7 @@ macro_rules! impl_value_from {
                 Value::$to(other as $cast)
             }
         }
-    }
+    };
 }
 
 impl_value_from!(I32, i32, u8);
@@ -56,11 +56,10 @@ impl_value_from!(I64, i64, i64);
 impl_value_from!(F32, f32, f32);
 impl_value_from!(F64, f64, f64);
 
-
 // pub trait Arithmetic {
 //     pub fn add(&self, other: &Self) -> Self;
 //     pub fn sub(&self, other: &Self) -> Self;
-    
+
 // }
 
 // impl Add for Value {

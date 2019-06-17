@@ -1,4 +1,4 @@
-use crate::types::index::{LabelIdx, FuncIdx};
+use crate::types::index::{FuncIdx, LabelIdx};
 use crate::types::{ValType, Value};
 
 use std::collections::CollectionAllocErr;
@@ -40,5 +40,5 @@ pub enum Error {
     #[fail(display = "Encountered an error growing the memory: {:?}", 0)]
     MemoryGrow(CollectionAllocErr),
     #[fail(display = "The maximum amount of memory was exceeded")]
-    MemoryExceeded
+    MemoryExceeded,
 }
