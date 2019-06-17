@@ -12,13 +12,14 @@ use std::iter;
 fn main() {
     let _ = try_init().unwrap();
 
-    let source = include_bytes!("../../../examples/sum_hard.wasm");
+    let source = include_bytes!("../../../examples/mem_check.wasm");
 
     let (rest, module) = ParsedModule::nom(source).unwrap();
     let code = module
         .sections()
         .iter()
         .find_map(Section::map_code)
+        // .unwrap()
         .expect("Unable to find code section")
         .clone();
 

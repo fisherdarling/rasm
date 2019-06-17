@@ -81,4 +81,12 @@ impl Runtime {
 
         interpreter.invoke_index(idx, args)
     }
+
+    pub fn interpreter(&mut self) -> Interpreter {
+        Interpreter::new(
+            &self.store.functions,
+            &self.resolver,
+            &mut self.store.memory,
+        )
+    }
 }

@@ -27,12 +27,15 @@ impl StructNom for Vec<Section> {
 
         let (mut input, mut next) = opt!(input, complete!(Section::nom))?;
 
+        println!("{:?}", next);
+
         while let Some(sec) = next {
             sections.push(sec);
 
             let (new_input, new_next) = opt!(input, complete!(Section::nom))?;
             input = new_input;
             next = new_next;
+            println!("{:?}", next);
         }
 
         Ok((input, sections))

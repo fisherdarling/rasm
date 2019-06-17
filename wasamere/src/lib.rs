@@ -129,7 +129,7 @@ pub fn leb_i32(input: &[u8]) -> IResult<&[u8], i32> {
 
     let final_shift = 32 - shift;
 
-    Ok((&[10], (result << final_shift) >> final_shift))
+    Ok((slice, (result << final_shift) >> final_shift))
 }
 // pub fn read_var_i32(&mut self) -> Result<i32> {
 //         // Optimization for single byte i32.

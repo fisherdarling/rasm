@@ -38,6 +38,8 @@ fn main() {
         func_args.push(Value::I32(value));
     }
 
+    println!("Runtime: {:?}", runtime);
+
     let start = Instant::now();
     println!("{}({:?})", args.func, func_args);
     let res = runtime.invoke(args.func, &func_args).unwrap();
