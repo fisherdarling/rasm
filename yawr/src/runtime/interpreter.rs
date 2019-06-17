@@ -225,8 +225,6 @@ impl Interpreter<'_> {
                         } else if let Some(value) = self.stack.peek().clone().clone() {
                             valid_result!(result, value)?;
                             return Ok(InstrResult::Goto(false_end));
-                        } else {
-                            return Err(Error::TypeMismatch(line!()));
                         }
                     }
                     LabelType::Block(result, block_end) => {
@@ -235,8 +233,6 @@ impl Interpreter<'_> {
                         } else if let Some(value) = self.stack.peek().clone().clone() {
                             valid_result!(result, value)?;
                             return Ok(InstrResult::Goto(block_end));
-                        } else {
-                            return Err(Error::TypeMismatch(line!()));
                         }
                     }
                     LabelType::Loop(result, loop_start) => {
@@ -253,8 +249,6 @@ impl Interpreter<'_> {
                             // debug!("Reader Position: {:?}", reader.pos());
                             valid_result!(result, value)?;
                             return Ok(InstrResult::Goto(loop_start));
-                        } else {
-                            return Err(Error::TypeMismatch(line!()));
                         }
                     }
                 }
@@ -286,37 +280,35 @@ impl Interpreter<'_> {
                 debug!("Branch Target: {:?}", target);
                 match target {
                     LabelType::If(result, true_end, false_end) => {
-                        if let Some(value) = self.stack.peek().clone() {
+                        if result == ResType::Unit {
+                            return Ok(InstrResult::Goto(false_end));
+                        } else if let Some(value) = self.stack.peek().clone() {
                             valid_result!(result, value)?;
                             return Ok(InstrResult::Goto(false_end));
-                        } else if result != ResType::Unit {
-                            return Err(Error::TypeMismatch(line!()));
                         }
                     }
                     LabelType::Block(result, block_end) => {
-                        if let Some(value) = self.stack.peek().clone() {
+                        if result == ResType::Unit {
+                            // NOP
+                        } if let Some(value) = self.stack.peek().clone() {
                             valid_result!(result, value)?;
                             return Ok(InstrResult::Goto(block_end));
-                        } else if result != ResType::Unit {
-                            return Err(Error::TypeMismatch(line!()));
                         }
                     }
                     LabelType::Loop(result, loop_start) => {
-                        if let Some(value) = self.stack.peek().clone() {
+                        if result == ResType::Unit {
+                            // debug!("Reader Position: {:?}", reader.pos());
+                            self.current_frame()?
+                                .label_stack
+                                .push(LabelType::Loop(result, loop_start));
+                            return Ok(InstrResult::Goto(loop_start));
+                        } else if let Some(value) = self.stack.peek().clone() {
                             valid_result!(result, value)?;
                             self.current_frame()?
                                 .label_stack
                                 .push(LabelType::Loop(result, loop_start));
                             // debug!("Reader Position: {:?}", reader.pos());
                             return Ok(InstrResult::Goto(loop_start));
-                        } else if result == ResType::Unit {
-                            // debug!("Reader Position: {:?}", reader.pos());
-                            self.current_frame()?
-                                .label_stack
-                                .push(LabelType::Loop(result, loop_start));
-                            return Ok(InstrResult::Goto(loop_start));
-                        } else {
-                            return Err(Error::TypeMismatch(line!()));
                         }
                     }
                 }
@@ -338,26 +330,30 @@ impl Interpreter<'_> {
                     .expect("Label stack must contain a label");
                 match outer_label {
                     LabelType::If(result, true_end, false_end) => {
-                        if let Some(value) = self.stack.peek().clone() {
-                            valid_result!(result, value)?;
+                        if result == ResType::Unit {
                             return Ok(InstrResult::Goto(false_end));
-                        } else if result == ResType::Unit {
+                        } else if let Some(value) = self.stack.peek().clone() {
+                            valid_result!(result, value)?;
                             return Ok(InstrResult::Goto(false_end));
                         } else {
                             return Err(Error::TypeMismatch(line!()));
                         }
                     }
                     LabelType::Block(result, _block_end) => {
-                        if let Some(value) = self.stack.peek().clone() {
+                        if result == ResType::Unit {
+                            // NOP
+                        } else if let Some(value) = self.stack.peek().clone() {
                             valid_result!(result, value)?;
-                        } else if result != ResType::Unit {
+                        } else {
                             return Err(Error::TypeMismatch(line!()));
                         }
                     }
                     LabelType::Loop(result, _loop_end) => {
-                        if let Some(value) = self.stack.peek().clone() {
+                        if result == ResType::Unit {
+                            // NOP
+                        } else if let Some(value) = self.stack.peek().clone() {
                             valid_result!(result, value)?;
-                        } else if result != ResType::Unit {
+                        } else {
                             return Err(Error::TypeMismatch(line!()));
                         }
                     }

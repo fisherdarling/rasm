@@ -15,7 +15,7 @@ struct Args {
     #[structopt(short = "f", long = "invoke")]
     pub func: String,
     #[structopt(short = "a")]
-    pub args: Vec<i64>,
+    pub args: Vec<i32>,
 }
 
 fn main() {
@@ -35,7 +35,7 @@ fn main() {
     let mut func_args = Vec::new();
 
     for value in args.args {
-        func_args.push(Value::I64(value));
+        func_args.push(Value::I32(value));
     }
 
     let start = Instant::now();

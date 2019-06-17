@@ -2,16 +2,11 @@ use yawr::runtime::Runtime;
 use yawr::types::Value;
 
 fn main() {
-    let input = include_bytes!("../../examples/is_one.wasm");
+    let bytes = include_bytes!("../../../examples/fib_bench.wasm");
+    let mut runtime = Runtime::from_bytes(bytes);
 
-    let _ = env_logger::try_init().unwrap();
+    let args = vec![Value::I32(10)];
 
-    let mut runtime = Runtime::from_bytes(input);
-
-    let args = vec![Value::I32(5)];
-
-    let res = runtime.invoke("is_one", &args).unwrap();
-
-    println!("Function: {:?}, Args: {:?}", "add", args);
+    let res = runtime.invoke("fib", &args);
     println!("Result: {:?}", res);
 }
