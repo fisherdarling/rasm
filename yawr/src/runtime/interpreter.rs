@@ -117,7 +117,13 @@ impl Interpreter<'_> {
 
                 let pos = reader.pos().unwrap_or_default();
 
-                let next_instr: &Instr = reader.next().unwrap();
+                let next_instr: Option<&Instr> = reader.next();
+
+                if next_instr.is_none() {
+                    break;
+                }
+
+                let next_instr = next_instr.unwrap();
 
                 debug!("[{:?}] {:?}", pos, next_instr);
                 // debug!("\t---> [Lables] {:?}", current_frame.clone().label_stack);
@@ -593,7 +599,8 @@ impl Interpreter<'_> {
             }
             Instr::MemGrow(_reserved) => {
                 let num_pages = get!(I32, self.stack.pop()?)?;
-                self.store.memory.mem_grow(num_pages)?;
+                let old_size = self.store.memory.mem_grow(num_pages)?;
+                self.stack.push(Value::from(old_size));
             }
 
             // Const operators

@@ -16,7 +16,7 @@ use wasamere::section::export::{Export, ExportDesc};
 use std::collections::HashMap;
 use std::path::Path;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Runtime {
     store: Store,
     resolver: HashMap<String, FuncIdx>,

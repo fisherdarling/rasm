@@ -170,7 +170,7 @@ gen_binop! {
 
 gen_unop! {
     iclz => leading_zeros,
-    ictz => count_zeros,
+    ictz => trailing_zeros,
     ipopcnt => count_ones,
 
     fabs => abs,

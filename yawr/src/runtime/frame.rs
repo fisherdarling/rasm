@@ -102,6 +102,7 @@ pub struct ValueStack {
 }
 
 impl ValueStack {
+    
     pub fn with_capacity(cap: usize) -> ValueStack {
         ValueStack {
             values: Vec::with_capacity(cap),
@@ -113,9 +114,7 @@ impl ValueStack {
     }
 
     pub fn pop(&mut self) -> ExecResult<Value> {
-        let val = self.values.pop().ok_or(Error::EmptyValueStack)?;
-
-        Ok(val)
+        self.values.pop().ok_or(Error::EmptyValueStack)
     }
 
     pub fn peek(&self) -> Option<&Value> {
@@ -123,8 +122,8 @@ impl ValueStack {
     }
 
     pub fn pop_pair(&mut self) -> ExecResult<(Value, Value)> {
-        let rhs = self.values.pop().ok_or(Error::EmptyValueStack)?;
-        let lhs = self.values.pop().ok_or(Error::EmptyValueStack)?;
+        let rhs = self.pop()?;
+        let lhs = self.pop()?;
 
         Ok((lhs, rhs))
     }

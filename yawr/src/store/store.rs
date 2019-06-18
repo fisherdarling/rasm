@@ -8,7 +8,7 @@ use crate::types::{index::FuncIdx, Data, Global, Limit};
 
 use crate::error::Error;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Store {
     pub(crate) functions: Vec<FuncRef>,
     pub(crate) memory: MemInst,

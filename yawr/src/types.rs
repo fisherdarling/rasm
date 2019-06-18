@@ -4,6 +4,7 @@ use crate::error::{Error, ExecResult};
 
 use std::convert::TryFrom;
 use std::mem::transmute;
+use std::fmt;
 // use std::ops::{Add, Div, Mul, Sub};
 // pub use wasamere::
 
@@ -34,6 +35,17 @@ impl Value {
         }
     }
 }
+
+// impl fmt::Debug for Value {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         match self {
+//             Value::I32(v) => write!(f, "{}_i32", v),
+//             Value::I64(v) => write!(f, "{}_i64", v),
+//             Value::F32(v) => write!(f, "{}_f32", v),
+//             Value::F64(v) => write!(f, "{}_f64", v),
+//         }
+//     }
+// }
 
 macro_rules! impl_value_from {
     ($to:ident, $cast:ty, $ty:ty) => {

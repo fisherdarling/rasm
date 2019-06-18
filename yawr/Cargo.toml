@@ -12,6 +12,8 @@ log = "*"
 clap = "*"
 structopt = "*"
 byteorder = "*"
+wabt = "*"
+colored = "1.8"
 
 [dev-dependencies]
 criterion = "0.2"
