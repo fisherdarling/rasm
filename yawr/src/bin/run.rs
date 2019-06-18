@@ -38,7 +38,7 @@ fn main() {
         func_args.push(Value::I32(value));
     }
 
-    println!("Runtime: {:?}", runtime);
+    // println!("Runtime: {:?}", runtime);
 
     let start = Instant::now();
     println!("{}({:?})", args.func, func_args);

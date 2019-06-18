@@ -81,7 +81,11 @@ impl MemInst {
             self.data[offset + 3],
         ];
 
-        i32::from_le_bytes(data)
+        let value = i32::from_le_bytes(data);
+
+        // log::debug!("[MEMORY] LOAD I32: {}", value);
+
+        value
     }
 
     pub fn load_i64(&self, align: Align, offset: Offset) -> i64 {

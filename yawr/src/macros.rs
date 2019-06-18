@@ -84,9 +84,6 @@ macro_rules! get {
     };
 }
 
-// mod math {
-
-// }
 
 #[macro_export]
 macro_rules! truthy {
@@ -95,11 +92,11 @@ macro_rules! truthy {
     };
 }
 
-// fn add_dummy() {
-//     use crate::types::Value;
-
-//     let a = Value::I32(5);
-//     let b = Value::I32(10);
-
-//     binop!(I32, |a, b| a + b)(a, b).unwrap();
-// }
+#[macro_export]
+macro_rules! args {
+    ($($lit:literal),*) => {
+        vec![
+            $(Value::from($lit)),*
+        ]
+    }
+}

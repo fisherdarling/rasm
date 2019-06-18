@@ -14,6 +14,7 @@ use wasamere::instr::Instr;
 use wasamere::section::export::{Export, ExportDesc};
 
 use std::collections::HashMap;
+use std::path::Path;
 
 #[derive(Debug)]
 pub struct Runtime {
@@ -88,5 +89,11 @@ impl Runtime {
             &self.resolver,
             &mut self.store.memory,
         )
+    }
+
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Runtime, std::io::Error> {
+        let data = std::fs::read(path)?;
+
+        Ok(Runtime::from_bytes(&data))
     }
 }

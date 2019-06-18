@@ -13,13 +13,8 @@ impl StructNom for Vec<Instr> {
     fn nom(input: &[u8]) -> IResult<&[u8], Self> {
         let (rest, mut instrs) = do_parse!(
             input,
-            instrs: many_till!(
-                do_parse!(
-                    val: call!(Instr::nom) >>
-                    value!(println!("Parsed Instr: {:?}", val)) >>
-                    (val) 
-                ),
-            tag!(&[0x0B])) >> (instrs.0)
+            instrs: many_till!(Instr::nom, tag!(&[0x0B])) >> 
+            (instrs.0)
         )?;
 
         instrs.push(Instr::End);

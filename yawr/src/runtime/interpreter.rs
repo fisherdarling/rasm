@@ -112,14 +112,18 @@ impl Interpreter<'_> {
             'instr: loop {
                 // TODO Handle None case
 
-                let pos = reader.pos().clone().unwrap_or_default();
+                let pos = reader.pos().unwrap_or_default();
 
                 let next_instr: &Instr = reader.next().unwrap();
 
-                debug!("[{:3}] {:?}", pos + 1, next_instr);
-                debug!("[{:3}]\t--->[Values] {:?}", pos + 1, self.stack);
+                debug!("[{:?}] {:?}", pos, next_instr);
 
-                match self.execute_instr(next_instr)? {
+                let instruction_result = self.execute_instr(next_instr)?;
+
+                debug!("\t---> [Values] {:?}", self.stack);
+                // debug!("\t---> [Locals] {:?}", current_frame.locals);
+
+                match instruction_result {
                     InstrResult::Goto(loc) => {
                         reader.goto(loc);
                     }
@@ -143,6 +147,7 @@ impl Interpreter<'_> {
                     }
                     InstrResult::Continue => continue 'instr,
                 }
+
             }
 
             if self.frames.len() == 1 {
@@ -395,78 +400,78 @@ impl Interpreter<'_> {
 
             // I32/64 Full Load
             Instr::I32Load(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i32(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i64(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
 
             // F32/64 Full Load
             Instr::F32Load(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_f32(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::F64Load(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_f64(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
 
             // I32 Partial Mem Load
             Instr::I32Load8S(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i32_8_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I32Load8U(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i32_8_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I32Load16S(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i32_16_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I32Load16U(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i32_16_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
 
             // I64 Partial Mem Load
             Instr::I64Load8S(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i64_8_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load8U(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i64_8_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load16S(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i64_16_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load16U(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i64_16_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load32S(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i64_32_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load32U(align, offset) => {
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 let res = self.memory.load_i64_32_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
@@ -474,47 +479,47 @@ impl Interpreter<'_> {
             // Memory Storage Operators
             Instr::I32Store(align, offset) => {
                 let value = get!(I32, self.stack.pop()?)?;
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 self.memory.store_i32(*align, offset, value);
             }
             Instr::I64Store(align, offset) => {
                 let value = get!(I64, self.stack.pop()?)?;
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 self.memory.store_i64(*align, offset, value);
             }
             Instr::F32Store(align, offset) => {
                 let value = get!(F32, self.stack.pop()?)?;
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 self.memory.store_f32(*align, offset, value);
             }
             Instr::F64Store(align, offset) => {
                 let value = get!(F64, self.stack.pop()?)?;
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 self.memory.store_f64(*align, offset, value);
             }
             Instr::I32Store8(align, offset) => {
                 let value = get!(I32, self.stack.pop()?)?;
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 self.memory.store_i32_8(*align, offset, value);
             }
             Instr::I32Store16(align, offset) => {
                 let value = get!(I32, self.stack.pop()?)?;
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 self.memory.store_i32_16(*align, offset, value);
             }
             Instr::I64Store8(align, offset) => {
                 let value = get!(I64, self.stack.pop()?)?;
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 self.memory.store_i64_8(*align, offset, value);
             }
             Instr::I64Store16(align, offset) => {
                 let value = get!(I64, self.stack.pop()?)?;
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 self.memory.store_i64_16(*align, offset, value);
             }
             Instr::I64Store32(align, offset) => {
                 let value = get!(I64, self.stack.pop()?)?;
-                let offset = Interpreter::get_delta(*offset, self.current_frame()?)?;
+                let offset = self.get_delta(*offset)?;
                 self.memory.store_i64_32(*align, offset, value);
             }
             Instr::MemSize => {
@@ -1326,8 +1331,8 @@ impl Interpreter<'_> {
     }
 
     #[inline]
-    fn get_delta(offset: Offset, current_frame: &mut Frame) -> Result<Offset, Error> {
-        let delta = get!(I32, current_frame.pop()?)?;
+    fn get_delta(&mut self, offset: Offset) -> Result<Offset, Error> {
+        let delta = get!(I32, self.stack.pop()?)?;
 
         let new_offset = Offset::from((*offset as i32 + delta) as u32);
 
