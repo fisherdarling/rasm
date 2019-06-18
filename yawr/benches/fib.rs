@@ -59,7 +59,9 @@ fn fibonacci_index(c: &mut Criterion) {
 
     let args = vec![Value::I32(10)];
 
-    c.bench_function("fib_index", move |b| b.iter(|| runtime.invoke_index(0, &args)));
+    c.bench_function("fib_index", move |b| {
+        b.iter(|| runtime.invoke_index(0, &args))
+    });
 }
 
 criterion_group!(benches, fibonacci_name, fibonacci_index);

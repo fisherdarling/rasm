@@ -1,6 +1,6 @@
 use crate::function::{Function, Signature};
 use crate::instr::{Expression, Instr};
-use crate::types::{Data, Limit};
+use crate::types::{Data, Global, Limit};
 
 use wasamere::module::ParsedModule;
 use wasamere::section::{Export, Section};
@@ -11,6 +11,7 @@ pub struct Module {
     pub(crate) exports: Vec<Export>,
     pub(crate) mems: Option<Limit>,
     pub(crate) data: Vec<Data>,
+    pub(crate) globals: Vec<Global>,
 }
 
 impl Module {
@@ -78,11 +79,20 @@ impl Module {
             .unwrap_or_default()
             .0;
 
+        let globals = parsed_module
+            .sections()
+            .iter()
+            .find_map(Section::map_global)
+            .cloned()
+            .unwrap_or_default()
+            .0;
+
         Module {
             data,
             mems,
             funcs: functions,
             exports: exports.clone(),
+            globals,
         }
     }
 }

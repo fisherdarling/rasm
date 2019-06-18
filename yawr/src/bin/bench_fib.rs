@@ -11,7 +11,7 @@ fn main() {
 
     let _ = env_logger::try_init().unwrap();
 
-    let mut runtime = Runtime::from_bytes(input.as_slice());
+    let mut runtime = Runtime::from_bytes(input.as_slice()).unwrap();
 
     let args = vec![Value::I32(10)];
 

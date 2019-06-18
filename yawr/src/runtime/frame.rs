@@ -113,7 +113,7 @@ impl ValueStack {
     }
 
     pub fn pop(&mut self) -> ExecResult<Value> {
-        let val = self.values.pop().ok_or(Error::ValueStack)?;
+        let val = self.values.pop().ok_or(Error::EmptyValueStack)?;
 
         Ok(val)
     }

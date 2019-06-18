@@ -9,7 +9,7 @@ use crate::instr::{Expression, Instr};
 use crate::runtime::frame::{Frame, LabelType, ValueStack};
 use crate::types::{
     index::{FuncIdx, Offset},
-    ResType, ValType, Value, WasmResult,
+    Mut, ResType, ValType, Value, WasmResult,
 };
 // use crate::{binop, is_a, relop, same_type, truthy, valid_result};
 use crate::math;
@@ -32,21 +32,18 @@ pub enum InstrResult {
 pub struct Interpreter<'a> {
     frames: FrameStack,
     stack: ValueStack,
-    functions: &'a [FuncRef],
     resolver: &'a HashMap<String, FuncIdx>,
-    memory: &'a mut MemInst,
+    store: &'a mut Store,
 }
 
 impl Interpreter<'_> {
     pub fn new<'a>(
-        functions: &'a [FuncRef],
         resolver: &'a HashMap<String, FuncIdx>,
-        memory: &'a mut MemInst,
+        store: &'a mut Store,
     ) -> Interpreter<'a> {
         Interpreter {
-            functions,
             resolver,
-            memory,
+            store,
             frames: FrameStack::default(),
             stack: ValueStack::default(),
             // current_frame: None,
@@ -66,6 +63,7 @@ impl Interpreter<'_> {
             .get(&name)
             .ok_or(Error::InvalidFunctionName(name))?;
         let function: &FuncRef = self
+            .store
             .functions
             .get(func_idx.as_usize())
             .ok_or(Error::InvalidFuncIdx(*func_idx))?;
@@ -75,16 +73,21 @@ impl Interpreter<'_> {
         self.execute_with_frame(frame)
     }
 
-    pub fn invoke_index<A: AsRef<[Value]>>(&mut self, idx: usize, args: A) -> ExecResult<WasmResult> {
+    pub fn invoke_index<A: AsRef<[Value]>>(
+        &mut self,
+        idx: usize,
+        args: A,
+    ) -> ExecResult<WasmResult> {
         let args: &[Value] = args.as_ref();
 
         let function: &FuncRef = self
+            .store
             .functions
             .get(idx)
             .ok_or(Error::InvalidFuncIdx((idx as u32).into()))?;
 
         let frame = function.instantiate(args)?;
-        
+
         self.execute_with_frame(frame)
     }
 
@@ -117,6 +120,7 @@ impl Interpreter<'_> {
                 let next_instr: &Instr = reader.next().unwrap();
 
                 debug!("[{:?}] {:?}", pos, next_instr);
+                // debug!("\t---> [Lables] {:?}", current_frame.clone().label_stack);
 
                 let instruction_result = self.execute_instr(next_instr)?;
 
@@ -129,6 +133,7 @@ impl Interpreter<'_> {
                     }
                     InstrResult::Call(idx) => {
                         let function = self
+                            .store
                             .functions
                             .get(idx.as_usize())
                             .ok_or(Error::InvalidFuncIdx(idx.clone()))?;
@@ -147,7 +152,6 @@ impl Interpreter<'_> {
                     }
                     InstrResult::Continue => continue 'instr,
                 }
-
             }
 
             if self.frames.len() == 1 {
@@ -179,14 +183,16 @@ impl Interpreter<'_> {
     }
 
     fn execute_instr(&mut self, instr: &Instr) -> ExecResult<InstrResult> {
+        debug!("\t---> [Lables] {:?}", self.current_frame()?.label_stack);
+
         match instr {
             Instr::Drop => {
                 let _ = self.stack.pop()?;
             }
-            Instr::Nop => {},
+            Instr::Nop => {}
             Instr::Unreachable => {
                 return Err(Error::TrapUnreachable);
-            },
+            }
             Instr::IfMarker(result, true_end, false_end) => {
                 let check = self.stack.pop()?;
                 self.current_frame()?
@@ -240,7 +246,7 @@ impl Interpreter<'_> {
                     .label_stack
                     .pop()
                     .ok_or(Error::BranchDepth(*idx))?;
-                debug!("Branch Target: {:?}", target);
+                debug!("\t ---> Target: {:?}", target);
                 match target {
                     LabelType::If(result, true_end, false_end) => {
                         if result == ResType::Unit {
@@ -300,7 +306,7 @@ impl Interpreter<'_> {
                     .label_stack
                     .pop()
                     .ok_or(Error::BranchDepth(*idx))?;
-                debug!("Branch Target: {:?}", target);
+                debug!("\t---> Target: {:?}", target);
                 match target {
                     LabelType::If(result, true_end, false_end) => {
                         if result == ResType::Unit {
@@ -312,8 +318,9 @@ impl Interpreter<'_> {
                     }
                     LabelType::Block(result, block_end) => {
                         if result == ResType::Unit {
-                            // NOP
-                        } if let Some(value) = self.stack.peek().clone() {
+                            return Ok(InstrResult::Goto(block_end));
+                        }
+                        if let Some(value) = self.stack.peek().clone() {
                             valid_result!(result, value)?;
                             return Ok(InstrResult::Goto(block_end));
                         }
@@ -397,82 +404,140 @@ impl Interpreter<'_> {
 
                 self.current_frame()?[idx.index() as usize] = value;
             }
+            Instr::GlobalGet(idx) => {
+                let global = self
+                    .store
+                    .globals
+                    .get(idx.as_usize())
+                    .ok_or(Error::GlobalIndex(idx.clone()))?;
+
+                self.stack.push(global.value);
+            }
+
+            Instr::GlobalSet(idx) => {
+                let global = self
+                    .store
+                    .globals
+                    .get_mut(idx.as_usize())
+                    .ok_or(Error::GlobalIndex(idx.clone()))?;
+
+                if let Mut::Var = global.var {
+                    let new_value = self.stack.pop()?;
+                    let prev = global.get();
+
+                    same_type!(new_value, prev)?;
+
+                    global.set(new_value);
+                } else {
+                    return Err(Error::GlobalMut(idx.clone()));
+                }
+            }
 
             // I32/64 Full Load
             Instr::I32Load(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i32(align.clone(), offset.clone());
+                let res = self.store.memory.load_i32(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i64(align.clone(), offset.clone());
+                let res = self.store.memory.load_i64(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
 
             // F32/64 Full Load
             Instr::F32Load(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_f32(align.clone(), offset.clone());
+                let res = self.store.memory.load_f32(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::F64Load(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_f64(align.clone(), offset.clone());
+                let res = self.store.memory.load_f64(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
 
             // I32 Partial Mem Load
             Instr::I32Load8S(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i32_8_s(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i32_8_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I32Load8U(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i32_8_u(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i32_8_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I32Load16S(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i32_16_s(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i32_16_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I32Load16U(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i32_16_u(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i32_16_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
 
             // I64 Partial Mem Load
             Instr::I64Load8S(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i64_8_s(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i64_8_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load8U(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i64_8_u(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i64_8_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load16S(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i64_16_s(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i64_16_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load16U(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i64_16_u(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i64_16_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load32S(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i64_32_s(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i64_32_s(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
             Instr::I64Load32U(align, offset) => {
                 let offset = self.get_delta(*offset)?;
-                let res = self.memory.load_i64_32_u(align.clone(), offset.clone());
+                let res = self
+                    .store
+                    .memory
+                    .load_i64_32_u(align.clone(), offset.clone());
                 self.stack.push(Value::from(res));
             }
 
@@ -480,55 +545,55 @@ impl Interpreter<'_> {
             Instr::I32Store(align, offset) => {
                 let value = get!(I32, self.stack.pop()?)?;
                 let offset = self.get_delta(*offset)?;
-                self.memory.store_i32(*align, offset, value);
+                self.store.memory.store_i32(*align, offset, value);
             }
             Instr::I64Store(align, offset) => {
                 let value = get!(I64, self.stack.pop()?)?;
                 let offset = self.get_delta(*offset)?;
-                self.memory.store_i64(*align, offset, value);
+                self.store.memory.store_i64(*align, offset, value);
             }
             Instr::F32Store(align, offset) => {
                 let value = get!(F32, self.stack.pop()?)?;
                 let offset = self.get_delta(*offset)?;
-                self.memory.store_f32(*align, offset, value);
+                self.store.memory.store_f32(*align, offset, value);
             }
             Instr::F64Store(align, offset) => {
                 let value = get!(F64, self.stack.pop()?)?;
                 let offset = self.get_delta(*offset)?;
-                self.memory.store_f64(*align, offset, value);
+                self.store.memory.store_f64(*align, offset, value);
             }
             Instr::I32Store8(align, offset) => {
                 let value = get!(I32, self.stack.pop()?)?;
                 let offset = self.get_delta(*offset)?;
-                self.memory.store_i32_8(*align, offset, value);
+                self.store.memory.store_i32_8(*align, offset, value);
             }
             Instr::I32Store16(align, offset) => {
                 let value = get!(I32, self.stack.pop()?)?;
                 let offset = self.get_delta(*offset)?;
-                self.memory.store_i32_16(*align, offset, value);
+                self.store.memory.store_i32_16(*align, offset, value);
             }
             Instr::I64Store8(align, offset) => {
                 let value = get!(I64, self.stack.pop()?)?;
                 let offset = self.get_delta(*offset)?;
-                self.memory.store_i64_8(*align, offset, value);
+                self.store.memory.store_i64_8(*align, offset, value);
             }
             Instr::I64Store16(align, offset) => {
                 let value = get!(I64, self.stack.pop()?)?;
                 let offset = self.get_delta(*offset)?;
-                self.memory.store_i64_16(*align, offset, value);
+                self.store.memory.store_i64_16(*align, offset, value);
             }
             Instr::I64Store32(align, offset) => {
                 let value = get!(I64, self.stack.pop()?)?;
                 let offset = self.get_delta(*offset)?;
-                self.memory.store_i64_32(*align, offset, value);
+                self.store.memory.store_i64_32(*align, offset, value);
             }
-            Instr::MemSize => {
-                let size = self.memory.mem_size() as i32;
+            Instr::MemSize(_reserved) => {
+                let size = self.store.memory.mem_size() as i32;
                 self.stack.push(Value::from(size));
             }
-            Instr::MemGrow => {
+            Instr::MemGrow(_reserved) => {
                 let num_pages = get!(I32, self.stack.pop()?)?;
-                self.memory.mem_grow(num_pages)?;
+                self.store.memory.mem_grow(num_pages)?;
             }
 
             // Const operators
@@ -850,6 +915,8 @@ impl Interpreter<'_> {
             }
             Instr::I32ShrU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
+
+                // println!("LHS: {:?}, RHS: {:?}", lhs, rhs);
 
                 let res = shr!(I32, lhs, rhs)?;
                 self.stack.push(res);
@@ -1354,11 +1421,21 @@ impl Interpreter<'_> {
     pub fn get_index(expr: Expression) -> Option<usize> {
         for instr in expr.0 {
             match instr {
-                Instr::I32Const(idx) => return Some(idx as usize),
+                Instr::I32Const(val) => return Some(val as usize),
                 _ => {}
             }
         }
         None
+    }
+
+    pub fn get_constant_init(expr: Expression) -> Result<Value, Error> {
+        match &expr.0[0] {
+            Instr::I32Const(val) => Ok(Value::from(*val)),
+            Instr::I64Const(val) => Ok(Value::from(*val)),
+            Instr::F32Const(val) => Ok(Value::from(*val)),
+            Instr::F64Const(val) => Ok(Value::from(*val)),
+            i => Err(Error::InvalidGlobalInitializer(i.clone())),
+        }
     }
 }
 

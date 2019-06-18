@@ -269,7 +269,7 @@ pub fn wrap(value: Value) -> Result<Value, Error> {
 macro_rules! shr {
     ($kind:ident, $lhs:ident, $rhs:ident $(, $cast:ty)?) => {
         match ($lhs, $rhs) {
-            (Value::$kind(a), Value::I64(b)) => Ok(Value::from(a $(as $cast)? >> (b as u32))),
+            (Value::$kind(a), Value::$kind(b)) => Ok(Value::from(a $(as $cast)? >> (b as u32))),
             _ => Err(crate::error::Error::TypeMismatch(line!())),
         }
     }
@@ -303,60 +303,4 @@ macro_rules! rotl {
             _ => Err(crate::error::Error::TypeMismatch(line!())),
         }
     };
-}
-
-// #[inline]
-// pub fn shr(lhs: Value, rhs: Value, signed: bool) -> Result<Value, Error> {
-
-// }
-
-// #[macro_export]
-// macro_rules! iadd {
-//     ($kind:ident, $lhs:ident, $rhs:ident) => {
-//         match ($lhs, $rhs) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind(a.wrapping_add(b))),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         }
-//     };
-// }
-
-// #[macro_export]
-// macro_rules! idiv_s {
-//     ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
-//         match ($lhs, $rhs) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).wrapping_div((b as $cast)))),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         }
-//     };
-// }
-
-// #[macro_export]
-// macro_rules! irem_s {
-//     ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
-//         match ($lhs, $rhs) {
-//             (Value::$kind(a), Value::$kind(b)) => Ok(Value::$kind((a as $cast).wrapping_rem((b as $cast)))),
-//             _ => Err(crate::error::Error::TypeMismatch(line!())),
-//         }
-//     };
-// }
-
-// #[macro_export]
-// macro_rules! iand {
-//     ($kind:ident, $lhs:ident, $rhs:ident, $cast:ty) => {
-//         math_binop!($kind, $lhs, $rhs, $cast)
-//     }
-// }
-
-fn test() {
-    // use crate::types::Value;
-
-    let (a, b) = (Value::I32(5), Value::I32(5));
-
-    // math_binop!(I32, a, b, wrapping_rem);
-
-    iand!(I32, a, b);
-
-    // let value = Value::I32(10);
-
-    // let res = trunc!(I64, F32, u64, value).unwrap();
 }

@@ -13,8 +13,7 @@ impl StructNom for Vec<Instr> {
     fn nom(input: &[u8]) -> IResult<&[u8], Self> {
         let (rest, mut instrs) = do_parse!(
             input,
-            instrs: many_till!(Instr::nom, tag!(&[0x0B])) >> 
-            (instrs.0)
+            instrs: many_till!(Instr::nom, tag!(&[0x0B])) >> (instrs.0)
         )?;
 
         instrs.push(Instr::End);
@@ -152,9 +151,9 @@ pub enum Instr {
     I64Store8(Align, Offset),
     I64Store16(Align, Offset),
     I64Store32(Align, Offset),
-    MemSize,
+    MemSize(u8),
     #[snom(range(end = 0x40))]
-    MemGrow,
+    MemGrow(u8),
 
     // Numeric Instructions:
     #[snom(range(start = 0x41))]

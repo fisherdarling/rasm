@@ -84,7 +84,6 @@ macro_rules! get {
     };
 }
 
-
 #[macro_export]
 macro_rules! truthy {
     ($id:ident) => {

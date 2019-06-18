@@ -1,4 +1,4 @@
-use crate::types::index::{FuncIdx, LabelIdx};
+use crate::types::index::{FuncIdx, GlobalIdx, LabelIdx};
 use crate::types::{ValType, Value};
 
 use std::collections::CollectionAllocErr;
@@ -43,6 +43,20 @@ pub enum Error {
     MemoryGrow(CollectionAllocErr),
     #[fail(display = "The maximum amount of memory was exceeded")]
     MemoryExceeded,
+    #[fail(display = "Invalid global index {:?}", 0)]
+    GlobalIndex(GlobalIdx),
+    #[fail(display = "Global cannot be modified: {:?}", 0)]
+    GlobalMut(GlobalIdx),
+    #[fail(display = "IOError: {:?}", 0)]
+    IOError(std::io::Error),
+    #[fail(display = "Invalid Global Initializer: {:?}", 0)]
+    InvalidGlobalInitializer(wasamere::instr::Instr),
     #[fail(display = "Unreachable Trap")]
     TrapUnreachable,
+}
+
+impl From<std::io::Error> for Error {
+    fn from(error: std::io::Error) -> Self {
+        Error::IOError(error)
+    }
 }

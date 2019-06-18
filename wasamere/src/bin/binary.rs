@@ -12,7 +12,7 @@ use std::iter;
 fn main() {
     let _ = try_init().unwrap();
 
-    let source = include_bytes!("../../../examples/mem_check.wasm");
+    let source = include_bytes!("../../../examples/alloc.wasm");
 
     let (rest, module) = ParsedModule::nom(source).unwrap();
     let code = module
@@ -23,22 +23,19 @@ fn main() {
         .expect("Unable to find code section")
         .clone();
 
-    let func = &code.0[0];
+    for (i, func) in code.0.iter().enumerate() {
+        let mut acc = Vec::new();
 
-    let mut acc = Vec::new();
+        let test: Vec<Instr> = Vec::new();
 
-    let test: Vec<Instr> = Vec::new();
+        for instr in &(func.1).0 {
+            flatten(&mut acc, instr.clone());
+        }
 
-    println!("==== BEFORE ====");
-    println!("{:#?}", func);
-
-    for instr in &(func.1).0 {
-        flatten(&mut acc, instr.clone());
-    }
-
-    println!("==== AFTER  ====");
-    for (i, instr) in acc.iter().enumerate() {
-        println!("[{:2?}]: {:?}", i, instr);
+        println!("==== FUNC {} ====", i);
+        for (i, instr) in acc.iter().enumerate() {
+            println!("[{:2?}]: {:?}", i, instr);
+        }
     }
 }
 

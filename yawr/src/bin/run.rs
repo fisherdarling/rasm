@@ -30,7 +30,7 @@ fn main() {
         .read_to_end(&mut bytes)
         .unwrap();
 
-    let mut runtime = Runtime::from_bytes(&bytes);
+    let mut runtime = Runtime::from_bytes(&bytes).unwrap();
 
     let mut func_args = Vec::new();
 
@@ -44,4 +44,5 @@ fn main() {
     println!("{}({:?})", args.func, func_args);
     let res = runtime.invoke(args.func, &func_args).unwrap();
     println!("[ {:?} ]: {:?}", start.elapsed(), res);
+    // runtime.print_stack;
 }

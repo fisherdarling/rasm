@@ -8,7 +8,6 @@ pub mod math;
 pub mod module;
 pub mod runtime;
 pub mod store;
-pub mod store_old;
 pub mod types;
 pub mod value;
 
