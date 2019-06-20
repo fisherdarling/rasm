@@ -90,8 +90,11 @@ fn print_passed(line: u64, field: &str, verbose: bool) {
 }
 
 fn print_failed(line: u64, field: &str, args: Vec<Value>, expected: Vec<WasmResult>, result: WasmResult, verbose: bool) {
-    if !verbose {
-        println!("[{:04}] {} {:<30} Args: {:?}, || Expected: {:?}, || Received: {:?}", line, "[FAILED]".red(), &field.yellow(), args, expected, result);                    
+    if verbose {
+        println!(r#"[{:04}] {} {:<30} 
+                ├──>  Args:     {:?}
+                ├──>  Expected: {:?}
+                └──>  Received: {:?}"#, line, "[FAILED]".red(), &field.yellow(), args, expected, result);                    
     } else {
         println!("[{:04}] {} {:<30}", line, "[FAILED]".red(), &field.yellow());
     }

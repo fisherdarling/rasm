@@ -29,7 +29,7 @@ impl Store {
         };
 
         let mut memory = MemInst::new(min, max);
-        memory.init(data);
+        memory.init(data)?;
 
         let globals: Vec<GlobalInst> = globals
             .into_iter()
@@ -56,7 +56,7 @@ impl Store {
         };
 
         let mut memory = MemInst::new(min, max);
-        memory.init(data);
+        memory.init(data)?;
 
         let globals: Vec<GlobalInst> = globals
             .into_iter()

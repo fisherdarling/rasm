@@ -20,9 +20,11 @@ use crate::store::memory::MemInst;
 
 use log::*;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum InstrResult {
-    Goto(usize),
+    Goto {  loc: usize, 
+            clean_depth: usize,
+            value: Option<Value>, },
     Call(FuncIdx),
     Return,
     Continue,
@@ -134,8 +136,11 @@ impl Interpreter<'_> {
                 // debug!("\t---> [Locals] {:?}", current_frame.locals);
 
                 match instruction_result {
-                    InstrResult::Goto(loc) => {
+                    InstrResult::Goto { loc, clean_depth, value } => {
                         reader.goto(loc);
+                        if let Some(value) = value {
+                            self.stack.push(value);
+                        }
                     }
                     InstrResult::Call(idx) => {
                         let function = self
@@ -176,7 +181,7 @@ impl Interpreter<'_> {
                 match frame_res {
                     ResType::Unit => {}
                     res => {
-                        let value = self.stack.peek().ok_or(Error::EmptyValueStack)?;
+                        let value = self.stack.peek_value()?.ok_or(Error::EmptyValueStack)?;
                         valid_result!(res, value)?;
                     }
                 };
@@ -184,8 +189,6 @@ impl Interpreter<'_> {
 
             self.pop_frame();
         }
-
-        unimplemented!()
     }
 
     fn execute_instr(&mut self, instr: &Instr) -> ExecResult<InstrResult> {
@@ -209,7 +212,7 @@ impl Interpreter<'_> {
                     // Do nothing, the next instruction is part of the truthy path.
                 } else {
                     // Skip the true path
-                    return Ok(InstrResult::Goto(*true_end));
+                    return Ok(InstrResult::Goto { loc: *true_end, clean_depth: 0, value: None });
                 }
             }
             Instr::BlockMarker(result, block_end) => {
@@ -256,18 +259,20 @@ impl Interpreter<'_> {
                 match target {
                     LabelType::If(result, true_end, false_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Goto(false_end));
-                        } else if let Some(value) = self.stack.peek().clone().clone() {
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: None });
+                        } else {
+                            let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto(false_end));
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: Some(value) });
                         }
                     }
                     LabelType::Block(result, block_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Goto(block_end));
-                        } else if let Some(value) = self.stack.peek().clone().clone() {
+                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: None });
+                        } else {
+                            let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto(block_end));
+                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: Some(value) });
                         }
                     }
                     LabelType::Loop(result, loop_start) => {
@@ -276,14 +281,15 @@ impl Interpreter<'_> {
                                 .label_stack
                                 .push(LabelType::Loop(result, loop_start));
                             // debug!("Reader Position: {:?}", reader.pos());
-                            return Ok(InstrResult::Goto(loop_start));
-                        } else if let Some(value) = self.stack.peek().cloned() {
+                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: None });
+                        } else {
+                            let value = self.stack.pop()?;
                             self.current_frame()?
                                 .label_stack
                                 .push(LabelType::Loop(result, loop_start));
                             // debug!("Reader Position: {:?}", reader.pos());
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto(loop_start));
+                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: Some(value) });
                         }
                     }
                 }
@@ -316,19 +322,20 @@ impl Interpreter<'_> {
                 match target {
                     LabelType::If(result, true_end, false_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Goto(false_end));
-                        } else if let Some(value) = self.stack.peek().clone() {
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: None });
+                        } else {
+                            let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto(false_end));
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: Some(value) });
                         }
                     }
                     LabelType::Block(result, block_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Goto(block_end));
-                        }
-                        if let Some(value) = self.stack.peek().clone() {
+                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: None });
+                        } else {
+                            let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto(block_end));
+                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: Some(value) });
                         }
                     }
                     LabelType::Loop(result, loop_start) => {
@@ -337,14 +344,82 @@ impl Interpreter<'_> {
                             self.current_frame()?
                                 .label_stack
                                 .push(LabelType::Loop(result, loop_start));
-                            return Ok(InstrResult::Goto(loop_start));
-                        } else if let Some(value) = self.stack.peek().clone() {
+                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: None });
+                        } else {
+                            let value = self.stack.pop()?;
                             valid_result!(result, value)?;
                             self.current_frame()?
                                 .label_stack
                                 .push(LabelType::Loop(result, loop_start));
                             // debug!("Reader Position: {:?}", reader.pos());
-                            return Ok(InstrResult::Goto(loop_start));
+                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: Some(value) });
+                        }
+                    }
+                }
+            }
+            Instr::BrTable(labels, idx) => {
+                // Labels is a vector of the potential choices.
+                // idx is the default label to branch to.
+
+                // let target_idx = self.stack.pop()?;
+                
+
+
+                // for i in 0..**idx {
+                //     let label = self.current_frame()?
+                //         .label_stack
+                //         .pop()
+                //         .ok_or(Error::BranchDepth(*idx))?;
+                    
+                //     let res = label.res();
+
+
+                // }
+
+                if self.current_frame()?.label_stack.is_empty() {
+                    return Ok(InstrResult::Return);
+                }
+
+                let target = self
+                    .current_frame()?
+                    .label_stack
+                    .pop()
+                    .ok_or(Error::BranchDepth(*idx))?;
+                debug!("\t ---> Target: {:?}", target);
+                match target {
+                    LabelType::If(result, true_end, false_end) => {
+                        if result == ResType::Unit {
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: None });
+                        } else {
+                            let value = self.stack.pop()?;
+                            valid_result!(result, value)?;
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: Some(value) });
+                        }
+                    }
+                    LabelType::Block(result, block_end) => {
+                        if result == ResType::Unit {
+                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: None });
+                        } else {
+                            let value = self.stack.pop()?;
+                            valid_result!(result, value)?;
+                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: Some(value) });
+                        }
+                    }
+                    LabelType::Loop(result, loop_start) => {
+                        if result == ResType::Unit {
+                            self.current_frame()?
+                                .label_stack
+                                .push(LabelType::Loop(result, loop_start));
+                            // debug!("Reader Position: {:?}", reader.pos());
+                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: None });
+                        } else {
+                            let value = self.stack.pop()?;
+                            self.current_frame()?
+                                .label_stack
+                                .push(LabelType::Loop(result, loop_start));
+                            // debug!("Reader Position: {:?}", reader.pos());
+                            valid_result!(result, value)?;
+                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: Some(value) });
                         }
                     }
                 }
@@ -367,30 +442,29 @@ impl Interpreter<'_> {
                 match outer_label {
                     LabelType::If(result, true_end, false_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Goto(false_end));
-                        } else if let Some(value) = self.stack.peek().clone() {
-                            valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto(false_end));
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: 1, value: None });
                         } else {
-                            return Err(Error::TypeMismatch(line!()));
+                            let value = self.stack.pop()?;
+                            valid_result!(result, value)?;
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: 1, value: Some(value) });
                         }
                     }
-                    LabelType::Block(result, _block_end) => {
+                    LabelType::Block(result, block_end) => {
                         if result == ResType::Unit {
-                            // NOP
-                        } else if let Some(value) = self.stack.peek().clone() {
-                            valid_result!(result, value)?;
+                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: 1, value: None });
                         } else {
-                            return Err(Error::TypeMismatch(line!()));
+                            let value = self.stack.pop()?;
+                            valid_result!(result, value)?;
+                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: 1, value: Some(value) });
                         }
                     }
-                    LabelType::Loop(result, _loop_end) => {
+                    LabelType::Loop(result, loop_end) => {
                         if result == ResType::Unit {
-                            // NOP
-                        } else if let Some(value) = self.stack.peek().clone() {
-                            valid_result!(result, value)?;
+                            return Ok(InstrResult::Goto { loc: loop_end, clean_depth: 1, value: None });
                         } else {
-                            return Err(Error::TypeMismatch(line!()));
+                            let value = self.stack.pop()?;
+                            valid_result!(result, value)?;
+                            return Ok(InstrResult::Goto { loc: loop_end, clean_depth: 1, value: Some(value) });
                         }
                     }
                 }

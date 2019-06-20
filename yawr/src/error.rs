@@ -21,6 +21,8 @@ pub enum Error {
     NotImplemented(wasamere::instr::Instr),
     #[fail(display = "Corrupted Value Stack")]
     ValueStack,
+    #[fail(display = "Tried to convert a non-Value StackElem into a Value.")]
+    StackElemIntoValue,
     #[fail(display = "Invalid Function Name")]
     InvalidFunctionName(String),
     #[fail(display = "Invalid Function Index: {:?}", 0)]

@@ -9,16 +9,21 @@ use crate::function::{FuncReader, FuncRef};
 use std::fmt;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 
-#[derive(Debug, Clone)]
-pub enum StackElem {
-    Value(Value),
-}
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum LabelType {
     Block(ResType, usize),
     If(ResType, usize, usize),
     Loop(ResType, usize),
+}
+
+impl LabelType {
+    pub fn res(&self) -> ResType {
+        match self {
+            LabelType::Block(res, _) => *res,
+            LabelType::If(res, _, _) => *res,
+            LabelType::Loop(res, _) => *res, 
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -98,11 +103,39 @@ impl IndexMut<usize> for Frame {
 
 #[derive(Default, Clone, PartialEq)]
 pub struct ValueStack {
-    values: Vec<Value>,
+    values: Vec<StackElem>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum StackElem {
+    Value(Value),
+    // Purely Markers
+    Block,
+    If,
+    Loop,
+}
+
+impl StackElem {
+    pub fn into_value(self) -> ExecResult<Value> {
+        match self {
+            StackElem::Value(val) => Ok(val),
+            _ => Err(Error::StackElemIntoValue),
+        }
+    }
+
+    pub fn as_value(&self) -> ExecResult<&Value> {
+        match &self {
+            StackElem::Value(ref val) => Ok(val),
+            _ => Err(Error::StackElemIntoValue),
+        }
+    }
 }
 
 impl ValueStack {
-    
+    // pub fn into_value()
+
+
+
     pub fn with_capacity(cap: usize) -> ValueStack {
         ValueStack {
             values: Vec::with_capacity(cap),
@@ -110,15 +143,15 @@ impl ValueStack {
     }
 
     pub fn push(&mut self, val: Value) {
-        self.values.push(val);
+        self.values.push(StackElem::Value(val));
     }
 
     pub fn pop(&mut self) -> ExecResult<Value> {
-        self.values.pop().ok_or(Error::EmptyValueStack)
+        self.values.pop().ok_or(Error::EmptyValueStack)?.into_value()
     }
 
-    pub fn peek(&self) -> Option<&Value> {
-        self.values.last()
+    pub fn peek_value(&self) -> ExecResult<Option<&Value>> {
+        self.values.last().map(StackElem::as_value).transpose()
     }
 
     pub fn pop_pair(&mut self) -> ExecResult<(Value, Value)> {
