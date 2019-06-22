@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
 
-
 use crate::error::{Error, ExecResult};
 
 use crate::function::{FuncReader, FuncRef, Function};
@@ -15,8 +14,6 @@ use crate::types::{
 use crate::math;
 use crate::store::Store;
 use crate::*;
-
-
 
 use log::*;
 

@@ -4,8 +4,6 @@ use std::array::FixedSizeArray;
 use yawr::runtime::ModuleInstance;
 use yawr::types::Value;
 
-
-
 use criterion::*;
 
 // fn main() {

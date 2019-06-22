@@ -1,8 +1,7 @@
+use crate::types::ResType;
 use crate::types::Value;
-use crate::types::{ResType};
 
 use crate::error::{Error, ExecResult};
-
 
 use crate::function::{FuncReader, FuncRef};
 

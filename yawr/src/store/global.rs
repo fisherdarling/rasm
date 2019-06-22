@@ -1,5 +1,5 @@
 use crate::types::Value;
-use wasamere::types::{Global};
+use wasamere::types::Global;
 use wasamere::types::{Mut, ValType};
 
 use crate::error::Error;

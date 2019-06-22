@@ -3,7 +3,6 @@ use wabt::Wat2Wasm;
 use yawr::args;
 use yawr::runtime::ModuleInstance;
 
-
 use env_logger::try_init;
 
 fn main() {

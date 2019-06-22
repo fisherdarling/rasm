@@ -4,17 +4,17 @@ use env_logger::try_init;
 use wasamere::instr::Instr;
 use wasamere::module::ParsedModule;
 use wasamere::section::Section;
-use wasamere::types::Function;
+
 use wasamere::StructNom;
 
-use std::iter;
+
 
 fn main() {
     let _ = try_init().unwrap();
 
     let source = include_bytes!("../../../examples/loop2.wasm");
 
-    let (rest, module) = ParsedModule::nom(source).unwrap();
+    let (_rest, module) = ParsedModule::nom(source).unwrap();
     let code = module
         .sections()
         .iter()
@@ -26,7 +26,7 @@ fn main() {
     for (i, func) in code.0.iter().enumerate() {
         let mut acc = Vec::new();
 
-        let test: Vec<Instr> = Vec::new();
+        let _test: Vec<Instr> = Vec::new();
 
         for instr in &(func.1).0 {
             flatten(&mut acc, instr.clone());

@@ -1,7 +1,5 @@
 pub use wasamere::types::*;
 
-
-
 use std::convert::TryFrom;
 
 use std::mem::transmute;

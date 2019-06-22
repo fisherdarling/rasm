@@ -6,7 +6,6 @@ use crate::runtime::frame::Frame;
 
 use crate::types::{Locals, ResType, ValType, Value};
 
-
 use std::ops::{Deref, Index};
 use std::rc::Rc;
 

@@ -3,10 +3,7 @@ use wabt::script::{Action, Command, CommandKind, ScriptParser, Value as WastValu
 use colored::*;
 use structopt::StructOpt;
 
-
-
 use std::path::PathBuf;
-
 
 use yawr::error::Error;
 use yawr::runtime::ModuleInstance;

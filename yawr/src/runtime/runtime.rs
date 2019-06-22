@@ -1,20 +1,18 @@
-
 use crate::function::Function;
 use crate::module::Module;
 
 use crate::runtime::interpreter::Interpreter;
 use crate::store::{Store, StoreBuilder};
 
-use crate::types::index::{FuncIdx};
+use crate::types::index::FuncIdx;
 use crate::types::{Data, Global, Value, WasmResult};
 
 use crate::error::{Error, ExecResult};
 
-
 use wasamere::section::export::{Export, ExportDesc};
 
-use std::convert::TryFrom;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::path::Path;
 
 #[derive(Debug, Default)]
@@ -205,7 +203,7 @@ impl<'a> ModuleInstanceBuilder<'a> {
             return ModuleInstance::try_from(module);
         } else if let Some(bytes) = self.bytes {
             let module = Module::from_bytes(bytes.as_ref());
-            
+
             return ModuleInstance::try_from(module);
         }
 

@@ -1,4 +1,3 @@
-
 use std::ops::Index;
 
 use crate::function::{FuncRef, Function};
