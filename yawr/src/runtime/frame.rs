@@ -1,13 +1,13 @@
 use crate::types::Value;
-use crate::types::{ResType, WasmResult};
+use crate::types::{ResType};
 
 use crate::error::{Error, ExecResult};
-use crate::runtime::ModuleInstance;
+
 
 use crate::function::{FuncReader, FuncRef};
 
 use std::fmt;
-use std::ops::{Deref, DerefMut, Index, IndexMut};
+use std::ops::{Index, IndexMut};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum LabelType {

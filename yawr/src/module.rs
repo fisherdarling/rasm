@@ -1,5 +1,5 @@
 use crate::function::{Function, Signature};
-use crate::instr::{Expression, Instr};
+
 use crate::types::{Data, Global, Limit};
 
 use wasamere::module::ParsedModule;

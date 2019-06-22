@@ -1,12 +1,12 @@
 // use std::collections::HashMap;
 
 use crate::error::{Error, ExecResult};
-use crate::module::Module;
+
 use crate::runtime::frame::Frame;
-use crate::types::Function as PFunction;
+
 use crate::types::{Locals, ResType, ValType, Value};
 
-use std::cell::Cell;
+
 use std::ops::{Deref, Index};
 use std::rc::Rc;
 
@@ -166,7 +166,7 @@ impl FuncReader {
         }
 
         self.pos = match self.pos {
-            Some(pos) => Some(loc),
+            Some(_pos) => Some(loc),
             None => panic!("Cannot goto without first executing next."),
         };
 

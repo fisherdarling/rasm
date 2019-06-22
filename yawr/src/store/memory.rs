@@ -5,7 +5,7 @@ use std::io::Write;
 use crate::runtime::interpreter::Interpreter;
 use crate::types::{
     index::{Align, Offset},
-    Data, Value,
+    Data,
 };
 
 use crate::error::Error;
@@ -56,7 +56,7 @@ impl MemInst {
 
         if let Some(data_init) = data_init {
             for data in data_init {
-                let idx = data.0;
+                let _idx = data.0;
                 let offset = Interpreter::get_index(data.1).ok_or(Error::OffsetExpression)?;
                 let bytes = data.2;
 
@@ -70,7 +70,7 @@ impl MemInst {
         Ok(())
     }
 
-    pub fn load_i32(&self, align: Align, offset: Offset) -> i32 {
+    pub fn load_i32(&self, _align: Align, offset: Offset) -> i32 {
         // Align is always 4? Ignore?
         let offset = offset.as_usize();
 
@@ -88,7 +88,7 @@ impl MemInst {
         value
     }
 
-    pub fn load_i64(&self, align: Align, offset: Offset) -> i64 {
+    pub fn load_i64(&self, _align: Align, offset: Offset) -> i64 {
         // Align is always 4? Ignore?
         let offset = offset.as_usize();
 
@@ -118,7 +118,7 @@ impl MemInst {
         f64::from_bits(bits as u64)
     }
 
-    pub fn load_i32_8_s(&self, align: Align, offset: Offset) -> i32 {
+    pub fn load_i32_8_s(&self, _align: Align, offset: Offset) -> i32 {
         let offset = offset.as_usize();
 
         let data = self.data[offset] as i8;
@@ -126,7 +126,7 @@ impl MemInst {
         data as i32
     }
 
-    pub fn load_i32_8_u(&self, align: Align, offset: Offset) -> i32 {
+    pub fn load_i32_8_u(&self, _align: Align, offset: Offset) -> i32 {
         let offset = offset.as_usize();
 
         let data = self.data[offset];
@@ -134,7 +134,7 @@ impl MemInst {
         data as i32
     }
 
-    pub fn load_i32_16_s(&self, align: Align, offset: Offset) -> i32 {
+    pub fn load_i32_16_s(&self, _align: Align, offset: Offset) -> i32 {
         let offset = offset.as_usize();
 
         let data = [self.data[offset], self.data[offset + 1]];
@@ -142,7 +142,7 @@ impl MemInst {
         i16::from_le_bytes(data) as i32
     }
 
-    pub fn load_i32_16_u(&self, align: Align, offset: Offset) -> i32 {
+    pub fn load_i32_16_u(&self, _align: Align, offset: Offset) -> i32 {
         let offset = offset.as_usize();
 
         let data = [self.data[offset], self.data[offset + 1]];
@@ -186,7 +186,7 @@ impl MemInst {
         data as i64
     }
 
-    pub fn store_i32(&mut self, align: Align, offset: Offset, value: i32) {
+    pub fn store_i32(&mut self, _align: Align, offset: Offset, value: i32) {
         let offset = offset.as_usize();
 
         let mut buffer: &mut [u8] = &mut self.data[offset..offset + 4];
@@ -195,7 +195,7 @@ impl MemInst {
         buffer.flush().unwrap();
     }
 
-    pub fn store_i64(&mut self, align: Align, offset: Offset, value: i64) {
+    pub fn store_i64(&mut self, _align: Align, offset: Offset, value: i64) {
         let offset = offset.as_usize();
 
         let mut buffer: &mut [u8] = &mut self.data[offset..offset + 8];

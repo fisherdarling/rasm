@@ -1,16 +1,16 @@
-use crate::function::FuncRef;
+
 use crate::function::Function;
 use crate::module::Module;
-use crate::runtime::frame::{Frame, StackElem};
+
 use crate::runtime::interpreter::Interpreter;
 use crate::store::{Store, StoreBuilder};
 
-use crate::types::index::{FuncIdx, LocalIdx};
-use crate::types::{Data, Global, ResType, ValType, Value, WasmResult};
+use crate::types::index::{FuncIdx};
+use crate::types::{Data, Global, Value, WasmResult};
 
 use crate::error::{Error, ExecResult};
 
-use wasamere::instr::Instr;
+
 use wasamere::section::export::{Export, ExportDesc};
 
 use std::convert::TryFrom;
@@ -138,7 +138,7 @@ impl TryFrom<Module> for ModuleInstance {
 }
 
 pub struct ModuleInstanceBuilder<'a> {
-    bytes: Option<&'a AsRef<[u8]>>,
+    bytes: Option<&'a dyn AsRef<[u8]>>,
     module: Option<Module>,
     store: Option<Store>,
     functions: Option<Vec<Function>>,

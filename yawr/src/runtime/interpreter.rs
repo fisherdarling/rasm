@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
-use std::ops::{Deref, DerefMut};
+
 
 use crate::error::{Error, ExecResult};
 
@@ -9,14 +9,14 @@ use crate::instr::{Expression, Instr};
 use crate::runtime::frame::{Frame, LabelType, ValueStack};
 use crate::types::{
     index::{FuncIdx, LabelIdx, Offset},
-    Mut, ResType, ValType, Value, WasmResult,
+    Mut, ResType, Value, WasmResult,
 };
 // use crate::{binop, is_a, relop, same_type, truthy, valid_result};
 use crate::math;
 use crate::store::Store;
 use crate::*;
 
-use crate::store::memory::MemInst;
+
 
 use log::*;
 
@@ -111,7 +111,7 @@ impl Interpreter<'_> {
 
     pub fn execute(&mut self) -> ExecResult<WasmResult> {
         'frame: loop {
-            let mut current_frame: &mut Frame = self.current_frame()?;
+            let current_frame: &mut Frame = self.current_frame()?;
             let frame_res = current_frame.res();
 
             let mut reader = if current_frame.is_paused() {
@@ -303,7 +303,7 @@ impl Interpreter<'_> {
                 }
             }
             Instr::Br(idx) => {
-                let mut inner_result;
+                let inner_result;
 
                 if let Some(label) = self.current_frame()?.label_stack.last() {
                     inner_result = label.res();
@@ -311,7 +311,7 @@ impl Interpreter<'_> {
                     return Ok(InstrResult::Return);
                 }
 
-                for i in 0..**idx {
+                for _i in 0..**idx {
                     self.current_frame()?
                         .label_stack
                         .pop()
@@ -356,7 +356,7 @@ impl Interpreter<'_> {
                             value,
                         });
                     }
-                    LabelType::If(outer_result, true_end, false_end) => {
+                    LabelType::If(outer_result, _true_end, false_end) => {
                         let value = match outer_result {
                             ResType::Unit => None,
                             res => {
@@ -424,7 +424,7 @@ impl Interpreter<'_> {
                     return Ok(InstrResult::Continue);
                 }
 
-                let mut inner_result;
+                let inner_result;
 
                 if let Some(label) = self.current_frame()?.label_stack.last() {
                     inner_result = label.res();
@@ -432,7 +432,7 @@ impl Interpreter<'_> {
                     return Ok(InstrResult::Return);
                 }
 
-                for i in 0..**idx {
+                for _i in 0..**idx {
                     self.current_frame()?
                         .label_stack
                         .pop()
@@ -476,7 +476,7 @@ impl Interpreter<'_> {
                             value,
                         });
                     }
-                    LabelType::If(outer_result, true_end, false_end) => {
+                    LabelType::If(outer_result, _true_end, false_end) => {
                         let value = match outer_result {
                             ResType::Unit => None,
                             res => {
@@ -549,7 +549,7 @@ impl Interpreter<'_> {
 
                 // println!("Chosen Idx: {:?}", idx);
 
-                let mut inner_result;
+                let inner_result;
 
                 if let Some(label) = self.current_frame()?.label_stack.last() {
                     inner_result = label.res();
@@ -557,7 +557,7 @@ impl Interpreter<'_> {
                     return Ok(InstrResult::Return);
                 }
 
-                for i in 0..idx {
+                for _i in 0..idx {
                     self.current_frame()?
                         .label_stack
                         .pop()
@@ -602,7 +602,7 @@ impl Interpreter<'_> {
                             value,
                         });
                     }
-                    LabelType::If(outer_result, true_end, false_end) => {
+                    LabelType::If(outer_result, _true_end, false_end) => {
                         let value = match outer_result {
                             ResType::Unit => None,
                             res => {
@@ -681,7 +681,7 @@ impl Interpreter<'_> {
                 debug!("\t---> [END] Target: {:?}", outer_label);
 
                 match outer_label {
-                    LabelType::If(result, true_end, false_end) => {
+                    LabelType::If(result, _true_end, false_end) => {
                         if result == ResType::Unit {
                             return Ok(InstrResult::Goto {
                                 loc: false_end,
@@ -698,7 +698,7 @@ impl Interpreter<'_> {
                             });
                         }
                     }
-                    LabelType::Block(result, block_end) => {
+                    LabelType::Block(result, _block_end) => {
                         if result == ResType::Unit {
                             return Ok(InstrResult::Clean {
                                 clean_depth: Some(0),
@@ -715,7 +715,7 @@ impl Interpreter<'_> {
                     }
 
                     // FIXME: LOOP END IS A BRANCH
-                    LabelType::Loop(result, loop_end) => {
+                    LabelType::Loop(result, _loop_end) => {
                         if result == ResType::Unit {
                             return Ok(InstrResult::Clean {
                                 clean_depth: Some(0),
