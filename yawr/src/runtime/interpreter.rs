@@ -8,7 +8,7 @@ use crate::function::{FuncReader, FuncRef, Function};
 use crate::instr::{Expression, Instr};
 use crate::runtime::frame::{Frame, LabelType, ValueStack};
 use crate::types::{
-    index::{FuncIdx, Offset},
+    index::{FuncIdx, Offset, LabelIdx},
     Mut, ResType, ValType, Value, WasmResult,
 };
 // use crate::{binop, is_a, relop, same_type, truthy, valid_result};
@@ -476,73 +476,110 @@ impl Interpreter<'_> {
                     },
                 }
             }
-            // Instr::BrTable(labels, idx) => {
-            //     // Labels is a vector of the potential choices.
-            //     // idx is the default label to branch to.
+            Instr::BrTable(table, default) => {
+                let idx = get!(I32, self.stack.pop()?)? as usize;
 
-            //     // let target_idx = self.stack.pop()?;
-                
+                println!("Len: {:?}, Default: {:?}, Idx: {:?}", table.len(), default, idx);
 
+                let idx = if idx < table.len() {
+                    table[idx].as_usize()
+                } else {
+                    default.as_usize()
+                };
 
-            //     // for i in 0..**idx {
-            //     //     let label = self.current_frame()?
-            //     //         .label_stack
-            //     //         .pop()
-            //     //         .ok_or(Error::BranchDepth(*idx))?;
-                    
-            //     //     let res = label.res();
+                println!("Chosen Idx: {:?}", idx);
 
 
-            //     // }
+                let mut inner_result;
 
-            //     if self.current_frame()?.label_stack.is_empty() {
-            //         return Ok(InstrResult::Return);
-            //     }
+                if let Some(label) = self.current_frame()?.label_stack.last() {
+                    inner_result = label.res();
+                } else {
+                    return Ok(InstrResult::Return);
+                }
 
-            //     let target = self
-            //         .current_frame()?
-            //         .label_stack
-            //         .pop()
-            //         .ok_or(Error::BranchDepth(*idx))?;
-            //     debug!("\t ---> Target: {:?}", target);
-            //     match target {
-            //         LabelType::If(result, true_end, false_end) => {
-            //             if result == ResType::Unit {
-            //                 return Ok(InstrResult::Goto { loc: false_end, clean_depth: Some(idx.as_usize()), value: None });
-            //             } else {
-            //                 let value = self.stack.pop()?;
-            //                 valid_result!(result, value)?;
-            //                 return Ok(InstrResult::Goto { loc: false_end, clean_depth: Some(idx.as_usize()), value: Some(value) });
-            //             }
-            //         }
-            //         LabelType::Block(result, block_end) => {
-            //             if result == ResType::Unit {
-            //                 return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: None });
-            //             } else {
-            //                 let value = self.stack.pop()?;
-            //                 valid_result!(result, value)?;
-            //                 return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: Some(value) });
-            //             }
-            //         }
-            //         LabelType::Loop(result, loop_start) => {
-            //             if result == ResType::Unit {
-            //                 self.current_frame()?
-            //                     .label_stack
-            //                     .push(LabelType::Loop(result, loop_start));
-            //                 // debug!("Reader Position: {:?}", reader.pos());
-            //                 return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: None });
-            //             } else {
-            //                 let value = self.stack.pop()?;
-            //                 self.current_frame()?
-            //                     .label_stack
-            //                     .push(LabelType::Loop(result, loop_start));
-            //                 // debug!("Reader Position: {:?}", reader.pos());
-            //                 valid_result!(result, value)?;
-            //                 return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: Some(value) });
-            //             }
-            //         }
-            //     }
-            // }
+                for i in 0..idx {
+                    self.current_frame()?
+                        .label_stack
+                        .pop()
+                        .ok_or(Error::BranchDepth(LabelIdx::from(idx as u32)))?;
+                }
+
+                if self.current_frame()?.label_stack.is_empty() {
+                    return Ok(InstrResult::Return);
+                }
+
+                let target = self
+                    .current_frame()?
+                    .label_stack
+                    .pop()
+                    .ok_or(Error::BranchDepth(LabelIdx::from(idx as u32)))?;
+
+                debug!("\t---> Inner Result: {:?}, Target: {:?}", inner_result, target);
+
+                match target {
+                    LabelType::Block(outer_result, block_end) => {
+                        let value = match outer_result {
+                            ResType::Unit => None,
+                            res => {
+                                let value = self.stack.pop()?;
+                                valid_result!(res, value)?;
+                                Some(value)
+                            }
+                        };
+
+                        // if value.is_some() && inner_result != outer_result {
+                        //     return Err(Error::TypeMismatch(line!()));
+                        // }
+
+                        let clean_depth = Some(idx);
+
+                        return Ok(InstrResult::Goto { loc: block_end, clean_depth, value });
+                    },
+                    LabelType::If(outer_result, true_end, false_end) => {
+                        let value = match outer_result {
+                            ResType::Unit => None,
+                            res => {
+                                let value = self.stack.pop()?;
+                                valid_result!(res, value)?;
+                                Some(value)
+                            }
+                        };
+
+                        // if value.is_some() && inner_result != outer_result {
+                        //     return Err(Error::TypeMismatch(line!()));
+                        // }
+
+                        let clean_depth = Some(idx);
+
+                        return Ok(InstrResult::Goto { loc: false_end, clean_depth, value });
+                    },
+                    LabelType::Loop(loop_result, loop_start) => {
+                        if idx == 0 {
+                            // We're just repeating the loop;
+
+                            self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+
+                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: None, value: None });
+                        }
+                        
+                        let value = match inner_result {
+                            ResType::Unit => None,
+                            res => {
+                                let value = self.stack.pop()?;
+                                valid_result!(res, value)?;
+                                Some(value)
+                            }
+                        };
+
+                        let clean_depth = Some(idx);
+
+                        self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+
+                        return Ok(InstrResult::Goto { loc: loop_start, clean_depth, value });
+                    },
+                }
+            }
             Instr::Call(idx) => return Ok(InstrResult::Call(*idx)),
             Instr::Return => return Ok(InstrResult::Return),
             Instr::End => {
