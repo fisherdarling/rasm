@@ -16,30 +16,28 @@ fn main() {
             (func $dummy)
             
             
-            (func (export "loop2") (result i32)
-    (local $i i32)
-    (local.set $i (i32.const 0))
-    (block $exit (result i32)
-      (loop $cont (result i32)
-        (local.set $i (i32.add (local.get $i) (i32.const 1)))
-        (if (i32.eq (local.get $i) (i32.const 5))
-          (then (br $cont))
-        )
-        (if (i32.eq (local.get $i) (i32.const 8))
-          (then (br $exit (local.get $i)))
-        )
-        (local.set $i (i32.add (local.get $i) (i32.const 1)))
-        (br $cont)
-      )
+            (func (export "as-compare-operand") (result i32)
+    (i32.gt_u
+      (global.get 0) (i32.const 1)
     )
   )
+
+        (global $a i32 (i32.const -2))
+  (global (;1;) f32 (f32.const -3))
+  (global (;2;) f64 (f64.const -4))
+  (global $b i64 (i64.const -5))
+
+  (global $x (mut i32) (i32.const -12))
+  (global (;5;) (mut f32) (f32.const -13))
+  (global (;6;) (mut f64) (f64.const -14))
+  (global $y (mut i64) (i64.const -15))
 
         )
     "#).unwrap().as_ref().to_vec();
 
     let mut runtime = Runtime::from_bytes(wasm_binary).unwrap();
 
-    let func = "loop2";
+    let func = "as-compare-operand";
     let args = args![];
 
     println!("[running]: {}({:?}):", func, args);

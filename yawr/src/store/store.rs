@@ -4,6 +4,7 @@ use std::ops::Index;
 use crate::function::{FuncRef, Function};
 use crate::store::global::GlobalInst;
 use crate::store::memory::MemInst;
+// use crate::store::table::TableInst;
 use crate::types::{index::FuncIdx, Data, Global, Limit};
 
 use crate::error::Error;
@@ -13,6 +14,7 @@ pub struct Store {
     pub(crate) functions: Vec<FuncRef>,
     pub(crate) memory: MemInst,
     pub(crate) globals: Vec<GlobalInst>,
+    // pub(crate) table: TableInst,
 }
 
 impl Store {
@@ -72,6 +74,15 @@ impl Store {
         })
     }
 }
+
+// pub struct StoreBuilder {
+//     data: Option<Data>,
+//     mems: Option<Limit>,
+//     func_refs: Option<Vec<FuncRef>>,
+//     // functions: Option<Vec<Functions>>,
+//     // glboals
+// }
+
 
 impl<'a> Index<&'a FuncIdx> for Store {
     type Output = Function;

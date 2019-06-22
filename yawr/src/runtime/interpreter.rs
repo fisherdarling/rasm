@@ -479,7 +479,7 @@ impl Interpreter<'_> {
             Instr::BrTable(table, default) => {
                 let idx = get!(I32, self.stack.pop()?)? as usize;
 
-                println!("Len: {:?}, Default: {:?}, Idx: {:?}", table.len(), default, idx);
+                // println!("Len: {:?}, Default: {:?}, Idx: {:?}", table.len(), default, idx);
 
                 let idx = if idx < table.len() {
                     table[idx].as_usize()
@@ -487,7 +487,7 @@ impl Interpreter<'_> {
                     default.as_usize()
                 };
 
-                println!("Chosen Idx: {:?}", idx);
+                // println!("Chosen Idx: {:?}", idx);
 
 
                 let mut inner_result;
@@ -873,49 +873,49 @@ impl Interpreter<'_> {
             Instr::I32GtS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = igt_s!(I32, lhs, rhs, i32)?;
+                let res = igt_s!(I32, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I32GtU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = igt_u!(I32, lhs, rhs)?;
+                let res = igt_u!(I32, lhs, rhs, u32)?;
                 self.stack.push(res);
             }
             Instr::I32LtS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ilt_s!(I32, lhs, rhs, i32)?;
+                let res = ilt_s!(I32, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I32LtU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ilt_u!(I32, lhs, rhs)?;
+                let res = ilt_u!(I32, lhs, rhs, u32)?;
                 self.stack.push(res);
             }
             Instr::I32LeU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ile_u!(I32, lhs, rhs)?;
+                let res = ile_u!(I32, lhs, rhs, u32)?;
                 self.stack.push(res);
             }
             Instr::I32LeS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ile_s!(I32, lhs, rhs, i32)?;
+                let res = ile_s!(I32, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I32GeU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ige_u!(I32, lhs, rhs)?;
+                let res = ige_u!(I32, lhs, rhs, u32)?;
                 self.stack.push(res);
             }
             Instr::I32GeS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ige_s!(I32, lhs, rhs, i32)?;
+                let res = ige_s!(I32, lhs, rhs)?;
                 self.stack.push(res);
             }
 
@@ -941,49 +941,49 @@ impl Interpreter<'_> {
             Instr::I64GtS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = igt_s!(I64, lhs, rhs, i64)?;
+                let res = igt_s!(I64, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I64GtU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = igt_u!(I64, lhs, rhs)?;
+                let res = igt_u!(I64, lhs, rhs, u64)?;
                 self.stack.push(res);
             }
             Instr::I64LtS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ilt_s!(I64, lhs, rhs, i64)?;
+                let res = ilt_s!(I64, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I64LtU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ilt_u!(I64, lhs, rhs)?;
+                let res = ilt_u!(I64, lhs, rhs, u64)?;
                 self.stack.push(res);
             }
             Instr::I64LeU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ile_u!(I64, lhs, rhs)?;
+                let res = ile_u!(I64, lhs, rhs, u64)?;
                 self.stack.push(res);
             }
             Instr::I64LeS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ile_s!(I64, lhs, rhs, i64)?;
+                let res = ile_s!(I64, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I64GeU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ige_u!(I64, lhs, rhs)?;
+                let res = ige_u!(I64, lhs, rhs, u64)?;
                 self.stack.push(res);
             }
             Instr::I64GeS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = ige_s!(I64, lhs, rhs, i64)?;
+                let res = ige_s!(I64, lhs, rhs)?;
                 self.stack.push(res);
             }
 
@@ -1103,26 +1103,26 @@ impl Interpreter<'_> {
             Instr::I32DivS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = idiv_s!(I32, lhs, rhs, i32)?;
+                let res = idiv_s!(I32, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I32DivU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = idiv_u!(I32, lhs, rhs)?;
+                let res = idiv_u!(I32, lhs, rhs, u32)?;
                 self.stack.push(res);
             }
 
             Instr::I32RemS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = irem_s!(I32, lhs, rhs, i32)?;
+                let res = irem_s!(I32, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I32RemU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = irem_u!(I32, lhs, rhs)?;
+                let res = irem_u!(I32, lhs, rhs, u32)?;
                 self.stack.push(res);
             }
             Instr::I32And => {
@@ -1216,26 +1216,26 @@ impl Interpreter<'_> {
             Instr::I64DivS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = idiv_s!(I64, lhs, rhs, i64)?;
+                let res = idiv_s!(I64, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I64DivU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = idiv_u!(I64, lhs, rhs)?;
+                let res = idiv_u!(I64, lhs, rhs, u64)?;
                 self.stack.push(res);
             }
 
             Instr::I64RemS => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = irem_s!(I64, lhs, rhs, i64)?;
+                let res = irem_s!(I64, lhs, rhs)?;
                 self.stack.push(res);
             }
             Instr::I64RemU => {
                 let (lhs, rhs) = self.stack.pop_pair()?;
 
-                let res = irem_u!(I64, lhs, rhs)?;
+                let res = irem_u!(I64, lhs, rhs, u64)?;
                 self.stack.push(res);
             }
             Instr::I64And => {
