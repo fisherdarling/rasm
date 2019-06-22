@@ -3,8 +3,8 @@ pub use wasamere::types::*;
 use crate::error::{Error, ExecResult};
 
 use std::convert::TryFrom;
-use std::mem::transmute;
 use std::fmt;
+use std::mem::transmute;
 // use std::ops::{Add, Div, Mul, Sub};
 // pub use wasamere::
 

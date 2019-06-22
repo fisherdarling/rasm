@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::ops::Index;
 
-
 use crate::function::{FuncRef, Function};
 use crate::store::global::GlobalInst;
 use crate::store::memory::MemInst;
@@ -138,7 +137,7 @@ impl StoreBuilder {
 
         let mut memory = MemInst::new(min, max);
         memory.init(self.data)?;
-        
+
         let globals = if let Some(globals) = self.globals {
             globals
         } else if let Some(global_inits) = self.global_inits {
@@ -166,7 +165,6 @@ impl StoreBuilder {
     }
 }
 
-
 impl<'a> Index<&'a FuncIdx> for Store {
     type Output = Function;
 
@@ -175,8 +173,4 @@ impl<'a> Index<&'a FuncIdx> for Store {
     }
 }
 
-
-
-mod error {
-
-}
+mod error {}

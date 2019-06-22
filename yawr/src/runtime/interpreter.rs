@@ -8,7 +8,7 @@ use crate::function::{FuncReader, FuncRef, Function};
 use crate::instr::{Expression, Instr};
 use crate::runtime::frame::{Frame, LabelType, ValueStack};
 use crate::types::{
-    index::{FuncIdx, Offset, LabelIdx},
+    index::{FuncIdx, LabelIdx, Offset},
     Mut, ResType, ValType, Value, WasmResult,
 };
 // use crate::{binop, is_a, relop, same_type, truthy, valid_result};
@@ -22,11 +22,15 @@ use log::*;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum InstrResult {
-    Goto {  loc: usize, 
-            clean_depth: Option<usize>,
-            value: Option<Value>, },
-    Clean { clean_depth: Option<usize>, 
-            value: Option<Value>, },
+    Goto {
+        loc: usize,
+        clean_depth: Option<usize>,
+        value: Option<Value>,
+    },
+    Clean {
+        clean_depth: Option<usize>,
+        value: Option<Value>,
+    },
     Call(FuncIdx),
     Return,
     Continue,
@@ -137,11 +141,18 @@ impl Interpreter<'_> {
                 // debug!("\t---> [Locals] {:?}", current_frame.locals);
 
                 match instruction_result {
-                    InstrResult::Goto { loc, clean_depth, value } => {
-                        debug!("[GOTO] Instr: {:?}, Clean: {:?}, Value: {:?}", loc, clean_depth, value);
-                        
+                    InstrResult::Goto {
+                        loc,
+                        clean_depth,
+                        value,
+                    } => {
+                        debug!(
+                            "[GOTO] Instr: {:?}, Clean: {:?}, Value: {:?}",
+                            loc, clean_depth, value
+                        );
+
                         self.stack.pop_label_depth(clean_depth);
-                        
+
                         if let Some(value) = value {
                             self.stack.push(value);
                         }
@@ -152,9 +163,9 @@ impl Interpreter<'_> {
                     }
                     InstrResult::Clean { clean_depth, value } => {
                         debug!("[CLEAN] Clean: {:?}, Value: {:?}", clean_depth, value);
-                        
+
                         self.stack.pop_label_depth(clean_depth);
-                        
+
                         if let Some(value) = value {
                             self.stack.push(value);
                         }
@@ -188,7 +199,6 @@ impl Interpreter<'_> {
                 }
             }
 
-            
             // let clean_depth = current_frame.label_stack.len().clone();
 
             if self.frames.len() == 1 {
@@ -215,11 +225,7 @@ impl Interpreter<'_> {
 
                 let len = self.current_frame()?.label_stack.len();
 
-                let clean_depth = if len > 0 {
-                    Some(len - 1)
-                } else {
-                    None
-                };
+                let clean_depth = if len > 0 { Some(len - 1) } else { None };
 
                 self.stack.pop_label_depth(clean_depth);
 
@@ -249,23 +255,31 @@ impl Interpreter<'_> {
                 self.current_frame()?
                     .label_stack
                     .push(LabelType::If(*result, *true_end, *false_end));
-                
+
                 self.stack.push_label();
 
-                debug!("\t---> [IF_MARKER] Check: {:?}, truthy!: {:?}", check, truthy!(check));
+                debug!(
+                    "\t---> [IF_MARKER] Check: {:?}, truthy!: {:?}",
+                    check,
+                    truthy!(check)
+                );
 
                 if truthy!(check)? {
                     // Do nothing, the next instruction is part of the truthy path.
                 } else {
                     // Skip the true path, nothing to clean since we're entering a scope.
-                    return Ok(InstrResult::Goto { loc: *true_end, clean_depth: None, value: None });
+                    return Ok(InstrResult::Goto {
+                        loc: *true_end,
+                        clean_depth: None,
+                        value: None,
+                    });
                 }
             }
             Instr::BlockMarker(result, block_end) => {
                 self.current_frame()?
                     .label_stack
                     .push(LabelType::Block(*result, *block_end));
-                
+
                 self.stack.push_label();
             }
             Instr::LoopMarker(result, loop_start) => {
@@ -290,7 +304,7 @@ impl Interpreter<'_> {
             }
             Instr::Br(idx) => {
                 let mut inner_result;
-                
+
                 if let Some(label) = self.current_frame()?.label_stack.last() {
                     inner_result = label.res();
                 } else {
@@ -314,7 +328,10 @@ impl Interpreter<'_> {
                     .pop()
                     .ok_or(Error::BranchDepth(*idx))?;
 
-                debug!("\t---> Inner Result: {:?}, Target: {:?}", inner_result, target);
+                debug!(
+                    "\t---> Inner Result: {:?}, Target: {:?}",
+                    inner_result, target
+                );
 
                 match target {
                     LabelType::Block(outer_result, block_end) => {
@@ -333,8 +350,12 @@ impl Interpreter<'_> {
 
                         let clean_depth = Some(idx.as_usize());
 
-                        return Ok(InstrResult::Goto { loc: block_end, clean_depth, value });
-                    },
+                        return Ok(InstrResult::Goto {
+                            loc: block_end,
+                            clean_depth,
+                            value,
+                        });
+                    }
                     LabelType::If(outer_result, true_end, false_end) => {
                         let value = match outer_result {
                             ResType::Unit => None,
@@ -351,17 +372,27 @@ impl Interpreter<'_> {
 
                         let clean_depth = Some(idx.as_usize());
 
-                        return Ok(InstrResult::Goto { loc: false_end, clean_depth, value });
-                    },
+                        return Ok(InstrResult::Goto {
+                            loc: false_end,
+                            clean_depth,
+                            value,
+                        });
+                    }
                     LabelType::Loop(loop_result, loop_start) => {
                         if idx.as_usize() == 0 {
                             // We're just repeating the loop;
 
-                            self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+                            self.current_frame()?
+                                .label_stack
+                                .push(LabelType::Loop(loop_result, loop_start));
 
-                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: None, value: None });
+                            return Ok(InstrResult::Goto {
+                                loc: loop_start,
+                                clean_depth: None,
+                                value: None,
+                            });
                         }
-                        
+
                         let value = match inner_result {
                             ResType::Unit => None,
                             res => {
@@ -373,10 +404,16 @@ impl Interpreter<'_> {
 
                         let clean_depth = Some(idx.as_usize());
 
-                        self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+                        self.current_frame()?
+                            .label_stack
+                            .push(LabelType::Loop(loop_result, loop_start));
 
-                        return Ok(InstrResult::Goto { loc: loop_start, clean_depth, value });
-                    },
+                        return Ok(InstrResult::Goto {
+                            loc: loop_start,
+                            clean_depth,
+                            value,
+                        });
+                    }
                 }
             }
             Instr::BrIf(idx) => {
@@ -411,8 +448,11 @@ impl Interpreter<'_> {
                     .label_stack
                     .pop()
                     .ok_or(Error::BranchDepth(*idx))?;
-                debug!("\t---> Inner Result: {:?}, Target: {:?}", inner_result, target);
-                
+                debug!(
+                    "\t---> Inner Result: {:?}, Target: {:?}",
+                    inner_result, target
+                );
+
                 match target {
                     LabelType::Block(outer_result, block_end) => {
                         let value = match outer_result {
@@ -430,8 +470,12 @@ impl Interpreter<'_> {
 
                         let clean_depth = Some(idx.as_usize());
 
-                        return Ok(InstrResult::Goto { loc: block_end, clean_depth, value });
-                    },
+                        return Ok(InstrResult::Goto {
+                            loc: block_end,
+                            clean_depth,
+                            value,
+                        });
+                    }
                     LabelType::If(outer_result, true_end, false_end) => {
                         let value = match outer_result {
                             ResType::Unit => None,
@@ -448,17 +492,27 @@ impl Interpreter<'_> {
 
                         let clean_depth = Some(idx.as_usize());
 
-                        return Ok(InstrResult::Goto { loc: false_end, clean_depth, value });
-                    },
+                        return Ok(InstrResult::Goto {
+                            loc: false_end,
+                            clean_depth,
+                            value,
+                        });
+                    }
                     LabelType::Loop(loop_result, loop_start) => {
                         if idx.as_usize() == 0 {
                             // We're just repeating the loop;
 
-                            self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+                            self.current_frame()?
+                                .label_stack
+                                .push(LabelType::Loop(loop_result, loop_start));
 
-                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: None, value: None });
+                            return Ok(InstrResult::Goto {
+                                loc: loop_start,
+                                clean_depth: None,
+                                value: None,
+                            });
                         }
-                        
+
                         let value = match inner_result {
                             ResType::Unit => None,
                             res => {
@@ -470,10 +524,16 @@ impl Interpreter<'_> {
 
                         let clean_depth = Some(idx.as_usize());
 
-                        self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+                        self.current_frame()?
+                            .label_stack
+                            .push(LabelType::Loop(loop_result, loop_start));
 
-                        return Ok(InstrResult::Goto { loc: loop_start, clean_depth, value });
-                    },
+                        return Ok(InstrResult::Goto {
+                            loc: loop_start,
+                            clean_depth,
+                            value,
+                        });
+                    }
                 }
             }
             Instr::BrTable(table, default) => {
@@ -488,7 +548,6 @@ impl Interpreter<'_> {
                 };
 
                 // println!("Chosen Idx: {:?}", idx);
-
 
                 let mut inner_result;
 
@@ -515,7 +574,10 @@ impl Interpreter<'_> {
                     .pop()
                     .ok_or(Error::BranchDepth(LabelIdx::from(idx as u32)))?;
 
-                debug!("\t---> Inner Result: {:?}, Target: {:?}", inner_result, target);
+                debug!(
+                    "\t---> Inner Result: {:?}, Target: {:?}",
+                    inner_result, target
+                );
 
                 match target {
                     LabelType::Block(outer_result, block_end) => {
@@ -534,8 +596,12 @@ impl Interpreter<'_> {
 
                         let clean_depth = Some(idx);
 
-                        return Ok(InstrResult::Goto { loc: block_end, clean_depth, value });
-                    },
+                        return Ok(InstrResult::Goto {
+                            loc: block_end,
+                            clean_depth,
+                            value,
+                        });
+                    }
                     LabelType::If(outer_result, true_end, false_end) => {
                         let value = match outer_result {
                             ResType::Unit => None,
@@ -552,17 +618,27 @@ impl Interpreter<'_> {
 
                         let clean_depth = Some(idx);
 
-                        return Ok(InstrResult::Goto { loc: false_end, clean_depth, value });
-                    },
+                        return Ok(InstrResult::Goto {
+                            loc: false_end,
+                            clean_depth,
+                            value,
+                        });
+                    }
                     LabelType::Loop(loop_result, loop_start) => {
                         if idx == 0 {
                             // We're just repeating the loop;
 
-                            self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+                            self.current_frame()?
+                                .label_stack
+                                .push(LabelType::Loop(loop_result, loop_start));
 
-                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: None, value: None });
+                            return Ok(InstrResult::Goto {
+                                loc: loop_start,
+                                clean_depth: None,
+                                value: None,
+                            });
                         }
-                        
+
                         let value = match inner_result {
                             ResType::Unit => None,
                             res => {
@@ -574,10 +650,16 @@ impl Interpreter<'_> {
 
                         let clean_depth = Some(idx);
 
-                        self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+                        self.current_frame()?
+                            .label_stack
+                            .push(LabelType::Loop(loop_result, loop_start));
 
-                        return Ok(InstrResult::Goto { loc: loop_start, clean_depth, value });
-                    },
+                        return Ok(InstrResult::Goto {
+                            loc: loop_start,
+                            clean_depth,
+                            value,
+                        });
+                    }
                 }
             }
             Instr::Call(idx) => return Ok(InstrResult::Call(*idx)),
@@ -597,35 +679,55 @@ impl Interpreter<'_> {
                     .expect("Label stack must contain a label");
 
                 debug!("\t---> [END] Target: {:?}", outer_label);
-                
+
                 match outer_label {
                     LabelType::If(result, true_end, false_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: Some(0), value: None });
+                            return Ok(InstrResult::Goto {
+                                loc: false_end,
+                                clean_depth: Some(0),
+                                value: None,
+                            });
                         } else {
                             let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: Some(0), value: Some(value) });
+                            return Ok(InstrResult::Goto {
+                                loc: false_end,
+                                clean_depth: Some(0),
+                                value: Some(value),
+                            });
                         }
                     }
                     LabelType::Block(result, block_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Clean { clean_depth: Some(0), value: None });
+                            return Ok(InstrResult::Clean {
+                                clean_depth: Some(0),
+                                value: None,
+                            });
                         } else {
                             let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Clean { clean_depth: Some(0), value: Some(value) });
+                            return Ok(InstrResult::Clean {
+                                clean_depth: Some(0),
+                                value: Some(value),
+                            });
                         }
                     }
 
                     // FIXME: LOOP END IS A BRANCH
                     LabelType::Loop(result, loop_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Clean { clean_depth: Some(0), value: None });
+                            return Ok(InstrResult::Clean {
+                                clean_depth: Some(0),
+                                value: None,
+                            });
                         } else {
                             let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Clean { clean_depth: Some(0), value: Some(value) });
+                            return Ok(InstrResult::Clean {
+                                clean_depth: Some(0),
+                                value: Some(value),
+                            });
                         }
                     }
                 }

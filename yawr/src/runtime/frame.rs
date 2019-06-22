@@ -21,7 +21,7 @@ impl LabelType {
         match self {
             LabelType::Block(res, _) => *res,
             LabelType::If(res, _, _) => *res,
-            LabelType::Loop(res, _) => *res, 
+            LabelType::Loop(res, _) => *res,
         }
     }
 }
@@ -131,8 +131,6 @@ impl StackElem {
 impl ValueStack {
     // pub fn into_value()
 
-
-
     pub fn with_capacity(cap: usize) -> ValueStack {
         ValueStack {
             values: Vec::with_capacity(cap),
@@ -148,24 +146,26 @@ impl ValueStack {
     }
 
     pub fn pop(&mut self) -> ExecResult<Value> {
-        self.values.pop().ok_or(Error::EmptyValueStack)?.into_value()
+        self.values
+            .pop()
+            .ok_or(Error::EmptyValueStack)?
+            .into_value()
     }
 
     pub fn pop_label_depth(&mut self, depth: Option<usize>) {
         if let Some(depth) = depth {
             for _ in 0..=depth {
-                
                 while let Some(StackElem::Value(ref v)) = self.values.last() {
                     log::debug!("[STACK CLEAN] Value: {:?}", v);
                     self.values.pop();
                 }
-                
+
                 let label = self.values.pop();
-                
+
                 log::debug!("[STACK CLEAN] Label: {:?}", label);
             }
         }
-        
+
         return;
     }
 

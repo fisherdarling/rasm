@@ -1,9 +1,8 @@
 use wabt::Wat2Wasm;
 
+use yawr::args;
 use yawr::runtime::ModuleInstance;
 use yawr::types::Value;
-use yawr::args;
-
 
 use env_logger::try_init;
 
@@ -11,7 +10,8 @@ fn main() {
     let _ = try_init().unwrap();
 
     let wasm_binary = Wat2Wasm::new()
-        .convert(r#"
+        .convert(
+            r#"
         (module
             (func $dummy)
             
@@ -33,7 +33,11 @@ fn main() {
   (global $y (mut i64) (i64.const -15))
 
         )
-    "#).unwrap().as_ref().to_vec();
+    "#,
+        )
+        .unwrap()
+        .as_ref()
+        .to_vec();
 
     let mut runtime = ModuleInstance::from_bytes(wasm_binary).unwrap();
 
@@ -41,11 +45,8 @@ fn main() {
     let args = args![];
 
     println!("[running]: {}({:?}):", func, args);
-    
+
     let res = runtime.invoke(func, args);
-    
+
     println!("[result]:  {:?}", res);
 }
-
-
-
