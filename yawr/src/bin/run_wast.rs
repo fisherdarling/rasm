@@ -8,7 +8,7 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use yawr::runtime::Runtime;
+use yawr::runtime::ModuleInstance;
 use yawr::types::{Value, WasmResult};
 use yawr::error::Error;
 
@@ -33,7 +33,7 @@ fn main() {
     
     let mut parser = ScriptParser::<f32, f64>::from_str(&file).unwrap();
 
-    let mut runtime = Runtime::default();
+    let mut runtime = ModuleInstance::default();
 
     while let Some(Command { kind, line }) = parser.next().unwrap() {
         match kind {
@@ -43,7 +43,7 @@ fn main() {
 
                 // Convert the module into the binary representation and check the magic number.
                 let module_binary = module.into_vec();
-                runtime = Runtime::from_bytes(&module_binary).unwrap();
+                runtime = ModuleInstance::from_bytes(&module_binary).unwrap();
 
                 println!("[MODULE] Name: {:?}", name);
             },
@@ -82,7 +82,7 @@ fn main() {
 
 
 
-    // println!("Runtime: {:?}", runtime);
+    // println!("ModuleInstance: {:?}", runtime);
 }
 
 fn print_passed(line: u64, field: &str, verbose: bool) {

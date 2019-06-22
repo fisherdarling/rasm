@@ -2,7 +2,7 @@ use crate::types::Value;
 use crate::types::{ResType, WasmResult};
 
 use crate::error::{Error, ExecResult};
-use crate::runtime::Runtime;
+use crate::runtime::ModuleInstance;
 
 use crate::function::{FuncReader, FuncRef};
 

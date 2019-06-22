@@ -3,7 +3,7 @@ use crate::function::Function;
 use crate::module::Module;
 use crate::runtime::frame::{Frame, StackElem};
 use crate::runtime::interpreter::Interpreter;
-use crate::store::Store;
+use crate::store::{Store, StoreBuilder};
 
 use crate::types::index::{FuncIdx, LocalIdx};
 use crate::types::{ResType, ValType, Value, WasmResult};
@@ -17,15 +17,15 @@ use std::collections::HashMap;
 use std::path::Path;
 
 #[derive(Debug, Default)]
-pub struct Runtime {
+pub struct ModuleInstance {
     store: Store,
     resolver: HashMap<String, FuncIdx>,
     // stack: Vec<StackElem>,
     // interpreter: Interpreter<'a>,
 }
 
-impl Runtime {
-    pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<Runtime, Error> {
+impl ModuleInstance {
+    pub fn from_bytes(bytes: impl AsRef<[u8]>) -> Result<ModuleInstance, Error> {
         let module = Module::from_bytes(bytes.as_ref());
 
         let funcs: Vec<Function> = module.funcs;
@@ -47,12 +47,18 @@ impl Runtime {
             }
         }
 
-        let functions = funcs.into_iter().map(FuncRef::new).collect();
-
-        let store = Store::new(mems, Some(data), functions, globals)?;
+        // let store = Store::new(mems, Some(data), functions, globals)?;
+        
+        let store = StoreBuilder::default()
+            .memory_limit(mems.unwrap_or_default())
+            .data(data)
+            .functions(funcs)
+            .global_inits(globals)
+            .build()?;
+        
         // let interpreter = Interpreter::new(&store.functions, &resolver, &mut store.memory);
 
-        Ok(Runtime {
+        Ok(ModuleInstance {
             store,
             resolver,
             // interpreter,
@@ -80,9 +86,9 @@ impl Runtime {
         Interpreter::new(&self.resolver, &mut self.store)
     }
 
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Runtime, Error> {
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<ModuleInstance, Error> {
         let data = std::fs::read(path)?;
 
-        Ok(Runtime::from_bytes(&data)?)
+        Ok(ModuleInstance::from_bytes(&data)?)
     }
 }

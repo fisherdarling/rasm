@@ -41,7 +41,7 @@ pub struct FuncType(#[snom(tag(0x60))] pub Vec<ValType>, pub Vec<ResType>);
 #[derive(Debug, Clone, PartialEq, StructNom)]
 pub struct Function(#[snom(call(leb_u32))] pub Locals, pub Expression);
 
-#[derive(Debug, Copy, Clone, PartialEq, StructNom)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, StructNom)]
 #[snom(parser = parse_limit)]
 pub struct Limit {
     pub min: u32,

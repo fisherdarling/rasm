@@ -1,6 +1,6 @@
 use wabt::Wat2Wasm;
 
-use yawr::runtime::Runtime;
+use yawr::runtime::ModuleInstance;
 use yawr::types::Value;
 use yawr::args;
 
@@ -35,7 +35,7 @@ fn main() {
         )
     "#).unwrap().as_ref().to_vec();
 
-    let mut runtime = Runtime::from_bytes(wasm_binary).unwrap();
+    let mut runtime = ModuleInstance::from_bytes(wasm_binary).unwrap();
 
     let func = "as-compare-operand";
     let args = args![];

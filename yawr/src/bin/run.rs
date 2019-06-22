@@ -5,7 +5,7 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use yawr::runtime::Runtime;
+use yawr::runtime::ModuleInstance;
 use yawr::types::Value;
 
 #[derive(Debug, Clone, StructOpt)]
@@ -30,7 +30,7 @@ fn main() {
         .read_to_end(&mut bytes)
         .unwrap();
 
-    let mut runtime = Runtime::from_bytes(&bytes).unwrap();
+    let mut runtime = ModuleInstance::from_bytes(&bytes).unwrap();
 
     let mut func_args = Vec::new();
 
@@ -38,7 +38,7 @@ fn main() {
         func_args.push(Value::I32(value));
     }
 
-    // println!("Runtime: {:?}", runtime);
+    // println!("ModuleInstance: {:?}", runtime);
 
     let start = Instant::now();
     println!("{}({:?})", args.func, func_args);

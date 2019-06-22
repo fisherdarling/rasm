@@ -1,7 +1,7 @@
 #![feature(fixed_size_array)]
 use std::array::FixedSizeArray;
 
-use yawr::runtime::Runtime;
+use yawr::runtime::ModuleInstance;
 use yawr::types::Value;
 
 use std::time::{Duration, Instant};
@@ -11,7 +11,7 @@ fn main() {
 
     let _ = env_logger::try_init().unwrap();
 
-    let mut runtime = Runtime::from_bytes(input.as_slice()).unwrap();
+    let mut runtime = ModuleInstance::from_bytes(input.as_slice()).unwrap();
 
     let args = vec![Value::I32(10)];
 

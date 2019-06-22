@@ -55,6 +55,8 @@ pub enum Error {
     InvalidGlobalInitializer(wasamere::instr::Instr),
     #[fail(display = "Unreachable Trap")]
     TrapUnreachable,
+    // #[fail(display = "")]
+    // Store()
 }
 
 impl From<std::io::Error> for Error {
