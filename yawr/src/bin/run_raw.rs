@@ -1,7 +1,9 @@
 use wabt::Wat2Wasm;
 
 use yawr::runtime::Runtime;
+use yawr::types::Value;
 use yawr::args;
+
 
 use env_logger::try_init;
 
@@ -14,25 +16,30 @@ fn main() {
             (func $dummy)
             
             
-            (func (export "nested-block-value") (result i32)
-                (i32.add
-                    (i32.const 1)
-                    (block (result i32)
-                        (call $dummy)
-                        (i32.add 
-                            (i32.const 4) 
-                            (br 0 (i32.const 8))
-                        )
-                    )
-                )
-            )
+            (func (export "loop2") (result i32)
+    (local $i i32)
+    (local.set $i (i32.const 0))
+    (block $exit (result i32)
+      (loop $cont (result i32)
+        (local.set $i (i32.add (local.get $i) (i32.const 1)))
+        (if (i32.eq (local.get $i) (i32.const 5))
+          (then (br $cont))
+        )
+        (if (i32.eq (local.get $i) (i32.const 8))
+          (then (br $exit (local.get $i)))
+        )
+        (local.set $i (i32.add (local.get $i) (i32.const 1)))
+        (br $cont)
+      )
+    )
+  )
 
         )
     "#).unwrap().as_ref().to_vec();
 
     let mut runtime = Runtime::from_bytes(wasm_binary).unwrap();
 
-    let func = "nested-block-value";
+    let func = "loop2";
     let args = args![];
 
     println!("[running]: {}({:?}):", func, args);

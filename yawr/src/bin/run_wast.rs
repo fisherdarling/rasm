@@ -15,7 +15,7 @@ use yawr::error::Error;
 #[derive(Debug, Clone, StructOpt)]
 struct Args {
     #[structopt(short = "f", long = "file")]
-    pub file: PathBuf,
+    pub files: Vec<PathBuf>,
     #[structopt(short = "v", long = "verbose")]
     pub verbose: bool
 }
@@ -24,10 +24,12 @@ fn main() {
     let args = Args::from_args();
     let verbose = args.verbose;
 
-    let bar = "================".purple();
-    println!("{} {} {}", bar, args.file.to_str().unwrap().bright_yellow().bold(), bar);
+    for file in args.files {
 
-    let file = std::fs::read_to_string(&args.file).unwrap();
+    let bar = "================".purple();
+    println!("{} {} {}", bar, file.to_str().unwrap().bright_yellow().bold(), bar);
+
+    let file = std::fs::read_to_string(&file).unwrap();
     
     let mut parser = ScriptParser::<f32, f64>::from_str(&file).unwrap();
 
@@ -74,6 +76,8 @@ fn main() {
             _ => {},
             // k => println!("[UNSUPPORTED] Kind: {:?}", k),
         }
+    }
+
     }
 
 

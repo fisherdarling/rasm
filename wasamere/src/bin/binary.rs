@@ -12,7 +12,7 @@ use std::iter;
 fn main() {
     let _ = try_init().unwrap();
 
-    let source = include_bytes!("../../../examples/alloc.wasm");
+    let source = include_bytes!("../../../examples/loop2.wasm");
 
     let (rest, module) = ParsedModule::nom(source).unwrap();
     let code = module

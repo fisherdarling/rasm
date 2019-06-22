@@ -23,7 +23,9 @@ use log::*;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum InstrResult {
     Goto {  loc: usize, 
-            clean_depth: usize,
+            clean_depth: Option<usize>,
+            value: Option<Value>, },
+    Clean { clean_depth: Option<usize>, 
             value: Option<Value>, },
     Call(FuncIdx),
     Return,
@@ -118,7 +120,6 @@ impl Interpreter<'_> {
                 // TODO Handle None case
 
                 let pos = reader.pos().unwrap_or_default();
-
                 let next_instr: Option<&Instr> = reader.next();
 
                 if next_instr.is_none() {
@@ -137,12 +138,32 @@ impl Interpreter<'_> {
 
                 match instruction_result {
                     InstrResult::Goto { loc, clean_depth, value } => {
-                        reader.goto(loc);
+                        debug!("[GOTO] Instr: {:?}, Clean: {:?}, Value: {:?}", loc, clean_depth, value);
+                        
+                        self.stack.pop_label_depth(clean_depth);
+                        
                         if let Some(value) = value {
                             self.stack.push(value);
                         }
+
+                        debug!("[GOTO] Stack after clean {:?}", self.stack);
+
+                        reader.goto(loc);
+                    }
+                    InstrResult::Clean { clean_depth, value } => {
+                        debug!("[CLEAN] Clean: {:?}, Value: {:?}", clean_depth, value);
+                        
+                        self.stack.pop_label_depth(clean_depth);
+                        
+                        if let Some(value) = value {
+                            self.stack.push(value);
+                        }
+
+                        debug!("[CLEAN] Stack after clean {:?}", self.stack);
                     }
                     InstrResult::Call(idx) => {
+                        debug!("== [CALL ({:?})] ==", idx);
+
                         let function = self
                             .store
                             .functions
@@ -159,11 +180,16 @@ impl Interpreter<'_> {
                         continue 'frame;
                     }
                     InstrResult::Return => {
+                        debug!("== [RETURN] ==");
+
                         break 'instr;
                     }
                     InstrResult::Continue => continue 'instr,
                 }
             }
+
+            
+            // let clean_depth = current_frame.label_stack.len().clone();
 
             if self.frames.len() == 1 {
                 let result = match frame_res {
@@ -178,13 +204,28 @@ impl Interpreter<'_> {
 
                 return result;
             } else {
-                match frame_res {
-                    ResType::Unit => {}
+                let value = match frame_res {
+                    ResType::Unit => None,
                     res => {
-                        let value = self.stack.peek_value()?.ok_or(Error::EmptyValueStack)?;
+                        let value = self.stack.pop()?;
                         valid_result!(res, value)?;
+                        Some(value)
                     }
                 };
+
+                let len = self.current_frame()?.label_stack.len();
+
+                let clean_depth = if len > 0 {
+                    Some(len - 1)
+                } else {
+                    None
+                };
+
+                self.stack.pop_label_depth(clean_depth);
+
+                if let Some(value) = value {
+                    self.stack.push(value);
+                }
             }
 
             self.pop_frame();
@@ -192,7 +233,8 @@ impl Interpreter<'_> {
     }
 
     fn execute_instr(&mut self, instr: &Instr) -> ExecResult<InstrResult> {
-        debug!("\t---> [Lables] {:?}", self.current_frame()?.label_stack);
+        debug!("\t---> [Locals] {:?}", self.current_frame()?.locals);
+        debug!("\t---> [Labels] {:?}", self.current_frame()?.label_stack);
 
         match instr {
             Instr::Drop => {
@@ -207,23 +249,31 @@ impl Interpreter<'_> {
                 self.current_frame()?
                     .label_stack
                     .push(LabelType::If(*result, *true_end, *false_end));
+                
+                self.stack.push_label();
+
+                debug!("\t---> [IF_MARKER] Check: {:?}, truthy!: {:?}", check, truthy!(check));
 
                 if truthy!(check)? {
                     // Do nothing, the next instruction is part of the truthy path.
                 } else {
-                    // Skip the true path
-                    return Ok(InstrResult::Goto { loc: *true_end, clean_depth: 0, value: None });
+                    // Skip the true path, nothing to clean since we're entering a scope.
+                    return Ok(InstrResult::Goto { loc: *true_end, clean_depth: None, value: None });
                 }
             }
             Instr::BlockMarker(result, block_end) => {
                 self.current_frame()?
                     .label_stack
                     .push(LabelType::Block(*result, *block_end));
+                
+                self.stack.push_label();
             }
             Instr::LoopMarker(result, loop_start) => {
                 self.current_frame()?
                     .label_stack
                     .push(LabelType::Loop(*result, *loop_start));
+
+                self.stack.push_label();
             }
             Instr::Select => {
                 let check = self.stack.pop()?;
@@ -239,6 +289,14 @@ impl Interpreter<'_> {
                 }
             }
             Instr::Br(idx) => {
+                let mut inner_result;
+                
+                if let Some(label) = self.current_frame()?.label_stack.last() {
+                    inner_result = label.res();
+                } else {
+                    return Ok(InstrResult::Return);
+                }
+
                 for i in 0..**idx {
                     self.current_frame()?
                         .label_stack
@@ -255,43 +313,70 @@ impl Interpreter<'_> {
                     .label_stack
                     .pop()
                     .ok_or(Error::BranchDepth(*idx))?;
-                debug!("\t ---> Target: {:?}", target);
+
+                debug!("\t---> Inner Result: {:?}, Target: {:?}", inner_result, target);
+
                 match target {
-                    LabelType::If(result, true_end, false_end) => {
-                        if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: None });
-                        } else {
-                            let value = self.stack.pop()?;
-                            valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: Some(value) });
+                    LabelType::Block(outer_result, block_end) => {
+                        let value = match outer_result {
+                            ResType::Unit => None,
+                            res => {
+                                let value = self.stack.pop()?;
+                                valid_result!(res, value)?;
+                                Some(value)
+                            }
+                        };
+
+                        // if value.is_some() && inner_result != outer_result {
+                        //     return Err(Error::TypeMismatch(line!()));
+                        // }
+
+                        let clean_depth = Some(idx.as_usize());
+
+                        return Ok(InstrResult::Goto { loc: block_end, clean_depth, value });
+                    },
+                    LabelType::If(outer_result, true_end, false_end) => {
+                        let value = match outer_result {
+                            ResType::Unit => None,
+                            res => {
+                                let value = self.stack.pop()?;
+                                valid_result!(res, value)?;
+                                Some(value)
+                            }
+                        };
+
+                        // if value.is_some() && inner_result != outer_result {
+                        //     return Err(Error::TypeMismatch(line!()));
+                        // }
+
+                        let clean_depth = Some(idx.as_usize());
+
+                        return Ok(InstrResult::Goto { loc: false_end, clean_depth, value });
+                    },
+                    LabelType::Loop(loop_result, loop_start) => {
+                        if idx.as_usize() == 0 {
+                            // We're just repeating the loop;
+
+                            self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+
+                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: None, value: None });
                         }
-                    }
-                    LabelType::Block(result, block_end) => {
-                        if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: None });
-                        } else {
-                            let value = self.stack.pop()?;
-                            valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: Some(value) });
-                        }
-                    }
-                    LabelType::Loop(result, loop_start) => {
-                        if result == ResType::Unit {
-                            self.current_frame()?
-                                .label_stack
-                                .push(LabelType::Loop(result, loop_start));
-                            // debug!("Reader Position: {:?}", reader.pos());
-                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: None });
-                        } else {
-                            let value = self.stack.pop()?;
-                            self.current_frame()?
-                                .label_stack
-                                .push(LabelType::Loop(result, loop_start));
-                            // debug!("Reader Position: {:?}", reader.pos());
-                            valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: Some(value) });
-                        }
-                    }
+                        
+                        let value = match inner_result {
+                            ResType::Unit => None,
+                            res => {
+                                let value = self.stack.pop()?;
+                                valid_result!(res, value)?;
+                                Some(value)
+                            }
+                        };
+
+                        let clean_depth = Some(idx.as_usize());
+
+                        self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+
+                        return Ok(InstrResult::Goto { loc: loop_start, clean_depth, value });
+                    },
                 }
             }
             Instr::BrIf(idx) => {
@@ -302,6 +387,14 @@ impl Interpreter<'_> {
                     return Ok(InstrResult::Continue);
                 }
 
+                let mut inner_result;
+
+                if let Some(label) = self.current_frame()?.label_stack.last() {
+                    inner_result = label.res();
+                } else {
+                    return Ok(InstrResult::Return);
+                }
+
                 for i in 0..**idx {
                     self.current_frame()?
                         .label_stack
@@ -318,112 +411,138 @@ impl Interpreter<'_> {
                     .label_stack
                     .pop()
                     .ok_or(Error::BranchDepth(*idx))?;
-                debug!("\t---> Target: {:?}", target);
+                debug!("\t---> Inner Result: {:?}, Target: {:?}", inner_result, target);
+                
                 match target {
-                    LabelType::If(result, true_end, false_end) => {
-                        if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: None });
-                        } else {
-                            let value = self.stack.pop()?;
-                            valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: Some(value) });
+                    LabelType::Block(outer_result, block_end) => {
+                        let value = match outer_result {
+                            ResType::Unit => None,
+                            res => {
+                                let value = self.stack.pop()?;
+                                valid_result!(res, value)?;
+                                Some(value)
+                            }
+                        };
+
+                        // if value.is_some() && inner_result != outer_result {
+                        //     return Err(Error::TypeMismatch(line!()));
+                        // }
+
+                        let clean_depth = Some(idx.as_usize());
+
+                        return Ok(InstrResult::Goto { loc: block_end, clean_depth, value });
+                    },
+                    LabelType::If(outer_result, true_end, false_end) => {
+                        let value = match outer_result {
+                            ResType::Unit => None,
+                            res => {
+                                let value = self.stack.pop()?;
+                                valid_result!(res, value)?;
+                                Some(value)
+                            }
+                        };
+
+                        // if value.is_some() && inner_result != outer_result {
+                        //     return Err(Error::TypeMismatch(line!()));
+                        // }
+
+                        let clean_depth = Some(idx.as_usize());
+
+                        return Ok(InstrResult::Goto { loc: false_end, clean_depth, value });
+                    },
+                    LabelType::Loop(loop_result, loop_start) => {
+                        if idx.as_usize() == 0 {
+                            // We're just repeating the loop;
+
+                            self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+
+                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: None, value: None });
                         }
-                    }
-                    LabelType::Block(result, block_end) => {
-                        if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: None });
-                        } else {
-                            let value = self.stack.pop()?;
-                            valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: Some(value) });
-                        }
-                    }
-                    LabelType::Loop(result, loop_start) => {
-                        if result == ResType::Unit {
-                            // debug!("Reader Position: {:?}", reader.pos());
-                            self.current_frame()?
-                                .label_stack
-                                .push(LabelType::Loop(result, loop_start));
-                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: None });
-                        } else {
-                            let value = self.stack.pop()?;
-                            valid_result!(result, value)?;
-                            self.current_frame()?
-                                .label_stack
-                                .push(LabelType::Loop(result, loop_start));
-                            // debug!("Reader Position: {:?}", reader.pos());
-                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: Some(value) });
-                        }
-                    }
+                        
+                        let value = match inner_result {
+                            ResType::Unit => None,
+                            res => {
+                                let value = self.stack.pop()?;
+                                valid_result!(res, value)?;
+                                Some(value)
+                            }
+                        };
+
+                        let clean_depth = Some(idx.as_usize());
+
+                        self.current_frame()?.label_stack.push(LabelType::Loop(loop_result, loop_start));
+
+                        return Ok(InstrResult::Goto { loc: loop_start, clean_depth, value });
+                    },
                 }
             }
-            Instr::BrTable(labels, idx) => {
-                // Labels is a vector of the potential choices.
-                // idx is the default label to branch to.
+            // Instr::BrTable(labels, idx) => {
+            //     // Labels is a vector of the potential choices.
+            //     // idx is the default label to branch to.
 
-                // let target_idx = self.stack.pop()?;
+            //     // let target_idx = self.stack.pop()?;
                 
 
 
-                // for i in 0..**idx {
-                //     let label = self.current_frame()?
-                //         .label_stack
-                //         .pop()
-                //         .ok_or(Error::BranchDepth(*idx))?;
+            //     // for i in 0..**idx {
+            //     //     let label = self.current_frame()?
+            //     //         .label_stack
+            //     //         .pop()
+            //     //         .ok_or(Error::BranchDepth(*idx))?;
                     
-                //     let res = label.res();
+            //     //     let res = label.res();
 
 
-                // }
+            //     // }
 
-                if self.current_frame()?.label_stack.is_empty() {
-                    return Ok(InstrResult::Return);
-                }
+            //     if self.current_frame()?.label_stack.is_empty() {
+            //         return Ok(InstrResult::Return);
+            //     }
 
-                let target = self
-                    .current_frame()?
-                    .label_stack
-                    .pop()
-                    .ok_or(Error::BranchDepth(*idx))?;
-                debug!("\t ---> Target: {:?}", target);
-                match target {
-                    LabelType::If(result, true_end, false_end) => {
-                        if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: None });
-                        } else {
-                            let value = self.stack.pop()?;
-                            valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: idx.as_usize(), value: Some(value) });
-                        }
-                    }
-                    LabelType::Block(result, block_end) => {
-                        if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: None });
-                        } else {
-                            let value = self.stack.pop()?;
-                            valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: Some(value) });
-                        }
-                    }
-                    LabelType::Loop(result, loop_start) => {
-                        if result == ResType::Unit {
-                            self.current_frame()?
-                                .label_stack
-                                .push(LabelType::Loop(result, loop_start));
-                            // debug!("Reader Position: {:?}", reader.pos());
-                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: None });
-                        } else {
-                            let value = self.stack.pop()?;
-                            self.current_frame()?
-                                .label_stack
-                                .push(LabelType::Loop(result, loop_start));
-                            // debug!("Reader Position: {:?}", reader.pos());
-                            valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: Some(value) });
-                        }
-                    }
-                }
-            }
+            //     let target = self
+            //         .current_frame()?
+            //         .label_stack
+            //         .pop()
+            //         .ok_or(Error::BranchDepth(*idx))?;
+            //     debug!("\t ---> Target: {:?}", target);
+            //     match target {
+            //         LabelType::If(result, true_end, false_end) => {
+            //             if result == ResType::Unit {
+            //                 return Ok(InstrResult::Goto { loc: false_end, clean_depth: Some(idx.as_usize()), value: None });
+            //             } else {
+            //                 let value = self.stack.pop()?;
+            //                 valid_result!(result, value)?;
+            //                 return Ok(InstrResult::Goto { loc: false_end, clean_depth: Some(idx.as_usize()), value: Some(value) });
+            //             }
+            //         }
+            //         LabelType::Block(result, block_end) => {
+            //             if result == ResType::Unit {
+            //                 return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: None });
+            //             } else {
+            //                 let value = self.stack.pop()?;
+            //                 valid_result!(result, value)?;
+            //                 return Ok(InstrResult::Goto { loc: block_end, clean_depth: idx.as_usize(), value: Some(value) });
+            //             }
+            //         }
+            //         LabelType::Loop(result, loop_start) => {
+            //             if result == ResType::Unit {
+            //                 self.current_frame()?
+            //                     .label_stack
+            //                     .push(LabelType::Loop(result, loop_start));
+            //                 // debug!("Reader Position: {:?}", reader.pos());
+            //                 return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: None });
+            //             } else {
+            //                 let value = self.stack.pop()?;
+            //                 self.current_frame()?
+            //                     .label_stack
+            //                     .push(LabelType::Loop(result, loop_start));
+            //                 // debug!("Reader Position: {:?}", reader.pos());
+            //                 valid_result!(result, value)?;
+            //                 return Ok(InstrResult::Goto { loc: loop_start, clean_depth: idx.as_usize(), value: Some(value) });
+            //             }
+            //         }
+            //     }
+            // }
             Instr::Call(idx) => return Ok(InstrResult::Call(*idx)),
             Instr::Return => return Ok(InstrResult::Return),
             Instr::End => {
@@ -439,32 +558,37 @@ impl Interpreter<'_> {
                     .label_stack
                     .pop()
                     .expect("Label stack must contain a label");
+
+                debug!("\t---> [END] Target: {:?}", outer_label);
+                
                 match outer_label {
                     LabelType::If(result, true_end, false_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: 1, value: None });
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: Some(0), value: None });
                         } else {
                             let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: 1, value: Some(value) });
+                            return Ok(InstrResult::Goto { loc: false_end, clean_depth: Some(0), value: Some(value) });
                         }
                     }
                     LabelType::Block(result, block_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: 1, value: None });
+                            return Ok(InstrResult::Clean { clean_depth: Some(0), value: None });
                         } else {
                             let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: block_end, clean_depth: 1, value: Some(value) });
+                            return Ok(InstrResult::Clean { clean_depth: Some(0), value: Some(value) });
                         }
                     }
+
+                    // FIXME: LOOP END IS A BRANCH
                     LabelType::Loop(result, loop_end) => {
                         if result == ResType::Unit {
-                            return Ok(InstrResult::Goto { loc: loop_end, clean_depth: 1, value: None });
+                            return Ok(InstrResult::Clean { clean_depth: Some(0), value: None });
                         } else {
                             let value = self.stack.pop()?;
                             valid_result!(result, value)?;
-                            return Ok(InstrResult::Goto { loc: loop_end, clean_depth: 1, value: Some(value) });
+                            return Ok(InstrResult::Clean { clean_depth: Some(0), value: Some(value) });
                         }
                     }
                 }

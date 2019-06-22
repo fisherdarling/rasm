@@ -109,10 +109,7 @@ pub struct ValueStack {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StackElem {
     Value(Value),
-    // Purely Markers
-    Block,
-    If,
-    Loop,
+    Label,
 }
 
 impl StackElem {
@@ -146,8 +143,30 @@ impl ValueStack {
         self.values.push(StackElem::Value(val));
     }
 
+    pub fn push_label(&mut self) {
+        self.values.push(StackElem::Label);
+    }
+
     pub fn pop(&mut self) -> ExecResult<Value> {
         self.values.pop().ok_or(Error::EmptyValueStack)?.into_value()
+    }
+
+    pub fn pop_label_depth(&mut self, depth: Option<usize>) {
+        if let Some(depth) = depth {
+            for _ in 0..=depth {
+                
+                while let Some(StackElem::Value(ref v)) = self.values.last() {
+                    log::debug!("[STACK CLEAN] Value: {:?}", v);
+                    self.values.pop();
+                }
+                
+                let label = self.values.pop();
+                
+                log::debug!("[STACK CLEAN] Label: {:?}", label);
+            }
+        }
+        
+        return;
     }
 
     pub fn peek_value(&self) -> ExecResult<Option<&Value>> {
