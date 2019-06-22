@@ -4,7 +4,7 @@ use std::array::FixedSizeArray;
 use yawr::runtime::ModuleInstance;
 use yawr::types::Value;
 
-use std::time::{Duration, Instant};
+
 
 use criterion::*;
 
@@ -46,7 +46,7 @@ use criterion::*;
 
 fn fibonacci_name(c: &mut Criterion) {
     let bytes = include_bytes!("../../examples/fib_bench.wasm");
-    let mut runtime = ModuleInstance::from_bytes(bytes.as_slice());
+    let mut runtime = ModuleInstance::from_bytes(bytes.as_slice()).unwrap();
 
     let args = vec![Value::I32(10)];
 
@@ -55,7 +55,7 @@ fn fibonacci_name(c: &mut Criterion) {
 
 fn fibonacci_index(c: &mut Criterion) {
     let bytes = include_bytes!("../../examples/fib_bench.wasm");
-    let mut runtime = ModuleInstance::from_bytes(bytes.as_slice());
+    let mut runtime = ModuleInstance::from_bytes(bytes.as_slice()).unwrap();
 
     let args = vec![Value::I32(10)];
 
