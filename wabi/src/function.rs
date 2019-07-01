@@ -9,7 +9,7 @@ use crate::types::{Locals, ResType, ValType, Value};
 use std::ops::{Deref, Index};
 use std::rc::Rc;
 
-use wasamere::instr::*;
+use wasm_nom::instr::*;
 
 use log::*;
 

@@ -5,9 +5,9 @@ use structopt::StructOpt;
 
 use std::path::PathBuf;
 
-use yawr::error::Error;
-use yawr::runtime::ModuleInstance;
-use yawr::types::{Value, WasmResult};
+use wabi::error::Error;
+use wabi::runtime::ModuleInstance;
+use wabi::types::{Value, WasmResult};
 
 #[derive(Debug, Clone, StructOpt)]
 struct Args {

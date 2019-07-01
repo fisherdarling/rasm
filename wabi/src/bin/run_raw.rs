@@ -1,7 +1,7 @@
 use wabt::Wat2Wasm;
 
-use yawr::args;
-use yawr::runtime::ModuleInstance;
+use wabi::args;
+use wabi::runtime::ModuleInstance;
 
 use env_logger::try_init;
 

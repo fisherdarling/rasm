@@ -1,6 +1,6 @@
 use crate::types::Value;
-use wasamere::types::Global;
-use wasamere::types::{Mut, ValType};
+use wasm_nom::types::Global;
+use wasm_nom::types::{Mut, ValType};
 
 use crate::error::Error;
 

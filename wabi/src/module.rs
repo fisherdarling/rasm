@@ -2,8 +2,8 @@ use crate::function::{Function, Signature};
 
 use crate::types::{Data, Global, Limit};
 
-use wasamere::module::ParsedModule;
-use wasamere::section::{Export, Section};
+use wasm_nom::module::ParsedModule;
+use wasm_nom::section::{Export, Section};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Module {

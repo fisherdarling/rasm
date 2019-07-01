@@ -1,11 +1,11 @@
 // use std::fs::;
 
 use env_logger::try_init;
-use wasamere::instr::Instr;
-use wasamere::module::ParsedModule;
-use wasamere::section::Section;
+use wasm_nom::instr::Instr;
+use wasm_nom::module::ParsedModule;
+use wasm_nom::section::Section;
 
-use wasamere::StructNom;
+use wasm_nom::StructNom;
 
 
 

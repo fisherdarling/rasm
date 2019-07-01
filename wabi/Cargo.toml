@@ -1,11 +1,11 @@
 [package]
-name = "yawr"
+name = "wabi"
 version = "0.1.0"
 authors = ["Fisher Darling <fdarlingco@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-wasamere = { path = "../wasamere" }
+wasm_nom = { path = "../wasm-nom" }
 failure = "*"
 env_logger = "*"
 log = "*"

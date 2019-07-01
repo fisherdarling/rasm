@@ -1,8 +1,8 @@
 #![feature(fixed_size_array)]
 use std::array::FixedSizeArray;
 
-use yawr::runtime::ModuleInstance;
-use yawr::types::Value;
+use wabi::runtime::ModuleInstance;
+use wabi::types::Value;
 
 use std::time::{Duration, Instant};
 

@@ -1,9 +1,7 @@
 [workspace]
 members = [
-    # "rasm", 
-    "wasamere",
-    # "wasamere-derive",
-    "yawr",
+    "wasm-nom",
+    "wabi",
 ]
 
 [profile.release]

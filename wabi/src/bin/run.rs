@@ -5,8 +5,8 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use yawr::runtime::ModuleInstance;
-use yawr::types::Value;
+use wabi::runtime::ModuleInstance;
+use wabi::types::Value;
 
 #[derive(Debug, Clone, StructOpt)]
 struct Args {

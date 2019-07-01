@@ -3,7 +3,7 @@ macro_rules! test_file {
     ($name:ident, $path:literal, $func:ident ( $($args:literal),* ) => $expected:literal) => {
         #[test]
         fn $name() {
-            let args = yawr::args!($($args),*);
+            let args = wabi::args!($($args),*);
             let func_name = stringify!($func);
             let expected_value = WasmResult::from(Value::from($expected));
 
@@ -16,8 +16,8 @@ macro_rules! test_file {
     };
 }
 
-use yawr::runtime::ModuleInstance;
-use yawr::types::{Value, WasmResult};
+use wabi::runtime::ModuleInstance;
+use wabi::types::{Value, WasmResult};
 
 test_file!(add, "../examples/add.wasm", add(1_i32, 1_i32) => 2_i32);
 test_file!(factorial, "../examples/fact.wasm", factorial(10_i64) => 3628800_i64);

@@ -1,11 +1,11 @@
 #![feature(fixed_size_array)]
 use std::array::FixedSizeArray;
 
-use yawr::runtime::ModuleInstance;
-use yawr::types::Value;
+use wabi::runtime::ModuleInstance;
+use wabi::types::Value;
 
 fn main() {
-    let input = include_bytes!("../../../wasamere/examples/add.wasm");
+    let input = include_bytes!("../../../wasm-nom/examples/add.wasm");
 
     let _ = env_logger::try_init().unwrap();
 

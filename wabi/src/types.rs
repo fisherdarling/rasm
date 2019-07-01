@@ -1,10 +1,10 @@
-pub use wasamere::types::*;
+pub use wasm_nom::types::*;
 
 use std::convert::TryFrom;
 
 use std::mem::transmute;
 // use std::ops::{Add, Div, Mul, Sub};
-// pub use wasamere::
+// pub use wasm_nom::
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Value {

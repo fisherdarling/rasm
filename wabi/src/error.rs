@@ -18,7 +18,7 @@ pub enum Error {
     #[fail(display = "Invalid argument types. Expected: {:?}, Got: {:?}", 0, 1)]
     FunctionArgumentTypes(ValType, Value),
     #[fail(display = "Instruction not implemented: {:?}", 0)]
-    NotImplemented(wasamere::instr::Instr),
+    NotImplemented(wasm_nom::instr::Instr),
     #[fail(display = "Corrupted Value Stack")]
     ValueStack,
     #[fail(display = "Tried to convert a non-Value StackElem into a Value.")]
@@ -52,7 +52,7 @@ pub enum Error {
     #[fail(display = "IOError: {:?}", 0)]
     IOError(std::io::Error),
     #[fail(display = "Invalid Global Initializer: {:?}", 0)]
-    InvalidGlobalInitializer(wasamere::instr::Instr),
+    InvalidGlobalInitializer(wasm_nom::instr::Instr),
     #[fail(display = "Unreachable Trap")]
     TrapUnreachable,
     // #[fail(display = "")]
