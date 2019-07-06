@@ -1621,13 +1621,13 @@ impl Interpreter<'_> {
             Instr::I64TruncF64S => {
                 let value = self.stack.pop()?;
 
-                let res = trunc!(I64, F64, i32, value)?;
+                let res = trunc!(I64, F64, i64, value)?;
                 self.stack.push(res);
             }
             Instr::I64TruncF64U => {
                 let value = self.stack.pop()?;
 
-                let res = trunc!(I64, F64, u32, value)?;
+                let res = trunc!(I64, F64, u64, value)?;
                 self.stack.push(res);
             }
 
@@ -1635,25 +1635,25 @@ impl Interpreter<'_> {
             Instr::F32ConvertI32S => {
                 let value = self.stack.pop()?;
 
-                let res = convert!(I32 => f32, value, i32)?;
+                let res = convert!(I32 => f32, value)?;
                 self.stack.push(res);
             }
             Instr::F32ConvertI32U => {
                 let value = self.stack.pop()?;
 
-                let res = convert!(I32 => f32, value)?;
+                let res = convert!(I32 => f32, value, u32)?;
                 self.stack.push(res);
             }
             Instr::F32ConvertI64S => {
                 let value = self.stack.pop()?;
 
-                let res = convert!(I64 => f32, value, i32)?;
+                let res = convert!(I64 => f32, value)?;
                 self.stack.push(res);
             }
             Instr::F32ConvertI64U => {
                 let value = self.stack.pop()?;
 
-                let res = convert!(I64 => f32, value)?;
+                let res = convert!(I64 => f32, value, u64)?;
                 self.stack.push(res);
             }
 
@@ -1669,25 +1669,25 @@ impl Interpreter<'_> {
             Instr::F64ConvertI32S => {
                 let value = self.stack.pop()?;
 
-                let res = convert!(I32 => f64, value, i32)?;
+                let res = convert!(I32 => f64, value)?;
                 self.stack.push(res);
             }
             Instr::F64ConvertI32U => {
                 let value = self.stack.pop()?;
 
-                let res = convert!(I32 => f64, value)?;
+                let res = convert!(I32 => f64, value, u32)?;
                 self.stack.push(res);
             }
             Instr::F64ConvertI64S => {
                 let value = self.stack.pop()?;
 
-                let res = convert!(I64 => f64, value, i32)?;
+                let res = convert!(I64 => f64, value)?;
                 self.stack.push(res);
             }
             Instr::F64ConvertI64U => {
                 let value = self.stack.pop()?;
 
-                let res = convert!(I64 => f64, value)?;
+                let res = convert!(I64 => f64, value, u64)?;
                 self.stack.push(res);
             }
 

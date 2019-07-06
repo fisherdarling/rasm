@@ -137,9 +137,12 @@ fn print_failed_hard(
 ) {
     if verbose {
         println!(
-            "[{:04}] {} {:<30} Args: {:?}, || Expected: {:?}, || Received: {:?}",
+            r#"[{:04}] {} {:<30} 
+                ├──>  Args:     {:?}
+                ├──>  Expected: {:?}
+                └──>  Received: {:?}"#,
             line,
-            "[FAILED]".red().underline().bold(),
+            "[FAILED]".red(),
             &field.yellow(),
             args,
             expected,
