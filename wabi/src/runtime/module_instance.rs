@@ -10,6 +10,7 @@ use crate::types::{Data, Global, Value, WasmResult};
 use crate::error::{Error, ExecResult};
 
 use wasm_nom::section::export::{Export, ExportDesc};
+use wasm_nom::section::import::{Import, ImportDesc};
 
 use std::collections::HashMap;
 use std::convert::TryFrom;
@@ -63,7 +64,8 @@ impl TryFrom<Module> for ModuleInstance {
     type Error = crate::error::Error;
 
     fn try_from(module: Module) -> Result<ModuleInstance, Self::Error> {
-        let funcs: Vec<Function> = module.funcs;
+        // let funcs: Vec<Function> = module.funcs;
+        let funcs: Vec<Function> = unimplemented!();
         let exports: Vec<Export> = module.exports;
         let mems = module.mems;
         let data = module.data;
@@ -109,7 +111,8 @@ pub struct ModuleInstanceBuilder<'a> {
     store: Option<Store>,
     functions: Option<Vec<Function>>,
     data: Option<Data>,
-    exports: Option<Export>,
+    exports: Option<Vec<Export>>,
+    imports: Option<Vec<Import>>,
     global_inits: Option<Vec<Global>>,
     resolver: Option<HashMap<String, FuncIdx>>,
 }
@@ -156,9 +159,17 @@ impl<'a> ModuleInstanceBuilder<'a> {
     }
 
     #[inline]
-    pub fn exports(self, exports: Export) -> Self {
+    pub fn exports(self, exports: Vec<Export>) -> Self {
         Self {
             exports: Some(exports),
+            ..self
+        }
+    }
+
+    #[inline]
+    pub fn imports(self, imports: Vec<Import>) -> Self {
+        Self {
+            imports: Some(imports),
             ..self
         }
     }

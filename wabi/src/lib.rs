@@ -2,6 +2,7 @@
 
 pub mod error;
 pub mod function;
+pub mod index;
 pub mod instr;
 pub mod macros;
 pub mod math;

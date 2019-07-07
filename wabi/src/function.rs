@@ -4,6 +4,7 @@ use crate::error::{Error, ExecResult};
 
 use crate::runtime::frame::Frame;
 
+use crate::index::ModuleIdx;
 use crate::types::{Locals, ResType, ValType, Value};
 
 use std::ops::{Deref, Index};
@@ -92,28 +93,8 @@ impl FuncReader {
             }
         };
 
-        // match &mut self.pos {
-        //     Some(pos) => {
-        //         pos.set(pos.get() + 1);
-        //     }
-        //     None => {
-        //         if self.len() > 1 {
-        //             self.pos = Some(0);
-        //         }
-        //     }
-        // };
-
         debug!("Inc Reader: {:?}", self.pos);
     }
-
-    // fn dec(&mut self) {
-    //     self.pos = match self.pos {
-    //         Some(pos) => {
-    //             pos.set(pos.get() - 1);
-    //         }
-    //         None => {}
-    //     }
-    // }
 
     pub fn pos(&self) -> Option<usize> {
         self.pos
@@ -150,15 +131,6 @@ impl FuncReader {
         self.current()
     }
 
-    // pub fn prev(&mut self) -> Option<&Instr> {
-    //     if self.pos()? == 0 {
-    //         return None;
-    //     }
-
-    //     self.dec();
-    //     self.current()
-    // }
-
     pub fn goto(&mut self, loc: usize) -> Option<&Instr> {
         if loc >= self.len() {
             return None;
@@ -185,14 +157,16 @@ pub struct Function {
     pub signature: Signature,
     pub locals: Locals,
     pub body: Expression,
+    pub module: ModuleIdx,
 }
 
 impl Function {
-    pub fn new(signature: Signature, locals: Locals, body: Expression) -> Self {
+    pub fn new(signature: Signature, locals: Locals, body: Expression, module: ModuleIdx) -> Self {
         Self {
             signature,
             locals,
             body,
+            module,
         }
     }
 
@@ -208,39 +182,9 @@ impl Function {
         self.signature.params.len()
     }
 
-    // pub fn instantiate<A: AsRef<[Value]>>(&self, args: A) -> ExecResult<Frame> {
-    //     let args = args.as_ref();
-    //     let mut locals: Vec<Value> = Vec::new();
-
-    //     if args.len() != self.signature.params.len() {
-    //         return Err(Error::FunctionArgumentCount);
-    //     }
-
-    //     for (arg, param) in args.into_iter().zip(self.signature.params.iter()) {
-    //         match (arg, param) {
-    //             (a @ Value::I32(_), ValType::I32) => locals.push(a.clone()),
-    //             (a @ Value::I64(_), ValType::I64) => locals.push(a.clone()),
-    //             (a @ Value::F32(_), ValType::F32) => locals.push(a.clone()),
-    //             (a @ Value::F64(_), ValType::F64) => locals.push(a.clone()),
-    //             _ => return Err(Error::FunctionArgumentTypes(*param, *arg)),
-    //         }
-    //     }
-
-    //     for local in &self.locals.0 {
-    //         match local {
-    //             ValType::I32 => locals.push(Value::I32(0)),
-    //             ValType::I64 => locals.push(Value::I64(0)),
-    //             ValType::F32 => locals.push(Value::F32(0.0)),
-    //             ValType::F64 => locals.push(Value::F64(0.0)),
-    //         }
-    //     }
-
-    //     let func = FuncRef::new(FuncInstance::new(self.signature.result, self.body.clone()));
-
-    //     let frame = Frame::new(locals, func);
-
-    //     Ok(frame)
-    // }
+    pub fn module(&self) -> ModuleIdx {
+        self.module
+    }
 }
 
 impl Index<usize> for Function {

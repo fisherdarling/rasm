@@ -28,7 +28,6 @@ impl LabelType {
 #[derive(Debug, Clone)]
 pub struct Frame {
     pub locals: Vec<Value>,
-    pub stack: ValueStack,
     pub label_stack: Vec<LabelType>,
     pub func: FuncRef,
     pub reader: Option<FuncReader>,
@@ -38,7 +37,6 @@ impl Frame {
     pub fn new(locals: Vec<Value>, func: FuncRef) -> Frame {
         Frame {
             locals,
-            stack: ValueStack::with_capacity(10),
             label_stack: Vec::new(),
             func,
             reader: None,
@@ -51,26 +49,6 @@ impl Frame {
 
     pub fn locals(&self) -> &[Value] {
         &self.locals
-    }
-
-    pub fn stack(&self) -> &ValueStack {
-        &self.stack
-    }
-
-    pub fn stack_mut(&mut self) -> &mut ValueStack {
-        &mut self.stack
-    }
-
-    pub fn push(&mut self, value: Value) {
-        self.stack_mut().push(value);
-    }
-
-    pub fn pop(&mut self) -> ExecResult<Value> {
-        self.stack_mut().pop()
-    }
-
-    pub fn pop_pair(&mut self) -> ExecResult<(Value, Value)> {
-        self.stack_mut().pop_pair()
     }
 
     pub fn pause(&mut self, reader: FuncReader) {

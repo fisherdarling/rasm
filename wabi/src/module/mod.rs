@@ -1,13 +1,16 @@
 use crate::function::{Function, Signature};
 
-use crate::types::{Data, Global, Limit};
+use crate::types::{Data, Global, Limit, Locals};
 
+use crate::index::TypeIdx;
+
+use wasm_nom::instr::Expression;
 use wasm_nom::module::ParsedModule;
 use wasm_nom::section::{Export, Section};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Module {
-    pub(crate) funcs: Vec<Function>,
+    pub(crate) funcs: Vec<(Signature, Locals, Expression)>,
     pub(crate) exports: Vec<Export>,
     pub(crate) mems: Option<Limit>,
     pub(crate) data: Vec<Data>,
@@ -57,8 +60,7 @@ impl Module {
             .unwrap_or_default()
             .0;
 
-        let mut functions: Vec<Function> = Vec::new();
-
+        let mut funcs: Vec<(Signature, Locals, Expression)> = Vec::new();
         for (typeidx, body) in funcsec.into_iter().zip(bodies.into_iter()) {
             let idx: u32 = (*typeidx).into();
 
@@ -67,9 +69,9 @@ impl Module {
             let locals = body.0.clone();
             let code = body.1.clone().flatten();
 
-            let function = Function::new(signature, locals, code);
-            functions.push(function);
+            funcs.push((signature, locals, code));
         }
+
 
         let exports = &parsed_module
             .sections()
@@ -98,7 +100,7 @@ impl Module {
         Module {
             data,
             mems,
-            funcs: functions,
+            funcs,
             exports: exports.clone(),
             globals,
         }
