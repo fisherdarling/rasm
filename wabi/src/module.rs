@@ -87,6 +87,14 @@ impl Module {
             .unwrap_or_default()
             .0;
 
+        let imports = parsed_module
+            .sections()
+            .iter()
+            .find_map(Section::map_import)
+            .cloned()
+            .unwrap_or_default()
+            .0;
+
         Module {
             data,
             mems,

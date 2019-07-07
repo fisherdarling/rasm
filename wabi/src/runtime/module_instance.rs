@@ -51,7 +51,6 @@ impl ModuleInstance {
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<ModuleInstance, Error> {
         let data = std::fs::read(path)?;
 
-        
         Ok(ModuleInstance::from_bytes(&data)?)
     }
 

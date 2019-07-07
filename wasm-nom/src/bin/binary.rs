@@ -7,8 +7,6 @@ use wasm_nom::section::Section;
 
 use wasm_nom::StructNom;
 
-
-
 fn main() {
     let _ = try_init().unwrap();
 
