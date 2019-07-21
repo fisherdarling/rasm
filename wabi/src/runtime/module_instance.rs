@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::path::Path;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ModuleInstance {
     store: Store,
     resolver: HashMap<String, FuncIdx>,
