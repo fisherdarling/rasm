@@ -42,6 +42,12 @@ macro_rules! impl_leb32_wrapper {
             }
         }
 
+        impl From<usize> for $id {
+            fn from(val: usize) -> Self {
+                Self(val as u32)
+            }
+        }
+
         impl Into<u32> for $id {
             fn into(self) -> u32 {
                 self.0

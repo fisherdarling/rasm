@@ -374,12 +374,12 @@ mod tests {
             Expression(vec![
                 Instr::I32Const(0),
                 Instr::I32Const(0x32),
-                Instr::LocalGet(0.into()),
-                Instr::Call(5.into()),
+                Instr::LocalGet(0u32.into()),
+                Instr::Call(5u32.into()),
                 Instr::I32Const(0),
                 Instr::I32Const(0x32),
-                Instr::LocalGet(1.into()),
-                Instr::Call(10.into()),
+                Instr::LocalGet(1u32.into()),
+                Instr::Call(10u32.into()),
                 Instr::I32And,
                 Instr::End
             ])
@@ -404,7 +404,7 @@ mod tests {
             Instr::LocalGet(LocalIdx(0)),
             Instr::LocalGet(LocalIdx(1)),
             Instr::Call(FuncIdx(15)),
-            Instr::I32Load8U(0.into(), 0.into()),
+            Instr::I32Load8U(0u32.into(), 0u32.into()),
             Instr::End,
         ]), Expression(vec![
             Instr::I32Const(0),
