@@ -7,8 +7,9 @@ use crate::runtime::module_instance::ModuleInstance;
 
 use crate::error::Error;
 use std::borrow::Borrow;
+use std::fmt;
 
-pub trait Resolver {
+pub trait Resolver: fmt::Debug {
     fn resolve_module(&self, path: Option<&str>) -> ModuleIdx;
 
     fn resolve_function(&self, path: Option<&str>, name: &str) -> FuncIdx;

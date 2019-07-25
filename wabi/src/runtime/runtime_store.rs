@@ -1,12 +1,24 @@
 use std::ops::{Index, IndexMut};
+use std::fmt;
 
 use crate::function::FuncRef;
 use crate::index::{FuncIdx, ModuleIdx};
 use crate::runtime::ModuleInstance;
 
 pub trait RuntimeStore:
-    IndexMut<ModuleIdx, Output = ModuleInstance> + Index<FuncIdx, Output = Option<FuncRef>>
+    IndexMut<ModuleIdx, Output = ModuleInstance> 
+    + Index<FuncIdx, Output = Option<FuncRef>> 
+    + fmt::Debug
 {
+    fn modules_len(&self) -> usize;
+
+    fn functions_len(&self) -> usize;
+
+    fn push_module(&mut self, instance: ModuleInstance) -> ModuleIdx;
+
+    fn push_function(&mut self, function: FuncRef) -> FuncIdx;
+
+    fn push_empty_function(&mut self) -> FuncIdx;
 }
 
 #[derive(Default, Debug, Clone)]
@@ -15,33 +27,33 @@ pub struct DefaultStore {
     functions: Vec<Option<FuncRef>>,
 }
 
-impl DefaultStore {
-    pub fn modules_len(&self) -> usize {
+// impl DefaultStore {
+// }
+
+impl RuntimeStore for DefaultStore {
+    fn modules_len(&self) -> usize {
         self.modules.len()
     }
 
-    pub fn functions_len(&self) -> usize {
+    fn functions_len(&self) -> usize {
         self.functions.len()
     }
 
-    pub fn push_module(&mut self, instance: ModuleInstance) -> ModuleIdx {
+    fn push_module(&mut self, instance: ModuleInstance) -> ModuleIdx {
         self.modules.push(instance);
         (self.modules.len() - 1).into()
     }
 
-    pub fn push_function(&mut self, function: FuncRef) -> FuncIdx {
+    fn push_function(&mut self, function: FuncRef) -> FuncIdx {
         self.functions.push(Some(function));
         (self.functions.len() - 1).into()
     }
 
-    pub fn push_empty_function(&mut self) -> FuncIdx {
+    fn push_empty_function(&mut self) -> FuncIdx {
         self.functions.push(None);
         (self.functions.len() - 1).into()
-    
     }
 }
-
-impl RuntimeStore for DefaultStore {}
 
 impl Index<ModuleIdx> for DefaultStore {
     type Output = ModuleInstance;

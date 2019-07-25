@@ -1,14 +1,18 @@
-use crate::function::Function;
+use crate::function::{Function, Signature, FuncRef};
 use crate::module::Module;
+
+use crate::runtime::resolver::Resolver;
+use crate::runtime::runtime_store::RuntimeStore;
 
 use crate::runtime::interpreter::Interpreter;
 use crate::store::{Store, StoreBuilder};
 
 use crate::types::index::FuncIdx;
-use crate::types::{Data, Global, Value, WasmResult};
+use crate::types::{Data, Global, Value, WasmResult, Locals};
 
 use crate::error::{Error, ExecResult};
 
+use crate::instr::Expression;
 use wasm_nom::section::export::{Export, ExportDesc};
 use wasm_nom::section::import::{Import, ImportDesc};
 
@@ -19,7 +23,7 @@ use std::path::Path;
 #[derive(Debug, Default, Clone)]
 pub struct ModuleInstance {
     store: Store,
-    resolver: HashMap<String, FuncIdx>,
+    // resolver: HashMap<String, FuncIdx>,
     // stack: Vec<StackElem>,
     // interpreter: Interpreter<'a>,
 }
@@ -29,25 +33,25 @@ impl ModuleInstance {
         ModuleInstanceBuilder::default()
     }
 
-    pub fn invoke<N: Into<String>, A: AsRef<[Value]>>(
-        &mut self,
-        name: N,
-        args: A,
-    ) -> ExecResult<WasmResult> {
-        self.interpreter().invoke(name, args)
-    }
+    // pub fn invoke<N: Into<String>, A: AsRef<[Value]>>(
+    //     &mut self,
+    //     name: N,
+    //     args: A,
+    // ) -> ExecResult<WasmResult> {
+    //     self.interpreter().invoke(name, args)
+    // }
 
-    pub fn invoke_index<A: AsRef<[Value]>>(
-        &mut self,
-        idx: usize,
-        args: A,
-    ) -> ExecResult<WasmResult> {
-        self.interpreter().invoke_index(idx, args)
-    }
+    // pub fn invoke_index<A: AsRef<[Value]>>(
+    //     &mut self,
+    //     idx: usize,
+    //     args: A,
+    // ) -> ExecResult<WasmResult> {
+    //     self.interpreter().invoke_index(idx, args)
+    // }
 
-    pub fn interpreter(&mut self) -> Interpreter {
-        Interpreter::new(&self.resolver, &mut self.store)
-    }
+    // pub fn interpreter(&mut self) -> Interpreter {
+    //     Interpreter::new(&self.resolver, &mut self.store)
+    // }
 
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<ModuleInstance, Error> {
         let data = std::fs::read(path)?;
@@ -75,6 +79,10 @@ impl TryFrom<Module> for ModuleInstance {
 
         let mut resolver: HashMap<String, FuncIdx> = HashMap::new();
 
+        // for Import { module, name, desc } in imports {
+            
+        // }
+
         for Export { name, desc } in exports {
             match desc {
                 ExportDesc::Func(idx) => {
@@ -97,7 +105,6 @@ impl TryFrom<Module> for ModuleInstance {
 
         Ok(ModuleInstance {
             store,
-            resolver,
             // interpreter,
             // stack: Vec::with_capacity(256),
         })
@@ -188,6 +195,86 @@ impl<'a> ModuleInstanceBuilder<'a> {
             resolver: Some(resolver),
             ..self
         }
+    }
+
+    pub fn instantiate(
+        self,
+        store: &mut impl RuntimeStore,
+        resolver: &mut impl Resolver,
+    ) -> Result<ModuleInstance, Error> {
+        // let funcs: Vec<Function> = module.funcs;
+        let module = if let Some(bytes) = self.bytes {
+            Module::from_bytes(bytes.as_ref())
+        } else {
+            panic!()
+        };
+
+        let funcs: Vec<(Signature, Locals, Expression)> = module.funcs;
+        let func_indicies: Vec<FuncIdx> = Vec::new();
+
+        for (signature, locals, expr) in funcs {
+            let function = Function::new(signature, locals, expr, store.modules_len().into());
+            let function = FuncRef::new(function);
+
+            let mut idx = store.push_function(function);
+            func_indicies.push(idx);
+        }
+
+        let exports: Vec<Export> = module.exports;
+
+        for Export { name, desc } in exports {
+            match desc {
+                ExportDesc::Func(func_idx) => {
+                    let new_idx = func_indicies[func_idx.as_usize()];
+                    resolver.insert_function(None, &name, new_idx);
+                }
+            }
+        }
+
+        let imports: Vec<Import> = module.imports;
+        let mut imported_funcs: Vec<FuncIdx> = Vec::new(); 
+        for Import { module, name, desc } in imports {
+            match desc {
+                ImportDesc::Func(_) => {
+                    let idx = resolver.resolve_function(Some(&module), &name);
+                    imported_funcs.push(idx);
+                },
+                _ => {}
+            }
+        }
+
+
+
+        let imports: Vec<Import> = module.imports;
+        let mems = module.mems;
+        let data = module.data;
+        let globals = module.globals;
+
+        for Export { name, desc } in exports {
+            match desc {
+                ExportDesc::Func(idx) => {
+                    resolver.insert(name, FuncIdx::from(idx.index()));
+                }
+                _ => {}
+            }
+        }
+
+        // let store = Store::new(mems, Some(data), functions, globals)?;
+
+        let store = StoreBuilder::default()
+            .memory_limit(mems.unwrap_or_default())
+            .data(data)
+            .functions(funcs)
+            .global_inits(globals)
+            .build()?;
+
+        // let interpreter = Interpreter::new(&store.functions, &resolver, &mut store.memory);
+
+        Ok(ModuleInstance {
+            store,
+            // interpreter,
+            // stack: Vec::with_capacity(256),
+        })
     }
 
     pub fn build(self) -> Result<ModuleInstance, Error> {
