@@ -12,7 +12,7 @@ macro_rules! test_file {
 
             let mut data = Vec::new();
             let mut file = std::fs::File::open($path).expect(&format!("Unable to create runtime from `{}` for test: `{}`", $path, stringify!($name)));
-            file.read_to_end(&mut data);
+            file.read_to_end(&mut data).unwrap();
 
             runtime.add_module(None, &data).unwrap();
             // let mut runtime = ModuleInstance::from_file($path).expect(&format!("Unable to create runtime from `{}` for test: `{}`", $path, stringify!($name)));

@@ -1,7 +1,7 @@
 #![feature(fixed_size_array)]
 use std::array::FixedSizeArray;
 
-use wabi::runtime::ModuleInstance;
+use wabi::runtime::Runtime;
 use wabi::types::Value;
 
 use criterion::*;
@@ -44,7 +44,10 @@ use criterion::*;
 
 fn fibonacci_name(c: &mut Criterion) {
     let bytes = include_bytes!("../../examples/fib_bench.wasm");
-    let mut runtime = ModuleInstance::from_bytes(bytes.as_slice()).unwrap();
+    let vec: Vec<u8> = bytes.to_vec();
+
+    let mut runtime = Runtime::default();
+    runtime.add_module(None, &vec).unwrap();
 
     let args = vec![Value::I32(10)];
 
@@ -53,12 +56,15 @@ fn fibonacci_name(c: &mut Criterion) {
 
 fn fibonacci_index(c: &mut Criterion) {
     let bytes = include_bytes!("../../examples/fib_bench.wasm");
-    let mut runtime = ModuleInstance::from_bytes(bytes.as_slice()).unwrap();
+    let vec: Vec<u8> = bytes.to_vec();
+
+    let mut runtime = Runtime::default();
+    runtime.add_module(None, &vec).unwrap();
 
     let args = vec![Value::I32(10)];
 
     c.bench_function("fib_index", move |b| {
-        b.iter(|| runtime.invoke_index(0, &args))
+        b.iter(|| runtime.invoke_index(0u32.into(), &args))
     });
 }
 
