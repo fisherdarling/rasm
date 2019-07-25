@@ -43,14 +43,14 @@ pub enum InstrResult {
 pub struct Interpreter<'a> {
     frames: FrameStack,
     stack: ValueStack,
-    resolver: &'a dyn Resolver,
-    store: &'a mut dyn RuntimeStore,
+    resolver: &'a Box<dyn Resolver>,
+    store: &'a mut Box<dyn RuntimeStore>,
 }
 
 impl Interpreter<'_> {
     pub fn new<'a>(
-        resolver: &'a dyn Resolver,
-        store: &'a mut dyn RuntimeStore,
+        resolver: &'a Box<dyn Resolver>,
+        store: &'a mut Box<dyn RuntimeStore>,
     ) -> Interpreter<'a> {
         Interpreter {
             resolver,
@@ -59,6 +59,16 @@ impl Interpreter<'_> {
             stack: ValueStack::default(),
             // current_frame: None,
         }
+    }
+
+    pub fn execute_function_index<A: AsRef<[Value]>>(&mut self, index: FuncIdx, args: A) -> ExecResult<WasmResult> {
+        let function: FuncRef = self.store[index].clone().unwrap();
+        self.execute_function(function, args)
+    }
+
+    pub fn execute_function<A: AsRef<[Value]>>(&mut self, function: FuncRef, args: A) -> ExecResult<WasmResult> {
+        let frame = function.instantiate(args)?;
+        self.execute_with_frame(frame)
     }
 
     // pub fn invoke<N: Into<String>, A: AsRef<[Value]>>(

@@ -6,7 +6,7 @@ use structopt::StructOpt;
 use std::path::PathBuf;
 
 use wabi::error::Error;
-use wabi::runtime::ModuleInstance;
+use wabi::runtime::Runtime;
 use wabi::types::{Value, WasmResult};
 
 #[derive(Debug, Clone, StructOpt)]
@@ -34,7 +34,7 @@ fn main() {
 
         let mut parser = ScriptParser::<f32, f64>::from_str(&file).unwrap();
 
-        let mut runtime = ModuleInstance::default();
+        let mut runtime = Runtime::default();
 
         while let Some(Command { kind, line }) = parser.next().unwrap() {
             match kind {
@@ -44,9 +44,9 @@ fn main() {
 
                     // Convert the module into the binary representation and check the magic number.
                     let module_binary = module.into_vec();
-                    runtime = ModuleInstance::from_bytes(&module_binary).unwrap();
-
                     println!("[MODULE] Name: {:?}", name);
+
+                    runtime.add_module(name, &module_binary).unwrap();
                 }
                 CommandKind::AssertReturn { action, expected } => {
                     match action {
@@ -71,12 +71,10 @@ fn main() {
                                 print_failed_hard(line, &field, args, expected, res, verbose);
                             }
                         }
-                        _ => {}
-                        // a => println!("[UNSUPPORTED] Action: {:?}", a),
+                        _ => {} // a => println!("[UNSUPPORTED] Action: {:?}", a),
                     }
                 }
-                _ => {}
-                // k => println!("[UNSUPPORTED] Kind: {:?}", k),
+                _ => {} // k => println!("[UNSUPPORTED] Kind: {:?}", k),
             }
         }
     }

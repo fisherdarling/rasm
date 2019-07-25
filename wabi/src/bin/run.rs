@@ -5,7 +5,7 @@ use std::io::Read;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use wabi::runtime::ModuleInstance;
+use wabi::runtime::Runtime;
 use wabi::types::Value;
 
 #[derive(Debug, Clone, StructOpt)]
@@ -30,7 +30,10 @@ fn main() {
         .read_to_end(&mut bytes)
         .unwrap();
 
-    let mut runtime = ModuleInstance::from_bytes(&bytes).unwrap();
+    let mut runtime = Runtime::default();
+    runtime.add_module(None, &bytes).unwrap();
+
+    // let mut runtime = ModuleInstance::from_bytes(&bytes).unwrap();
 
     let mut func_args = Vec::new();
 

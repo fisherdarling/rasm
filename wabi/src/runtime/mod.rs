@@ -7,6 +7,8 @@ pub mod runtime;
 
 pub use module_instance::*;
 
+pub use runtime::*;
+
 // use std::ops::{Index, IndexMut};
 
 // pub struct Function;

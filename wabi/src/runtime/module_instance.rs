@@ -1,4 +1,4 @@
-use crate::function::{Function, Signature, FuncRef};
+use crate::function::{FuncRef, Function, Signature};
 use crate::module::Module;
 
 use crate::runtime::resolver::Resolver;
@@ -8,7 +8,7 @@ use crate::runtime::interpreter::Interpreter;
 use crate::store::{Store, StoreBuilder};
 
 use crate::types::index::FuncIdx;
-use crate::types::{Data, Global, Value, WasmResult, Locals};
+use crate::types::{Data, Global, Locals, Value, WasmResult};
 
 use crate::error::{Error, ExecResult};
 
@@ -68,7 +68,6 @@ impl ModuleInstance {
 //         let mut resolver: HashMap<String, FuncIdx> = HashMap::new();
 
 //         // for Import { module, name, desc } in imports {
-            
 //         // }
 
 //         for Export { name, desc } in exports {
@@ -102,7 +101,7 @@ impl ModuleInstance {
 #[derive(Default)]
 pub struct ModuleInstanceBuilder<'a> {
     bytes: Option<&'a dyn AsRef<[u8]>>,
-    name: Option<&'a str>,
+    name: Option<String>,
     module: Option<Module>,
     store: Option<Store>,
     functions: Option<Vec<Function>>,
@@ -123,7 +122,7 @@ impl<'a> ModuleInstanceBuilder<'a> {
     }
 
     #[inline]
-    pub fn name(self, name: &'a str) -> Self {
+    pub fn name(self, name: String) -> Self {
         Self {
             name: Some(name),
             ..self
@@ -196,8 +195,8 @@ impl<'a> ModuleInstanceBuilder<'a> {
 
     pub fn instantiate(
         self,
-        store: &mut impl RuntimeStore,
-        resolver: &mut impl Resolver,
+        store: &mut Box<dyn RuntimeStore>,
+        resolver: &mut Box<dyn Resolver>,
     ) -> Result<ModuleInstance, Error> {
         // let funcs: Vec<Function> = module.funcs;
         let module = if let Some(bytes) = self.bytes {
@@ -207,19 +206,17 @@ impl<'a> ModuleInstanceBuilder<'a> {
         };
 
         let mut func_indicies: Vec<FuncIdx> = Vec::new();
-        
         let imports: Vec<Import> = module.imports;
-        let mut imported_funcs: Vec<FuncIdx> = Vec::new(); 
+        let mut imported_funcs: Vec<FuncIdx> = Vec::new();
         for Import { module, name, desc } in imports {
             match desc {
                 ImportDesc::Func(_) => {
                     let idx = resolver.resolve_function(Some(&module), &name);
                     func_indicies.push(idx);
-                },
+                }
                 _ => {}
             }
         }
-        
         let func_sigs: Vec<(Signature, Locals, Expression)> = module.funcs;
 
         for (signature, locals, expr) in func_sigs {
@@ -233,16 +230,24 @@ impl<'a> ModuleInstanceBuilder<'a> {
 
         let exports: Vec<Export> = module.exports;
 
-        for Export { name: func_name, desc } in exports {
+        for Export {
+            name: func_name,
+            desc,
+        } in exports
+        {
             match desc {
                 ExportDesc::Func(idx) => {
                     let idx = func_indicies[idx.as_usize()];
-                    resolver.insert_function(self.name, &func_name, idx);
+
+                    if let Some(ref name) = self.name {
+                        resolver.insert_function(Some(name), &func_name, idx);
+                    } else {
+                        resolver.insert_function(None, &func_name, idx);
+                    }
                 }
                 _ => {}
             }
         }
-
 
         // let imports: Vec<Import> = module.imports;
         let mems = module.mems;
