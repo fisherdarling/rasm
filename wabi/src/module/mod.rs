@@ -1,12 +1,10 @@
-use crate::function::{Function, Signature};
+use crate::function::Signature;
 
 use crate::types::{Data, Global, Limit, Locals};
 
-use crate::index::TypeIdx;
-
 use wasm_nom::instr::Expression;
 use wasm_nom::module::ParsedModule;
-use wasm_nom::section::{Export, Section};
+use wasm_nom::section::{Export, Section, Import};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Module {
@@ -15,6 +13,7 @@ pub struct Module {
     pub(crate) mems: Option<Limit>,
     pub(crate) data: Vec<Data>,
     pub(crate) globals: Vec<Global>,
+    pub(crate) imports: Vec<Import>,
 }
 
 impl Module {
@@ -72,7 +71,6 @@ impl Module {
             funcs.push((signature, locals, code));
         }
 
-
         let exports = &parsed_module
             .sections()
             .iter()
@@ -103,6 +101,7 @@ impl Module {
             funcs,
             exports: exports.clone(),
             globals,
+            imports,
         }
     }
 }

@@ -55,6 +55,8 @@ pub enum Error {
     InvalidGlobalInitializer(wasm_nom::instr::Instr),
     #[fail(display = "Unreachable Trap")]
     TrapUnreachable,
+    #[fail(display = "A function not yet resolved was called")]
+    UnresolvedFunction,
     // #[fail(display = "")]
     // Store()
 }

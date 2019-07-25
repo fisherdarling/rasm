@@ -3,6 +3,7 @@ pub mod interpreter;
 pub mod module_instance;
 pub mod resolver;
 pub mod runtime_store;
+pub mod runtime;
 
 pub use module_instance::*;
 

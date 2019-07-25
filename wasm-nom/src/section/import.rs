@@ -10,9 +10,9 @@ pub struct ImportSection(pub Vec<Import>);
 
 #[derive(Debug, Clone, PartialEq, StructNom)]
 pub struct Import {
-    module: String,
-    name: String,
-    desc: ImportDesc,
+    pub module: String,
+    pub name: String,
+    pub desc: ImportDesc,
 }
 
 #[derive(Debug, Clone, PartialEq, StructNom)]

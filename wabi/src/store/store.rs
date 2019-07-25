@@ -1,6 +1,6 @@
 use std::ops::Index;
 
-use crate::function::{FuncRef, Function};
+use crate::function::Function;
 use crate::store::global::GlobalInst;
 use crate::store::memory::MemInst;
 // use crate::store::table::TableInst;
@@ -10,7 +10,7 @@ use crate::error::Error;
 
 #[derive(Debug, Clone, Default)]
 pub struct Store {
-    pub(crate) functions: Vec<FuncRef>,
+    pub(crate) functions: Vec<FuncIdx>,
     pub(crate) memory: MemInst,
     pub(crate) globals: Vec<GlobalInst>,
     // pub(crate) table: TableInst,
@@ -20,7 +20,7 @@ impl Store {
     pub fn new(
         mems: Option<Limit>,
         data: Option<Vec<Data>>,
-        functions: Vec<FuncRef>,
+        functions: Vec<FuncIdx>,
         globals: Vec<Global>,
     ) -> Result<Self, Error> {
         let (min, max) = if let Some(Limit { min, max }) = mems {
@@ -36,35 +36,6 @@ impl Store {
             .into_iter()
             .map(GlobalInst::from_global)
             .collect::<Result<Vec<GlobalInst>, Error>>()?;
-
-        Ok(Self {
-            functions,
-            memory,
-            globals,
-        })
-    }
-
-    pub fn new_functions(
-        mems: Option<Limit>,
-        data: Option<Vec<Data>>,
-        functions: Vec<Function>,
-        globals: Vec<Global>,
-    ) -> Result<Self, Error> {
-        let (min, max) = if let Some(Limit { min, max }) = mems {
-            (min, max)
-        } else {
-            (0, None)
-        };
-
-        let mut memory = MemInst::new(min, max);
-        memory.init(data)?;
-
-        let globals: Vec<GlobalInst> = globals
-            .into_iter()
-            .map(GlobalInst::from_global)
-            .collect::<Result<Vec<GlobalInst>, Error>>()?;
-
-        let functions: Vec<FuncRef> = functions.into_iter().map(|v| FuncRef::new(v)).collect();
 
         Ok(Self {
             functions,
@@ -78,7 +49,7 @@ impl Store {
 pub struct StoreBuilder {
     data: Option<Vec<Data>>,
     mems: Option<Limit>,
-    func_refs: Option<Vec<FuncRef>>,
+    func_indicies: Option<Vec<FuncIdx>>,
     functions: Option<Vec<Function>>,
     globals: Option<Vec<GlobalInst>>,
     global_inits: Option<Vec<Global>>,
@@ -99,16 +70,9 @@ impl StoreBuilder {
         }
     }
 
-    pub fn func_refs(self, func_refs: Vec<FuncRef>) -> Self {
+    pub fn func_indicies(self, indicies: Vec<FuncIdx>) -> Self {
         Self {
-            func_refs: Some(func_refs),
-            ..self
-        }
-    }
-
-    pub fn functions(self, functions: Vec<Function>) -> Self {
-        Self {
-            functions: Some(functions),
+            func_indicies: Some(indicies),
             ..self
         }
     }
@@ -148,9 +112,7 @@ impl StoreBuilder {
             Vec::new()
         };
 
-        let functions = if let Some(functions) = self.functions {
-            functions.into_iter().map(|v| FuncRef::new(v)).collect()
-        } else if let Some(func_refs) = self.func_refs {
+        let functions = if let Some(func_refs) = self.func_indicies {
             func_refs
         } else {
             Vec::new()
@@ -165,7 +127,7 @@ impl StoreBuilder {
 }
 
 impl<'a> Index<&'a FuncIdx> for Store {
-    type Output = Function;
+    type Output = FuncIdx;
 
     fn index(&self, func: &'a FuncIdx) -> &Self::Output {
         &self.functions[func.as_usize()]
